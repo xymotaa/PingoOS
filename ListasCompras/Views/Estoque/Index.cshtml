@@ -354,53 +354,57 @@
     </div>
 
     <!-- Cadastro de novo produto -->
-    <div id="novoProdutoOverlay" class="hidden fixed top-16 inset-x-0 bottom-0 z-40 bg-surface flex flex-col">
-        <!-- Título da página de cadastro -->
-        <div class="shrink-0 bg-surface flex items-center gap-sm px-lg pt-md pb-sm">
-            <button id="fecharNovoProdutoBtn" type="button" title="Voltar ao estoque"
-                    class="w-9 h-9 rounded-full hover:bg-surface-container-high flex items-center justify-center text-on-surface-variant transition-colors">
-                <span class="material-symbols-outlined text-[20px]">arrow_back</span>
-            </button>
-            <h2 class="font-headline-lg text-headline-lg text-primary">Cadastrar novo produto</h2>
-        </div>
+    <div id="novoProdutoOverlay" class="hidden fixed top-16 inset-x-0 bottom-0 z-40 bg-surface overflow-y-auto custom-scrollbar">
+        <div class="max-w-[1440px] mx-auto pt-md pl-lg pr-16 pb-xl">
 
-        <div class="flex-1 flex overflow-hidden">
-            <!-- Etapas do cadastro -->
-            <aside class="hidden md:flex w-72 shrink-0 border-r border-outline-variant bg-white flex-col p-lg overflow-y-auto custom-scrollbar">
-                <h3 class="font-title-lg text-title-lg text-primary">Etapas do cadastro</h3>
-
-                <div class="flex flex-col gap-lg">
-                    <button type="button" class="np-step flex items-center gap-sm text-left hover:opacity-90 transition-opacity" data-step="1">
-                        <span class="np-step-num w-6 h-6 rounded-full bg-secondary text-white flex items-center justify-center font-label-sm text-label-sm font-bold shrink-0">1</span>
-                        <span class="np-step-label font-body-lg text-body-lg font-semibold text-secondary">Dados básicos</span>
-                    </button>
-                    <button type="button" class="np-step flex items-center gap-sm text-left hover:opacity-90 transition-opacity" data-step="2">
-                        <span class="np-step-num w-6 h-6 rounded-full border border-outline-variant text-outline flex items-center justify-center font-label-sm text-label-sm font-bold shrink-0">2</span>
-                        <span class="np-step-label font-body-lg text-body-lg text-on-surface-variant">Características <span class="text-outline"></span></span>
-                    </button>
-                    <button type="button" class="np-step flex items-center gap-sm text-left hover:opacity-90 transition-opacity" data-step="3">
-                        <span class="np-step-num w-6 h-6 rounded-full border border-outline-variant text-outline flex items-center justify-center font-label-sm text-label-sm font-bold shrink-0">3</span>
-                        <span class="np-step-label font-body-lg text-body-lg text-on-surface-variant">Imagens <span class="text-outline"></span></span>
-                    </button>
-                    <button type="button" class="np-step flex items-center gap-sm text-left hover:opacity-90 transition-opacity" data-step="4">
-                        <span class="np-step-num w-6 h-6 rounded-full border border-outline-variant text-outline flex items-center justify-center font-label-sm text-label-sm font-bold shrink-0">4</span>
-                        <span class="np-step-label font-body-lg text-body-lg text-on-surface-variant">Estoque <span class="text-outline"></span></span>
-                    </button>
-                    <button type="button" class="np-step flex items-center gap-sm text-left hover:opacity-90 transition-opacity" data-step="5">
-                        <span class="np-step-num w-6 h-6 rounded-full border border-outline-variant text-outline flex items-center justify-center font-label-sm text-label-sm font-bold shrink-0">5</span>
-                        <span class="np-step-label font-body-lg text-body-lg text-on-surface-variant">Tributação <span class="text-outline"></span></span>
-                    </button>
-                    <button type="button" class="np-step flex items-center gap-sm text-left hover:opacity-90 transition-opacity" data-step="6">
-                        <span class="np-step-num w-6 h-6 rounded-full border border-outline-variant text-outline flex items-center justify-center font-label-sm text-label-sm font-bold shrink-0">6</span>
-                        <span class="np-step-label font-body-lg text-body-lg text-on-surface-variant">Variações <span class="text-outline"></span></span>
-                    </button>
+            <!-- Cabeçalho da página -->
+            <section class="mb-md flex items-center gap-sm">
+                <button id="fecharNovoProdutoBtn" type="button" title="Voltar ao estoque"
+                        class="w-9 h-9 rounded-full hover:bg-surface-container-high flex items-center justify-center text-on-surface-variant transition-colors shrink-0">
+                    <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+                </button>
+                <div>
+                    <h1 class="font-headline-lg text-headline-lg text-primary">Cadastrar novo produto</h1>
+                    <p class="font-body-md text-body-md text-on-surface-variant">Preencha os dados básicos e, se quiser, complete as demais etapas.</p>
                 </div>
-            </aside>
+            </section>
 
-            <!-- Formulário -->
-            <div class="flex-1 flex flex-col overflow-hidden">
-                <div class="flex-1 overflow-y-auto custom-scrollbar p-lg">
-                    <div class="max-w-[960px]">
+            <div class="flex flex-col lg:flex-row gap-md items-start">
+                <!-- Etapas do cadastro -->
+                <aside class="w-full lg:w-72 shrink-0 bg-white rounded-xl border border-outline-variant shadow-sm p-sm">
+                    <p class="font-label-sm text-label-sm text-outline uppercase tracking-wider px-sm pt-xs pb-sm">Etapas do cadastro</p>
+                    <div class="flex flex-col gap-base">
+                        <button type="button" class="np-step flex items-center gap-sm text-left px-sm py-sm rounded-lg hover:bg-surface-container-low transition-colors" data-step="1">
+                            <span class="np-step-num w-6 h-6 rounded-full bg-secondary text-white flex items-center justify-center font-label-sm text-label-sm font-bold shrink-0">1</span>
+                            <span class="np-step-label font-body-md text-body-md font-semibold text-secondary">Dados básicos</span>
+                        </button>
+                        <button type="button" class="np-step flex items-center gap-sm text-left px-sm py-sm rounded-lg hover:bg-surface-container-low transition-colors" data-step="2">
+                            <span class="np-step-num w-6 h-6 rounded-full border border-outline-variant text-outline flex items-center justify-center font-label-sm text-label-sm font-bold shrink-0">2</span>
+                            <span class="np-step-label font-body-md text-body-md text-on-surface-variant">Características</span>
+                        </button>
+                        <button type="button" class="np-step flex items-center gap-sm text-left px-sm py-sm rounded-lg hover:bg-surface-container-low transition-colors" data-step="3">
+                            <span class="np-step-num w-6 h-6 rounded-full border border-outline-variant text-outline flex items-center justify-center font-label-sm text-label-sm font-bold shrink-0">3</span>
+                            <span class="np-step-label font-body-md text-body-md text-on-surface-variant">Imagens</span>
+                        </button>
+                        <button type="button" class="np-step flex items-center gap-sm text-left px-sm py-sm rounded-lg hover:bg-surface-container-low transition-colors" data-step="4">
+                            <span class="np-step-num w-6 h-6 rounded-full border border-outline-variant text-outline flex items-center justify-center font-label-sm text-label-sm font-bold shrink-0">4</span>
+                            <span class="np-step-label font-body-md text-body-md text-on-surface-variant">Estoque</span>
+                        </button>
+                        <button type="button" class="np-step flex items-center gap-sm text-left px-sm py-sm rounded-lg hover:bg-surface-container-low transition-colors" data-step="5">
+                            <span class="np-step-num w-6 h-6 rounded-full border border-outline-variant text-outline flex items-center justify-center font-label-sm text-label-sm font-bold shrink-0">5</span>
+                            <span class="np-step-label font-body-md text-body-md text-on-surface-variant">Tributação</span>
+                        </button>
+                        <button type="button" class="np-step flex items-center gap-sm text-left px-sm py-sm rounded-lg hover:bg-surface-container-low transition-colors" data-step="6">
+                            <span class="np-step-num w-6 h-6 rounded-full border border-outline-variant text-outline flex items-center justify-center font-label-sm text-label-sm font-bold shrink-0">6</span>
+                            <span class="np-step-label font-body-md text-body-md text-on-surface-variant">Variações</span>
+                        </button>
+                    </div>
+                </aside>
+
+                <!-- Formulário -->
+                <div class="flex-1 w-full min-w-0 bg-white rounded-xl border border-outline-variant shadow-sm flex flex-col overflow-hidden">
+                    <div class="p-lg">
+                        <div class="max-w-[960px]">
 
                     <!-- Etapa 1: Dados básicos -->
                     <div data-step-panel="1">
@@ -489,7 +493,7 @@
 
                     <!-- Etapa 2: Características -->
                     <div data-step-panel="2" class="hidden">
-                        <h3 class="font-title-lg text-title-lg text-primary mb-lg">Características <span class="font-body-md text-body-md text-outline">(opcional)</span></h3>
+                        <h3 class="font-title-lg text-title-lg text-primary mb-lg">Características</h3>
                         <div class="grid grid-cols-1 md:grid-cols-12 gap-md">
                             <div class="md:col-span-12">
                                 <label class="font-label-md text-label-md text-on-surface-variant" for="npDescricao">Descrição complementar</label>
@@ -529,7 +533,7 @@
 
                     <!-- Etapa 3: Imagens -->
                     <div data-step-panel="3" class="hidden">
-                        <h3 class="font-title-lg text-title-lg text-primary mb-lg">Imagens <span class="font-body-md text-body-md text-outline">(opcional)</span></h3>
+                        <h3 class="font-title-lg text-title-lg text-primary mb-lg">Imagens</h3>
                         <div class="border-2 border-dashed border-outline-variant rounded-xl px-lg py-xl flex flex-col items-center justify-center text-center gap-sm">
                             <span class="material-symbols-outlined text-[40px] text-outline">add_photo_alternate</span>
                             <p class="font-body-md text-body-md text-on-surface-variant">Arraste imagens aqui ou clique para selecionar</p>
@@ -540,7 +544,7 @@
 
                     <!-- Etapa 4: Estoque -->
                     <div data-step-panel="4" class="hidden">
-                        <h3 class="font-title-lg text-title-lg text-primary mb-lg">Estoque <span class="font-body-md text-body-md text-outline">(opcional)</span></h3>
+                        <h3 class="font-title-lg text-title-lg text-primary mb-lg">Estoque</h3>
                         <div class="grid grid-cols-1 md:grid-cols-12 gap-md">
                             <div class="md:col-span-3">
                                 <label class="font-label-md text-label-md text-on-surface-variant" for="npEstoqueInicial">Estoque inicial</label>
@@ -567,7 +571,7 @@
 
                     <!-- Etapa 5: Tributação -->
                     <div data-step-panel="5" class="hidden">
-                        <h3 class="font-title-lg text-title-lg text-primary mb-lg">Tributação <span class="font-body-md text-body-md text-outline">(opcional)</span></h3>
+                        <h3 class="font-title-lg text-title-lg text-primary mb-lg">Tributação</h3>
                         <div class="grid grid-cols-1 md:grid-cols-12 gap-md">
                             <div class="md:col-span-6">
                                 <label class="font-label-md text-label-md text-on-surface-variant" for="npOrigem">Origem</label>
@@ -594,7 +598,7 @@
 
                     <!-- Etapa 6: Variações -->
                     <div data-step-panel="6" class="hidden">
-                        <h3 class="font-title-lg text-title-lg text-primary mb-lg">Variações <span class="font-body-md text-body-md text-outline">(opcional)</span></h3>
+                        <h3 class="font-title-lg text-title-lg text-primary mb-lg">Variações</h3>
                         <div class="bg-surface-container-low rounded-xl px-lg py-xl flex flex-col items-center justify-center text-center gap-sm">
                             <span class="material-symbols-outlined text-[40px] text-outline">tune</span>
                             <p class="font-body-md text-body-md text-on-surface-variant">Cadastre variações como cor, tamanho ou capacidade.</p>
@@ -602,30 +606,31 @@
                         </div>
                     </div>
 
+                        </div>
                     </div>
-                </div>
 
-                <!-- Rodapé de ações -->
-                <div class="shrink-0 bg-white border-t border-outline-variant px-lg py-md flex items-center justify-between gap-sm">
-                    <button id="cancelarNovoProdutoBtn" type="button"
-                            class="border border-outline text-on-surface-variant rounded-full px-lg py-sm font-label-md text-label-md font-bold hover:bg-surface-container-low transition-colors">
-                        Cancelar
-                    </button>
-                    <div class="flex items-center gap-sm">
-                        <button id="npVoltarEtapaBtn" type="button"
-                                class="hidden border border-outline text-on-surface-variant rounded-full px-lg py-sm font-label-md text-label-md font-bold hover:bg-surface-container-low transition-colors flex items-center gap-xs">
-                            <span class="material-symbols-outlined text-[18px]">arrow_back</span>
-                            Voltar
+                    <!-- Rodapé de ações -->
+                    <div class="border-t border-outline-variant px-lg py-md flex items-center justify-between gap-sm">
+                        <button id="cancelarNovoProdutoBtn" type="button"
+                                class="border border-outline text-on-surface-variant rounded-full px-lg py-sm font-label-md text-label-md font-bold hover:bg-surface-container-low transition-colors">
+                            Cancelar
                         </button>
-                        <button id="salvarNovoProdutoBtn" type="button"
-                                class="border border-secondary text-secondary rounded-full px-lg py-sm font-label-md text-label-md font-bold hover:bg-secondary-container/30 transition-colors">
-                            Salvar produto
-                        </button>
-                        <button id="npAvancarEtapaBtn" type="button"
-                                class="bg-secondary text-white rounded-full px-lg py-sm font-label-md text-label-md font-bold hover:bg-opacity-90 transition-colors flex items-center gap-xs">
-                            Avançar
-                            <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
-                        </button>
+                        <div class="flex items-center gap-sm">
+                            <button id="npVoltarEtapaBtn" type="button"
+                                    class="hidden border border-outline text-on-surface-variant rounded-full px-lg py-sm font-label-md text-label-md font-bold hover:bg-surface-container-low transition-colors flex items-center gap-xs">
+                                <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+                                Voltar
+                            </button>
+                            <button id="salvarNovoProdutoBtn" type="button"
+                                    class="border border-secondary text-secondary rounded-full px-lg py-sm font-label-md text-label-md font-bold hover:bg-secondary-container/30 transition-colors">
+                                Salvar produto
+                            </button>
+                            <button id="npAvancarEtapaBtn" type="button"
+                                    class="bg-secondary text-white rounded-full px-lg py-sm font-label-md text-label-md font-bold hover:bg-opacity-90 transition-colors flex items-center gap-xs">
+                                Avançar
+                                <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
