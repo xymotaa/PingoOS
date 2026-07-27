@@ -25,7 +25,25 @@ document.addEventListener("DOMContentLoaded", function () {
     const toastMsg = document.getElementById("toastMsg");
     const toastIcon = document.getElementById("toastIcon");
 
-    const abrirMovimentacaoBtn = document.getElementById("abrirMovimentacaoBtn");
+    const novoProdutoBtn = document.getElementById("novoProdutoBtn");
+    const novoProdutoOverlay = document.getElementById("novoProdutoOverlay");
+    const fecharNovoProdutoBtn = document.getElementById("fecharNovoProdutoBtn");
+    const cancelarNovoProdutoBtn = document.getElementById("cancelarNovoProdutoBtn");
+    const salvarNovoProdutoBtn = document.getElementById("salvarNovoProdutoBtn");
+    const npVoltarEtapaBtn = document.getElementById("npVoltarEtapaBtn");
+    const npAvancarEtapaBtn = document.getElementById("npAvancarEtapaBtn");
+    const npSteps = document.querySelectorAll(".np-step");
+    const npPanels = document.querySelectorAll("[data-step-panel]");
+    const npNome = document.getElementById("npNome");
+    const npCodigo = document.getElementById("npCodigo");
+    const npPreco = document.getElementById("npPreco");
+    const npCategoria = document.getElementById("npCategoria");
+    const npEstoqueInicial = document.getElementById("npEstoqueInicial");
+    const npEstoqueMinimo = document.getElementById("npEstoqueMinimo");
+    const npCusto = document.getElementById("npCusto");
+    const TOTAL_ETAPAS = 6;
+    let etapaAtual = 1;
+
     const fecharMovimentacaoBtn = document.getElementById("fecharMovimentacaoBtn");
     const modalMovimentacao = document.getElementById("modalMovimentacao");
     const movProdutoSelect = document.getElementById("movProdutoSelect");
@@ -207,7 +225,85 @@ document.addEventListener("DOMContentLoaded", function () {
         modalMovimentacao.classList.add("hidden");
     }
 
-    abrirMovimentacaoBtn.addEventListener("click", function () { abrirModal(); });
+    function irParaEtapa(n) {
+        etapaAtual = Math.min(Math.max(n, 1), TOTAL_ETAPAS);
+        npSteps.forEach(function (step) {
+            const ativo = parseInt(step.dataset.step, 10) === etapaAtual;
+            const num = step.querySelector(".np-step-num");
+            const label = step.querySelector(".np-step-label");
+            num.className = "np-step-num w-6 h-6 rounded-full flex items-center justify-center font-label-sm text-label-sm font-bold shrink-0 " +
+                (ativo ? "bg-secondary text-white" : "border border-outline-variant text-outline");
+            label.classList.toggle("text-secondary", ativo);
+            label.classList.toggle("font-semibold", ativo);
+            label.classList.toggle("text-on-surface-variant", !ativo);
+        });
+        npPanels.forEach(function (panel) {
+            panel.classList.toggle("hidden", parseInt(panel.dataset.stepPanel, 10) !== etapaAtual);
+        });
+        npVoltarEtapaBtn.classList.toggle("hidden", etapaAtual === 1);
+        npAvancarEtapaBtn.classList.toggle("hidden", etapaAtual === TOTAL_ETAPAS);
+    }
+
+    function abrirNovoProduto() {
+        novoProdutoOverlay.querySelectorAll("input, textarea").forEach(function (campo) { campo.value = ""; });
+        novoProdutoOverlay.querySelectorAll("select").forEach(function (campo) { campo.selectedIndex = 0; });
+        irParaEtapa(1);
+        novoProdutoOverlay.classList.remove("hidden");
+        novoProdutoOverlay.scrollTop = 0;
+        npNome.focus();
+    }
+
+    function fecharNovoProduto() {
+        novoProdutoOverlay.classList.add("hidden");
+    }
+
+    function parseDecimal(valor) {
+        return parseFloat(String(valor).replace(/\./g, "").replace(",", ".")) || 0;
+    }
+
+    function salvarNovoProduto() {
+        const nome = npNome.value.trim();
+        if (!nome) {
+            irParaEtapa(1);
+            npNome.focus();
+            mostrarToast("Informe o nome do produto para continuar.", true);
+            return;
+        }
+
+        let codigo = npCodigo.value.trim();
+        if (!codigo) codigo = "P" + Date.now().toString().slice(-8);
+        if (produtos.some(function (p) { return p.codigo === codigo; })) {
+            irParaEtapa(1);
+            npCodigo.focus();
+            mostrarToast("Já existe um produto com o código \"" + codigo + "\".", true);
+            return;
+        }
+
+        produtos.push({
+            codigo: codigo,
+            nome: nome,
+            categoria: npCategoria.value || "Sem categoria",
+            saldoAtual: parseInt(npEstoqueInicial.value, 10) || 0,
+            estoqueMinimo: parseInt(npEstoqueMinimo.value, 10) || 0,
+            custoUnitario: parseDecimal(npCusto.value),
+            precoVenda: parseDecimal(npPreco.value)
+        });
+
+        renderTabela();
+        fecharNovoProduto();
+        mostrarToast("Produto \"" + nome + "\" cadastrado (exemplo, ainda não gravado no banco de dados).");
+    }
+
+    novoProdutoBtn.addEventListener("click", abrirNovoProduto);
+    fecharNovoProdutoBtn.addEventListener("click", fecharNovoProduto);
+    cancelarNovoProdutoBtn.addEventListener("click", fecharNovoProduto);
+    salvarNovoProdutoBtn.addEventListener("click", salvarNovoProduto);
+    npVoltarEtapaBtn.addEventListener("click", function () { irParaEtapa(etapaAtual - 1); });
+    npAvancarEtapaBtn.addEventListener("click", function () { irParaEtapa(etapaAtual + 1); });
+    npSteps.forEach(function (step) {
+        step.addEventListener("click", function () { irParaEtapa(parseInt(step.dataset.step, 10)); });
+    });
+
     fecharMovimentacaoBtn.addEventListener("click", fecharModal);
     modalMovimentacao.addEventListener("click", function (e) {
         if (e.target === modalMovimentacao) fecharModal();
@@ -454,7 +550,8 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     painelIncluirCadastro.addEventListener("click", function () {
-        mostrarToast("Cadastro de novos produtos ainda não está disponível nesta versão.", true);
+        painelAcoes.classList.add("hidden");
+        abrirNovoProduto();
     });
 
     maisAcoesToggle.addEventListener("click", function () {

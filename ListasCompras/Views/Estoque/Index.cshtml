@@ -157,9 +157,10 @@
             </div>
 
             <div class="flex items-center gap-xs shrink-0 ml-auto">
-                <button id="abrirMovimentacaoBtn" type="button" title="Registrar movimentação"
-                        class="w-9 h-9 rounded-lg hover:bg-surface-container-low flex items-center justify-center text-on-surface-variant transition-colors">
-                    <span class="material-symbols-outlined text-[20px]">sync_alt</span>
+                <button id="novoProdutoBtn" type="button" title="Cadastrar novo produto"
+                        class="h-9 px-md rounded-lg bg-secondary text-white flex items-center justify-center gap-xs hover:bg-opacity-90 transition-colors shrink-0">
+                    <span class="material-symbols-outlined text-[20px]">add</span>
+                    <span class="font-label-md text-label-md font-bold hidden sm:inline">Novo</span>
                 </button>
                 <button id="imprimirBtn" type="button" title="Imprimir lista"
                         class="w-9 h-9 rounded-lg hover:bg-surface-container-low flex items-center justify-center text-on-surface-variant transition-colors">
@@ -348,6 +349,291 @@
                     Confirmar
                     <span class="material-symbols-outlined">check_circle</span>
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cadastro de novo produto -->
+    <div id="novoProdutoOverlay" class="hidden fixed top-16 inset-x-0 bottom-0 z-40 bg-surface flex flex-col">
+        <!-- Título da página de cadastro -->
+        <div class="shrink-0 bg-surface flex items-center gap-sm px-lg pt-md pb-sm">
+            <button id="fecharNovoProdutoBtn" type="button" title="Voltar ao estoque"
+                    class="w-9 h-9 rounded-full hover:bg-surface-container-high flex items-center justify-center text-on-surface-variant transition-colors">
+                <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+            </button>
+            <h2 class="font-headline-lg text-headline-lg text-primary">Cadastrar novo produto</h2>
+        </div>
+
+        <div class="flex-1 flex overflow-hidden">
+            <!-- Etapas do cadastro -->
+            <aside class="hidden md:flex w-72 shrink-0 border-r border-outline-variant bg-white flex-col p-lg overflow-y-auto custom-scrollbar">
+                <h3 class="font-title-lg text-title-lg text-primary">Etapas do cadastro</h3>
+                <p class="font-body-md text-body-md text-on-surface-variant mt-xs mb-lg">Navegue entre as etapas do cadastro</p>
+
+                <div class="flex flex-col gap-lg">
+                    <button type="button" class="np-step flex items-center gap-sm text-left hover:opacity-90 transition-opacity" data-step="1">
+                        <span class="np-step-num w-6 h-6 rounded-full bg-secondary text-white flex items-center justify-center font-label-sm text-label-sm font-bold shrink-0">1</span>
+                        <span class="np-step-label font-body-lg text-body-lg font-semibold text-secondary">Dados básicos</span>
+                    </button>
+                    <button type="button" class="np-step flex items-center gap-sm text-left hover:opacity-90 transition-opacity" data-step="2">
+                        <span class="np-step-num w-6 h-6 rounded-full border border-outline-variant text-outline flex items-center justify-center font-label-sm text-label-sm font-bold shrink-0">2</span>
+                        <span class="np-step-label font-body-lg text-body-lg text-on-surface-variant">Características <span class="text-outline">(opcional)</span></span>
+                    </button>
+                    <button type="button" class="np-step flex items-center gap-sm text-left hover:opacity-90 transition-opacity" data-step="3">
+                        <span class="np-step-num w-6 h-6 rounded-full border border-outline-variant text-outline flex items-center justify-center font-label-sm text-label-sm font-bold shrink-0">3</span>
+                        <span class="np-step-label font-body-lg text-body-lg text-on-surface-variant">Imagens <span class="text-outline">(opcional)</span></span>
+                    </button>
+                    <button type="button" class="np-step flex items-center gap-sm text-left hover:opacity-90 transition-opacity" data-step="4">
+                        <span class="np-step-num w-6 h-6 rounded-full border border-outline-variant text-outline flex items-center justify-center font-label-sm text-label-sm font-bold shrink-0">4</span>
+                        <span class="np-step-label font-body-lg text-body-lg text-on-surface-variant">Estoque <span class="text-outline">(opcional)</span></span>
+                    </button>
+                    <button type="button" class="np-step flex items-center gap-sm text-left hover:opacity-90 transition-opacity" data-step="5">
+                        <span class="np-step-num w-6 h-6 rounded-full border border-outline-variant text-outline flex items-center justify-center font-label-sm text-label-sm font-bold shrink-0">5</span>
+                        <span class="np-step-label font-body-lg text-body-lg text-on-surface-variant">Tributação <span class="text-outline">(opcional)</span></span>
+                    </button>
+                    <button type="button" class="np-step flex items-center gap-sm text-left hover:opacity-90 transition-opacity" data-step="6">
+                        <span class="np-step-num w-6 h-6 rounded-full border border-outline-variant text-outline flex items-center justify-center font-label-sm text-label-sm font-bold shrink-0">6</span>
+                        <span class="np-step-label font-body-lg text-body-lg text-on-surface-variant">Variações <span class="text-outline">(opcional)</span></span>
+                    </button>
+                </div>
+
+                <button type="button" disabled title="Em breve"
+                        class="mt-lg w-full border border-secondary text-secondary rounded-full py-sm font-label-md text-label-md font-bold opacity-60 cursor-not-allowed">
+                    Pular para versão completa
+                </button>
+            </aside>
+
+            <!-- Formulário -->
+            <div class="flex-1 flex flex-col overflow-hidden">
+                <div class="flex-1 overflow-y-auto custom-scrollbar p-lg">
+                    <div class="max-w-[960px]">
+
+                    <!-- Etapa 1: Dados básicos -->
+                    <div data-step-panel="1">
+                        <div class="flex items-end justify-between mb-lg">
+                            <h3 class="font-title-lg text-title-lg text-primary">Dados básicos</h3>
+                            <span class="font-label-md text-label-md text-error">(*) Campos obrigatórios</span>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-md">
+                            <div class="md:col-span-6">
+                                <label class="font-label-md text-label-md text-on-surface-variant" for="npNome">Nome <span class="text-error">*</span></label>
+                                <input id="npNome" type="text" maxlength="120"
+                                       class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                            </div>
+                            <div class="md:col-span-3">
+                                <label class="font-label-md text-label-md text-on-surface-variant flex items-center gap-xs" for="npCodigo">
+                                    Código (SKU)
+                                    <span class="material-symbols-outlined text-[16px] text-secondary" title="Deixe em branco para gerar automaticamente">info</span>
+                                </label>
+                                <input id="npCodigo" type="text" maxlength="40"
+                                       class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                            </div>
+                            <div class="md:col-span-3">
+                                <label class="font-label-md text-label-md text-on-surface-variant flex items-center gap-xs" for="npPreco">
+                                    Preço venda
+                                    <span class="material-symbols-outlined text-[16px] text-secondary" title="Valor de venda ao cliente">info</span>
+                                </label>
+                                <input id="npPreco" type="text" inputmode="decimal" placeholder="0,00"
+                                       class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                            </div>
+
+                            <div class="md:col-span-3">
+                                <label class="font-label-md text-label-md text-on-surface-variant flex items-center gap-xs" for="npUnidade">
+                                    Unidade
+                                    <span class="material-symbols-outlined text-[16px] text-secondary" title="Unidade de medida">info</span>
+                                </label>
+                                <input id="npUnidade" type="text" placeholder="Un, Pç, Kg" maxlength="10"
+                                       class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                            </div>
+                            <div class="md:col-span-3">
+                                <label class="font-label-md text-label-md text-on-surface-variant flex items-center gap-xs" for="npFormato">
+                                    Formato
+                                    <span class="material-symbols-outlined text-[16px] text-secondary" title="Produto simples ou com variações">info</span>
+                                </label>
+                                <select id="npFormato" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30">
+                                    <option value="simples">Simples ou com variação</option>
+                                    <option value="variacao">Com variação</option>
+                                </select>
+                            </div>
+                            <div class="md:col-span-3">
+                                <label class="font-label-md text-label-md text-on-surface-variant" for="npTipo">Tipo</label>
+                                <select id="npTipo" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30">
+                                    <option value="produto">Produto</option>
+                                    <option value="servico">Serviço</option>
+                                </select>
+                            </div>
+                            <div class="md:col-span-3">
+                                <label class="font-label-md text-label-md text-on-surface-variant flex items-center gap-xs" for="npCondicao">
+                                    Condição
+                                    <span class="material-symbols-outlined text-[16px] text-secondary" title="Condição do produto">info</span>
+                                </label>
+                                <select id="npCondicao" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30">
+                                    <option value="nao_especificado">Não Especificado</option>
+                                    <option value="novo">Novo</option>
+                                    <option value="usado">Usado</option>
+                                </select>
+                            </div>
+
+                            <div class="md:col-span-4">
+                                <label class="font-label-md text-label-md text-on-surface-variant flex items-center gap-xs" for="npCategoria">
+                                    Categoria
+                                    <span class="material-symbols-outlined text-[16px] text-secondary" title="Categoria do produto">info</span>
+                                </label>
+                                <select id="npCategoria" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30">
+                                    <option value="">Sem categoria</option>
+                                    <option value="Capinha">Capinha</option>
+                                    <option value="Película">Película</option>
+                                    <option value="Carregador">Carregador</option>
+                                    <option value="Cabo">Cabo</option>
+                                    <option value="Fone">Fone</option>
+                                    <option value="Acessório">Acessório</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Etapa 2: Características -->
+                    <div data-step-panel="2" class="hidden">
+                        <h3 class="font-title-lg text-title-lg text-primary mb-lg">Características <span class="font-body-md text-body-md text-outline">(opcional)</span></h3>
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-md">
+                            <div class="md:col-span-12">
+                                <label class="font-label-md text-label-md text-on-surface-variant" for="npDescricao">Descrição complementar</label>
+                                <textarea id="npDescricao" rows="3" placeholder="Detalhes do produto, especificações, observações..."
+                                          class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30"></textarea>
+                            </div>
+                            <div class="md:col-span-4">
+                                <label class="font-label-md text-label-md text-on-surface-variant" for="npMarca">Marca</label>
+                                <input id="npMarca" type="text" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                            </div>
+                            <div class="md:col-span-4">
+                                <label class="font-label-md text-label-md text-on-surface-variant" for="npModeloRef">Modelo / Referência</label>
+                                <input id="npModeloRef" type="text" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                            </div>
+                            <div class="md:col-span-4">
+                                <label class="font-label-md text-label-md text-on-surface-variant" for="npGtin">GTIN / EAN</label>
+                                <input id="npGtin" type="text" inputmode="numeric" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                            </div>
+                            <div class="md:col-span-3">
+                                <label class="font-label-md text-label-md text-on-surface-variant" for="npPeso">Peso (kg)</label>
+                                <input id="npPeso" type="text" inputmode="decimal" placeholder="0,000" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                            </div>
+                            <div class="md:col-span-3">
+                                <label class="font-label-md text-label-md text-on-surface-variant" for="npLargura">Largura (cm)</label>
+                                <input id="npLargura" type="text" inputmode="decimal" placeholder="0" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                            </div>
+                            <div class="md:col-span-3">
+                                <label class="font-label-md text-label-md text-on-surface-variant" for="npAltura">Altura (cm)</label>
+                                <input id="npAltura" type="text" inputmode="decimal" placeholder="0" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                            </div>
+                            <div class="md:col-span-3">
+                                <label class="font-label-md text-label-md text-on-surface-variant" for="npProfundidade">Profundidade (cm)</label>
+                                <input id="npProfundidade" type="text" inputmode="decimal" placeholder="0" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Etapa 3: Imagens -->
+                    <div data-step-panel="3" class="hidden">
+                        <h3 class="font-title-lg text-title-lg text-primary mb-lg">Imagens <span class="font-body-md text-body-md text-outline">(opcional)</span></h3>
+                        <div class="border-2 border-dashed border-outline-variant rounded-xl px-lg py-xl flex flex-col items-center justify-center text-center gap-sm">
+                            <span class="material-symbols-outlined text-[40px] text-outline">add_photo_alternate</span>
+                            <p class="font-body-md text-body-md text-on-surface-variant">Arraste imagens aqui ou clique para selecionar</p>
+                            <p class="font-label-sm text-label-sm text-outline">PNG ou JPG até 5 MB cada</p>
+                        </div>
+                        <p class="mt-sm font-label-sm text-label-sm text-outline">O envio das imagens será vinculado ao produto na versão completa do cadastro.</p>
+                    </div>
+
+                    <!-- Etapa 4: Estoque -->
+                    <div data-step-panel="4" class="hidden">
+                        <h3 class="font-title-lg text-title-lg text-primary mb-lg">Estoque <span class="font-body-md text-body-md text-outline">(opcional)</span></h3>
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-md">
+                            <div class="md:col-span-3">
+                                <label class="font-label-md text-label-md text-on-surface-variant" for="npEstoqueInicial">Estoque inicial</label>
+                                <input id="npEstoqueInicial" type="number" min="0" step="1" placeholder="0" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                            </div>
+                            <div class="md:col-span-3">
+                                <label class="font-label-md text-label-md text-on-surface-variant" for="npEstoqueMinimo">Estoque mínimo</label>
+                                <input id="npEstoqueMinimo" type="number" min="0" step="1" placeholder="0" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                            </div>
+                            <div class="md:col-span-3">
+                                <label class="font-label-md text-label-md text-on-surface-variant" for="npEstoqueMaximo">Estoque máximo</label>
+                                <input id="npEstoqueMaximo" type="number" min="0" step="1" placeholder="0" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                            </div>
+                            <div class="md:col-span-3">
+                                <label class="font-label-md text-label-md text-on-surface-variant" for="npCusto">Custo unitário</label>
+                                <input id="npCusto" type="text" inputmode="decimal" placeholder="0,00" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                            </div>
+                            <div class="md:col-span-6">
+                                <label class="font-label-md text-label-md text-on-surface-variant" for="npLocalizacao">Localização no estoque</label>
+                                <input id="npLocalizacao" type="text" placeholder="Ex: Prateleira A3, Gaveta 2..." class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Etapa 5: Tributação -->
+                    <div data-step-panel="5" class="hidden">
+                        <h3 class="font-title-lg text-title-lg text-primary mb-lg">Tributação <span class="font-body-md text-body-md text-outline">(opcional)</span></h3>
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-md">
+                            <div class="md:col-span-6">
+                                <label class="font-label-md text-label-md text-on-surface-variant" for="npOrigem">Origem</label>
+                                <select id="npOrigem" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30">
+                                    <option value="0">0 - Nacional</option>
+                                    <option value="1">1 - Estrangeira (importação direta)</option>
+                                    <option value="2">2 - Estrangeira (adquirida no mercado interno)</option>
+                                </select>
+                            </div>
+                            <div class="md:col-span-3">
+                                <label class="font-label-md text-label-md text-on-surface-variant" for="npNcm">NCM</label>
+                                <input id="npNcm" type="text" inputmode="numeric" placeholder="0000.00.00" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                            </div>
+                            <div class="md:col-span-3">
+                                <label class="font-label-md text-label-md text-on-surface-variant" for="npCest">CEST</label>
+                                <input id="npCest" type="text" inputmode="numeric" placeholder="00.000.00" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                            </div>
+                            <div class="md:col-span-3">
+                                <label class="font-label-md text-label-md text-on-surface-variant" for="npCfop">CFOP</label>
+                                <input id="npCfop" type="text" inputmode="numeric" placeholder="5102" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Etapa 6: Variações -->
+                    <div data-step-panel="6" class="hidden">
+                        <h3 class="font-title-lg text-title-lg text-primary mb-lg">Variações <span class="font-body-md text-body-md text-outline">(opcional)</span></h3>
+                        <div class="bg-surface-container-low rounded-xl px-lg py-xl flex flex-col items-center justify-center text-center gap-sm">
+                            <span class="material-symbols-outlined text-[40px] text-outline">tune</span>
+                            <p class="font-body-md text-body-md text-on-surface-variant">Cadastre variações como cor, tamanho ou capacidade.</p>
+                            <p class="font-label-sm text-label-sm text-outline">Disponível para produtos com o formato “Com variação”. A montagem das variações estará na versão completa do cadastro.</p>
+                        </div>
+                    </div>
+
+                    </div>
+                </div>
+
+                <!-- Rodapé de ações -->
+                <div class="shrink-0 bg-white border-t border-outline-variant px-lg py-md flex items-center justify-between gap-sm">
+                    <button id="cancelarNovoProdutoBtn" type="button"
+                            class="border border-outline text-on-surface-variant rounded-full px-lg py-sm font-label-md text-label-md font-bold hover:bg-surface-container-low transition-colors">
+                        Cancelar
+                    </button>
+                    <div class="flex items-center gap-sm">
+                        <button id="npVoltarEtapaBtn" type="button"
+                                class="hidden border border-outline text-on-surface-variant rounded-full px-lg py-sm font-label-md text-label-md font-bold hover:bg-surface-container-low transition-colors flex items-center gap-xs">
+                            <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+                            Voltar
+                        </button>
+                        <button id="salvarNovoProdutoBtn" type="button"
+                                class="border border-secondary text-secondary rounded-full px-lg py-sm font-label-md text-label-md font-bold hover:bg-secondary-container/30 transition-colors">
+                            Salvar produto
+                        </button>
+                        <button id="npAvancarEtapaBtn" type="button"
+                                class="bg-secondary text-white rounded-full px-lg py-sm font-label-md text-label-md font-bold hover:bg-opacity-90 transition-colors flex items-center gap-xs">
+                            Avançar
+                            <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
