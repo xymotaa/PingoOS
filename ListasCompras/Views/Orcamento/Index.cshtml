@@ -4,7 +4,11 @@
 
     var nomeLoja = ViewData["NomeLoja"] as string ?? "Minha Loja";
     var logo = ViewData["LogoLoja"] as string;
-    var inicial = string.IsNullOrWhiteSpace(nomeLoja) ? "L" : nomeLoja.Trim()[0].ToString().ToUpper();
+    var lojaCnpj = ViewData["LojaCnpj"] as string;
+    var lojaEndereco = ViewData["LojaEndereco"] as string;
+    var lojaTelefone = ViewData["LojaTelefone"] as string;
+    var lojaEmail = ViewData["LojaEmail"] as string;
+    var lojaContato = string.Join(" · ", new[] { lojaTelefone, lojaEmail }.Where(s => !string.IsNullOrWhiteSpace(s)));
 }
 <!DOCTYPE html>
 <html class="light" lang="pt-BR">
@@ -100,44 +104,7 @@
     </style>
 </head>
 <body class="bg-surface">
-    <!-- Barra superior -->
-    <header class="no-print fixed top-0 w-full z-50 bg-surface border-b border-outline-variant shadow-sm flex justify-between items-center h-16 px-lg">
-        <div class="flex items-center gap-md md:gap-xl">
-            <a asp-controller="Home" asp-action="Index" class="flex items-center gap-sm shrink-0">
-                <div class="w-9 h-9 rounded-lg bg-primary flex items-center justify-center overflow-hidden">
-                    <span class="material-symbols-outlined text-white text-[20px]">storefront</span>
-                </div>
-                <span class="font-headline-md text-headline-md font-bold text-primary">ERP XYM</span>
-            </a>
-        </div>
-        <div class="flex items-center gap-md">
-            <div class="relative">
-                <button id="userMenuBtn" type="button" class="flex items-center gap-sm rounded-full hover:bg-surface-container-high transition-colors pl-sm pr-xs py-xs">
-                    <div class="text-right hidden sm:block">
-                        <p class="font-label-md text-label-md font-semibold text-on-surface">@nomeLoja</p>
-                        <p class="font-label-sm text-label-sm text-outline">Administrador</p>
-                    </div>
-                    <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold overflow-hidden border-2 border-primary-fixed">
-                        @if (!string.IsNullOrEmpty(logo))
-                        {
-                            <img src="@logo" alt="Logo" class="w-full h-full object-cover" />
-                        }
-                        else
-                        {
-                            <span>@inicial</span>
-                        }
-                    </div>
-                    <span class="material-symbols-outlined text-[20px] text-on-surface-variant hidden sm:inline">expand_more</span>
-                </button>
-                <div id="userMenu" class="hidden absolute right-0 top-full mt-sm w-56 bg-white rounded-xl border border-outline-variant shadow-lg py-xs z-50">
-                    <a asp-controller="Configuracao" asp-action="Index" class="flex items-center gap-sm px-md py-sm hover:bg-surface-container-low transition-colors text-on-surface">
-                        <span class="material-symbols-outlined text-[20px] text-on-surface-variant">manage_accounts</span>
-                        <span class="font-body-md text-body-md">Editar perfil</span>
-                    </a>
-                </div>
-            </div>
-        </div>
-    </header>
+    @await Html.PartialAsync("_Navbar")
 
     <main class="no-print pt-24 px-lg pb-xl max-w-[1440px] mx-auto">
 
@@ -312,7 +279,9 @@
                 }
                 <div>
                     <div class="os-loja-nome">@nomeLoja</div>
-                    <div class="os-loja-sub">Assistência Técnica</div>
+                    @if (!string.IsNullOrWhiteSpace(lojaCnpj)) { <div class="os-loja-sub">CNPJ: @lojaCnpj</div> }
+                    @if (!string.IsNullOrWhiteSpace(lojaEndereco)) { <div class="os-loja-sub">@lojaEndereco</div> }
+                    @if (!string.IsNullOrWhiteSpace(lojaContato)) { <div class="os-loja-sub">@lojaContato</div> }
                 </div>
             </div>
             <div class="os-doc-meta">
@@ -375,16 +344,5 @@
     </div>
 
     <script src="~/js/orcamento.js" asp-append-version="true"></script>
-    <script>
-        (function () {
-            const btn = document.getElementById("userMenuBtn");
-            const menu = document.getElementById("userMenu");
-            if (!btn || !menu) return;
-            btn.addEventListener("click", function (e) { e.stopPropagation(); menu.classList.toggle("hidden"); });
-            document.addEventListener("click", function (e) {
-                if (!menu.contains(e.target) && !btn.contains(e.target)) menu.classList.add("hidden");
-            });
-        })();
-    </script>
 </body>
 </html>

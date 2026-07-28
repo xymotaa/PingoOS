@@ -1,62 +1,210 @@
 @model ListasCompras.Models.ConfiguracaoLoja
 @{
-    ViewData["Title"] = "Configurações";
+    Layout = null;
+    ViewData["Title"] = "Perfil da loja";
+
+    var nomeLoja = ViewData["NomeLoja"] as string ?? "Minha Loja";
 }
+<!DOCTYPE html>
+<html class="light" lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>@nomeLoja — @ViewData["Title"]</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-tertiary-container": "#93baa7", "outline-variant": "#bfc9c3",
+                        "on-tertiary-fixed-variant": "#294e3f", "surface": "#f8f9ff",
+                        "inverse-on-surface": "#eaf1ff", "outline": "#707974", "on-primary": "#ffffff",
+                        "secondary": "#006c49", "error-container": "#ffdad6", "primary-fixed-dim": "#95d3ba",
+                        "on-secondary": "#ffffff", "inverse-primary": "#95d3ba", "primary": "#003527",
+                        "on-error-container": "#93000a", "on-tertiary-fixed": "#002115", "primary-fixed": "#b0f0d6",
+                        "on-surface": "#0b1c30", "tertiary-fixed": "#c3ecd7", "on-primary-container": "#80bea6",
+                        "surface-container-highest": "#d3e4fe", "on-primary-fixed-variant": "#0b513d",
+                        "on-error": "#ffffff", "surface-container-lowest": "#ffffff", "surface-container": "#e5eeff",
+                        "secondary-fixed": "#6ffbbe", "surface-container-low": "#eff4ff", "surface-tint": "#2b6954",
+                        "background": "#f8f9ff", "on-primary-fixed": "#002117", "primary-container": "#064e3b",
+                        "on-background": "#0b1c30", "tertiary-container": "#274b3c", "error": "#ba1a1a",
+                        "surface-bright": "#f8f9ff", "inverse-surface": "#213145", "tertiary": "#0e3427",
+                        "surface-dim": "#cbdbf5", "on-secondary-fixed-variant": "#005236", "tertiary-fixed-dim": "#a8cfbc",
+                        "secondary-fixed-dim": "#4edea3", "surface-container-high": "#dce9ff",
+                        "on-secondary-container": "#00714d", "secondary-container": "#6cf8bb",
+                        "surface-variant": "#d3e4fe", "on-surface-variant": "#404944", "on-tertiary": "#ffffff",
+                        "on-secondary-fixed": "#002113",
+                        "warning": "#8a5300", "warning-container": "#ffddb1"
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                    spacing: { "container-margin": "24px", "lg": "24px", "base": "4px", "gutter": "16px", "sm": "8px", "xs": "4px", "md": "16px", "xl": "32px" },
+                    fontFamily: {
+                        "body-md": ["Hanken Grotesk"], "headline-md": ["Hanken Grotesk"], "title-lg": ["Hanken Grotesk"],
+                        "body-lg": ["Hanken Grotesk"], "label-sm": ["Hanken Grotesk"], "headline-lg": ["Hanken Grotesk"],
+                        "display-lg": ["Hanken Grotesk"], "label-md": ["Hanken Grotesk"]
+                    },
+                    fontSize: {
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-md": ["22px", { "lineHeight": "30px", "fontWeight": "600" }],
+                        "title-lg": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-sm": ["11px", { "lineHeight": "14px", "fontWeight": "600" }],
+                        "headline-lg": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "display-lg": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500" }]
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        body { font-family: 'Hanken Grotesk', sans-serif; background-color: #f8f9ff; color: #0b1c30; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    </style>
+</head>
+<body class="bg-surface">
+    @await Html.PartialAsync("_Navbar")
 
-<div class="card-config">
-    <h1>Configurações da Loja</h1>
+    <main class="pt-24 px-lg pb-xl max-w-[1440px] mx-auto">
 
-    @if (TempData["Sucesso"] != null)
-    {
-        <div class="alert-sucesso">@TempData["Sucesso"]</div>
-    }
-
-    <form asp-controller="Configuracao" asp-action="Salvar" method="post" enctype="multipart/form-data">
-        @Html.AntiForgeryToken()
-        <div class="form-field" style="margin-bottom: 1.25rem;">
-            <label for="nomeLoja">Nome da Loja</label>
-            <input type="text" id="nomeLoja" name="nomeLoja" value="@Model.NomeLoja" required />
-        </div>
-
-        <div class="form-field" style="margin-bottom: 0.5rem;">
-            <label>Logo da Loja</label>
-            <label class="upload-area" for="logoInput" id="uploadArea">
-                @if (!string.IsNullOrEmpty(Model.LogoBase64))
-                {
-                    <img src="@Model.LogoBase64" alt="Logo atual" class="logo-preview" id="logoPreview" />
-                }
-                else
-                {
-                    <span class="upload-icon">⬆️</span>
-                    <span>Clique para enviar uma imagem</span>
-                }
-            </label>
-            <input type="file" id="logoInput" name="logo" accept="image/*" class="d-none" />
-        </div>
-
-        <button type="submit" class="btn-app btn-app-primary">Salvar</button>
-    </form>
-
-    <div class="pdf-preview-box">
-        <p style="margin-top:0; font-size:0.8rem; text-transform:uppercase; color:var(--texto-suave); font-weight:600;">
-            Prévia do cabeçalho impresso
-        </p>
-        <div class="pdf-preview-header">
-            <div class="logo-placeholder" id="previewLogoBox">
-                @if (!string.IsNullOrEmpty(Model.LogoBase64))
-                {
-                    <img src="@Model.LogoBase64" alt="Logo" id="previewLogoImg" />
-                }
+        @if (TempData["Sucesso"] != null)
+        {
+            <div class="mb-md bg-secondary-container text-on-secondary-container px-md py-sm rounded-lg font-label-md text-label-md flex items-center gap-xs w-fit">
+                <span class="material-symbols-outlined text-[18px]">check_circle</span>
+                <span>@TempData["Sucesso"]</span>
             </div>
-            <div class="titulo">
-                <span id="previewNome">@Model.NomeLoja</span>
-                <small>LISTA DE REPOSIÇÃO</small>
-            </div>
-            <div style="width:36px;"></div>
-        </div>
-    </div>
-</div>
+        }
 
-@section Scripts {
-    <script src="~/js/configuracao.js" asp-append-version="true"></script>
-}
+        <!-- Cabeçalho da página -->
+        <section class="mb-md">
+            <h1 class="font-headline-lg text-headline-lg text-primary">Perfil da loja</h1>
+            <p class="font-body-md text-body-md text-on-surface-variant">Esses dados aparecem no cabeçalho da Ordem de Serviço/PDF do orçamento.</p>
+        </section>
+
+        <form asp-controller="Configuracao" asp-action="Salvar" method="post" enctype="multipart/form-data" class="flex flex-col gap-md">
+            @Html.AntiForgeryToken()
+
+            <!-- Identificação -->
+            <section class="bg-white rounded-xl border border-outline-variant shadow-sm p-lg">
+                <div class="flex items-center gap-sm mb-md">
+                    <span class="material-symbols-outlined text-[20px] text-secondary">storefront</span>
+                    <h2 class="font-title-lg text-title-lg text-primary">Identificação</h2>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-md items-start">
+                    <div class="md:col-span-3 md:row-span-2">
+                        <label class="font-label-md text-label-md text-on-surface-variant">Logo da loja</label>
+                        <label for="logoInput" class="mt-xs flex flex-col items-center justify-center gap-xs w-full aspect-square max-w-[180px] bg-surface-container-low border-2 border-dashed border-outline-variant rounded-xl cursor-pointer hover:border-secondary transition-colors overflow-hidden">
+                            <img id="logoPreview" src="@Model.LogoBase64" alt="Logo" class="@(string.IsNullOrEmpty(Model.LogoBase64) ? "hidden" : "") w-full h-full object-contain" />
+                            <div id="logoPlaceholder" class="@(string.IsNullOrEmpty(Model.LogoBase64) ? "" : "hidden") flex flex-col items-center gap-xs text-outline p-md text-center">
+                                <span class="material-symbols-outlined text-[32px]">add_photo_alternate</span>
+                                <span class="font-label-sm text-label-sm">Clique para enviar</span>
+                            </div>
+                        </label>
+                        <input id="logoInput" type="file" name="logo" accept="image/*" class="hidden" />
+                    </div>
+
+                    <div class="md:col-span-6">
+                        <label class="font-label-md text-label-md text-on-surface-variant" for="nomeLoja">Nome da loja <span class="text-error">*</span></label>
+                        <input id="nomeLoja" name="nomeLoja" type="text" required value="@Model.NomeLoja" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                    </div>
+                    <div class="md:col-span-3">
+                        <label class="font-label-md text-label-md text-on-surface-variant" for="cnpj">CNPJ</label>
+                        <input id="cnpj" name="cnpj" type="text" inputmode="numeric" placeholder="00.000.000/0000-00" value="@Model.Cnpj" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                    </div>
+                    <div class="md:col-span-9"></div>
+                </div>
+            </section>
+
+            <!-- Contato -->
+            <section class="bg-white rounded-xl border border-outline-variant shadow-sm p-lg">
+                <div class="flex items-center gap-sm mb-md">
+                    <span class="material-symbols-outlined text-[20px] text-secondary">call</span>
+                    <h2 class="font-title-lg text-title-lg text-primary">Contato</h2>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-md">
+                    <div class="md:col-span-4">
+                        <label class="font-label-md text-label-md text-on-surface-variant" for="telefone">Telefone</label>
+                        <input id="telefone" name="telefone" type="tel" inputmode="tel" placeholder="(00) 00000-0000" value="@Model.Telefone" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                    </div>
+                    <div class="md:col-span-8">
+                        <label class="font-label-md text-label-md text-on-surface-variant" for="email">E-mail</label>
+                        <input id="email" name="email" type="email" placeholder="contato@@sualoja.com" value="@Model.Email" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                    </div>
+                </div>
+            </section>
+
+            <!-- Endereço -->
+            <section class="bg-white rounded-xl border border-outline-variant shadow-sm p-lg">
+                <div class="flex items-center gap-sm mb-md">
+                    <span class="material-symbols-outlined text-[20px] text-secondary">location_on</span>
+                    <h2 class="font-title-lg text-title-lg text-primary">Endereço</h2>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-md">
+                    <div class="md:col-span-3">
+                        <label class="font-label-md text-label-md text-on-surface-variant" for="cep">CEP</label>
+                        <input id="cep" name="cep" type="text" inputmode="numeric" placeholder="00000-000" value="@Model.Cep" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                    </div>
+                    <div class="md:col-span-6">
+                        <label class="font-label-md text-label-md text-on-surface-variant" for="endereco">Endereço (Rua / Av.)</label>
+                        <input id="endereco" name="endereco" type="text" value="@Model.Endereco" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                    </div>
+                    <div class="md:col-span-3">
+                        <label class="font-label-md text-label-md text-on-surface-variant" for="numero">Número</label>
+                        <input id="numero" name="numero" type="text" value="@Model.Numero" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                    </div>
+                    <div class="md:col-span-4">
+                        <label class="font-label-md text-label-md text-on-surface-variant" for="bairro">Bairro</label>
+                        <input id="bairro" name="bairro" type="text" value="@Model.Bairro" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                    </div>
+                    <div class="md:col-span-5">
+                        <label class="font-label-md text-label-md text-on-surface-variant" for="cidade">Cidade</label>
+                        <input id="cidade" name="cidade" type="text" value="@Model.Cidade" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                    </div>
+                    <div class="md:col-span-3">
+                        <label class="font-label-md text-label-md text-on-surface-variant" for="uf">UF</label>
+                        <input id="uf" name="uf" type="text" maxlength="2" placeholder="Ex: PA" value="@Model.Uf" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30 uppercase" />
+                    </div>
+                </div>
+            </section>
+
+            <!-- Ações -->
+            <div class="flex items-center justify-end gap-sm">
+                <a asp-controller="Home" asp-action="Index"
+                   class="border border-outline text-on-surface-variant rounded-full px-lg py-sm font-label-md text-label-md font-bold hover:bg-surface-container-low transition-colors">
+                    Voltar
+                </a>
+                <button type="submit"
+                        class="bg-secondary text-white rounded-full px-lg py-sm font-label-md text-label-md font-bold hover:bg-opacity-90 transition-colors flex items-center gap-xs">
+                    <span class="material-symbols-outlined text-[18px]">save</span>
+                    Salvar
+                </button>
+            </div>
+        </form>
+    </main>
+
+    <script>
+        (function () {
+            const input = document.getElementById("logoInput");
+            const preview = document.getElementById("logoPreview");
+            const placeholder = document.getElementById("logoPlaceholder");
+            if (!input) return;
+            input.addEventListener("change", function () {
+                const file = this.files && this.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    preview.src = e.target.result;
+                    preview.classList.remove("hidden");
+                    if (placeholder) placeholder.classList.add("hidden");
+                };
+                reader.readAsDataURL(file);
+            });
+        })();
+    </script>
+</body>
+</html>

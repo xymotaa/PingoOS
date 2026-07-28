@@ -1,0 +1,54 @@
+@{
+    var navNomeLoja = ViewData["NomeLoja"] as string ?? "Minha Loja";
+    var navLogo = ViewData["LogoLoja"] as string;
+    var navInicial = string.IsNullOrWhiteSpace(navNomeLoja) ? "L" : navNomeLoja.Trim()[0].ToString().ToUpper();
+}
+<!-- Barra superior -->
+<header class="no-print fixed top-0 w-full z-50 bg-surface border-b border-outline-variant shadow-sm flex justify-between items-center h-16 px-lg">
+    <div class="flex items-center gap-md md:gap-xl">
+        <a asp-controller="Home" asp-action="Index" class="flex items-center gap-sm shrink-0">
+            <div class="w-9 h-9 rounded-lg bg-primary flex items-center justify-center overflow-hidden">
+                <span class="material-symbols-outlined text-white text-[20px]">storefront</span>
+            </div>
+            <span class="font-headline-md text-headline-md font-bold text-primary">ERP XYM</span>
+        </a>
+    </div>
+    <div class="flex items-center gap-md">
+        <div class="relative">
+            <button id="userMenuBtn" type="button" class="flex items-center gap-sm rounded-full hover:bg-surface-container-high transition-colors pl-sm pr-xs py-xs">
+                <div class="text-right hidden sm:block">
+                    <p class="font-label-md text-label-md font-semibold text-on-surface">@navNomeLoja</p>
+                    <p class="font-label-sm text-label-sm text-outline">Administrador</p>
+                </div>
+                <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold overflow-hidden border-2 border-primary-fixed">
+                    @if (!string.IsNullOrEmpty(navLogo))
+                    {
+                        <img src="@navLogo" alt="Logo" class="w-full h-full object-cover" />
+                    }
+                    else
+                    {
+                        <span>@navInicial</span>
+                    }
+                </div>
+                <span class="material-symbols-outlined text-[20px] text-on-surface-variant hidden sm:inline">expand_more</span>
+            </button>
+            <div id="userMenu" class="hidden absolute right-0 top-full mt-sm w-48 bg-white rounded-xl border border-outline-variant shadow-lg p-xs z-50">
+                <a asp-controller="Configuracao" asp-action="Index" class="flex items-center gap-xs px-sm py-xs rounded-lg hover:bg-surface-container-low transition-colors text-on-surface">
+                    <span class="material-symbols-outlined text-[18px] text-on-surface-variant">manage_accounts</span>
+                    <span class="font-label-md text-label-md">Editar perfil</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</header>
+<script>
+    (function () {
+        const btn = document.getElementById("userMenuBtn");
+        const menu = document.getElementById("userMenu");
+        if (!btn || !menu) return;
+        btn.addEventListener("click", function (e) { e.stopPropagation(); menu.classList.toggle("hidden"); });
+        document.addEventListener("click", function (e) {
+            if (!menu.contains(e.target) && !btn.contains(e.target)) menu.classList.add("hidden");
+        });
+    })();
+</script>

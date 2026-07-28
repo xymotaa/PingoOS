@@ -16,7 +16,11 @@ public class ConfiguracaoController : LojaControllerBase
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Salvar(string nomeLoja, IFormFile? logo)
+    public async Task<IActionResult> Salvar(
+        string nomeLoja,
+        string? cnpj, string? telefone, string? email,
+        string? cep, string? endereco, string? numero, string? bairro, string? cidade, string? uf,
+        IFormFile? logo)
     {
         var config = Context.ConfiguracoesLoja.FirstOrDefault();
         if (config == null)
@@ -26,6 +30,15 @@ public class ConfiguracaoController : LojaControllerBase
         }
 
         config.NomeLoja = string.IsNullOrWhiteSpace(nomeLoja) ? config.NomeLoja : nomeLoja;
+        config.Cnpj = cnpj;
+        config.Telefone = telefone;
+        config.Email = email;
+        config.Cep = cep;
+        config.Endereco = endereco;
+        config.Numero = numero;
+        config.Bairro = bairro;
+        config.Cidade = cidade;
+        config.Uf = string.IsNullOrWhiteSpace(uf) ? null : uf.Trim().ToUpper();
 
         if (logo != null && logo.Length > 0)
         {
