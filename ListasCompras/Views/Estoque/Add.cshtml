@@ -67,6 +67,9 @@
         input[type=number] { -moz-appearance: textfield; appearance: textfield; }
         input[type=number]::-webkit-outer-spin-button,
         input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        /* Alinha os campos: todos os rótulos com a mesma altura */
+        main label { display: flex; align-items: center; min-height: 20px; }
+        main label .material-symbols-outlined { line-height: 1; }
     </style>
 </head>
 <body class="bg-surface">
