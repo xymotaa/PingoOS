@@ -27,7 +27,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const novoProdutoBtn = document.getElementById("novoProdutoBtn");
     const novoProdutoOverlay = document.getElementById("novoProdutoOverlay");
-    const fecharNovoProdutoBtn = document.getElementById("fecharNovoProdutoBtn");
     const cancelarNovoProdutoBtn = document.getElementById("cancelarNovoProdutoBtn");
     const salvarNovoProdutoBtn = document.getElementById("salvarNovoProdutoBtn");
     const railNovoProdutoBtn = document.getElementById("railNovoProdutoBtn");
@@ -295,8 +294,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     novoProdutoBtn.addEventListener("click", abrirNovoProduto);
-    railNovoProdutoBtn.addEventListener("click", abrirNovoProduto);
-    fecharNovoProdutoBtn.addEventListener("click", fecharNovoProduto);
+    railNovoProdutoBtn.addEventListener("click", function () { painelAcoes.classList.remove("hidden"); });
     cancelarNovoProdutoBtn.addEventListener("click", fecharNovoProduto);
     salvarNovoProdutoBtn.addEventListener("click", salvarNovoProduto);
     npAvancarEtapaBtn.addEventListener("click", function () { irParaEtapa(etapaAtual + 1); });

@@ -72,6 +72,9 @@
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #bfc9c3; border-radius: 10px; }
         @@keyframes row-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
         .row-in { animation: row-in .15s ease-out; }
+        input[type=number] { -moz-appearance: textfield; appearance: textfield; }
+        input[type=number]::-webkit-outer-spin-button,
+        input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     </style>
 </head>
 <body class="bg-surface">
@@ -358,15 +361,9 @@
         <div class="max-w-[1440px] mx-auto pt-md pl-lg pr-16 pb-xl">
 
             <!-- Cabeçalho da página -->
-            <section class="mb-md flex items-center gap-sm">
-                <button id="fecharNovoProdutoBtn" type="button" title="Voltar ao estoque"
-                        class="w-9 h-9 rounded-full hover:bg-surface-container-high flex items-center justify-center text-on-surface-variant transition-colors shrink-0">
-                    <span class="material-symbols-outlined text-[20px]">arrow_back</span>
-                </button>
-                <div>
-                    <h1 class="font-headline-lg text-headline-lg text-primary">Cadastrar novo produto</h1>
-                    <p class="font-body-md text-body-md text-on-surface-variant">Preencha os dados básicos e, se quiser, complete as demais etapas.</p>
-                </div>
+            <section class="mb-md">
+                <h1 class="font-headline-lg text-headline-lg text-primary">Cadastrar novo produto</h1>
+                <p class="font-body-md text-body-md text-on-surface-variant">Preencha os dados básicos e, se quiser, complete as demais etapas.</p>
             </section>
 
             <div class="flex flex-col lg:flex-row gap-md items-start">
