@@ -12,17 +12,46 @@
     <title>Lista de Reposição - @nomeLoja</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "outline-variant": "#bfc9c3", "surface": "#f8f9ff", "outline": "#707974",
+                        "secondary": "#006c49", "on-secondary": "#ffffff", "primary": "#003527",
+                        "on-surface": "#0b1c30", "surface-container-low": "#eff4ff",
+                        "surface-container-high": "#dce9ff", "primary-fixed": "#b0f0d6",
+                        "on-surface-variant": "#404944", "secondary-container": "#6cf8bb"
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                    spacing: { "lg": "24px", "base": "4px", "gutter": "16px", "sm": "8px", "xs": "4px", "md": "16px", "xl": "32px" },
+                    fontFamily: {
+                        "headline-md": ["Hanken Grotesk"], "label-md": ["Hanken Grotesk"], "label-sm": ["Hanken Grotesk"]
+                    },
+                    fontSize: {
+                        "headline-md": ["22px", { "lineHeight": "30px", "fontWeight": "600" }],
+                        "label-sm": ["11px", { "lineHeight": "14px", "fontWeight": "600" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500" }]
+                    }
+                },
+            },
+        }
+    </script>
     <link rel="stylesheet" href="~/css/print.css" asp-append-version="true" />
+    <style>
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        @@media screen {
+            body { background: #f8f9ff; }
+            .report-shell { max-width: 1440px; padding: 6rem 24px 3rem; }
+        }
+    </style>
 </head>
 <body>
-    <div class="report-topbar no-print">
-        <span class="trilha">
-            <a asp-controller="Home" asp-action="Index">Painel</a> /
-            <a asp-controller="ListaCompra" asp-action="Index">Lista de Compras</a> /
-            <span class="atual">Relatório de Reposição</span>
-        </span>
-        <button type="button" class="btn-app btn-app-primary" onclick="window.print()">🖨️ Imprimir / Baixar PDF</button>
-    </div>
+    @await Html.PartialAsync("_Navbar")
 
     <div class="report-shell">
         <div class="report-card">
@@ -93,6 +122,14 @@
                 <span>Total de itens</span>
                 <strong>@Model.Itens.Count</strong>
             </div>
+        </div>
+
+        <div class="no-print" style="display:flex; justify-content:flex-end; margin-top:1.5rem;">
+            <button type="button" onclick="window.print()"
+                    class="bg-secondary text-on-secondary rounded-lg px-md py-sm font-label-md text-label-md font-bold hover:bg-opacity-90 transition-colors flex items-center gap-xs">
+                <span class="material-symbols-outlined text-[18px]">print</span>
+                Imprimir / Baixar PDF
+            </button>
         </div>
     </div>
 </body>

@@ -257,4 +257,10 @@ table.pdf-table tbody tr:last-child td {
     box-shadow: none;
     padding: 0;
   }
+
+  .report-card,
+  .report-card * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
 }

@@ -273,10 +273,11 @@ a {
   color: var(--ink-soft);
   border: 1px solid var(--line);
   border-radius: 6px;
-  padding: 0.25rem 0.7rem;
+  padding: 0.55rem 1.1rem;
   font-weight: 600;
-  font-size: 0.8rem;
-  display: inline-block;
+  font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
 }
 
 /* ===== Table ===== */
@@ -349,18 +350,22 @@ table.app-table tbody tr:hover {
   border: none;
   background: none;
   cursor: pointer;
-  font-size: 0.95rem;
+  font-size: 1.25rem;
   padding: 0.3rem;
   border-radius: 6px;
   line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-soft);
 }
 
 .acao-editar {
-  color: var(--pine);
+  color: var(--ink-soft);
 }
 
 .acao-excluir {
-  color: var(--danger);
+  color: var(--ink-soft);
 }
 
 .acao-btn:hover {
