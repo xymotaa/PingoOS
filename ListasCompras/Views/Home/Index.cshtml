@@ -85,25 +85,29 @@
             </a>
         </div>
         <div class="flex items-center gap-md">
-            <a class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors text-on-surface-variant"
-               asp-controller="Configuracao" asp-action="Index" title="Configurações">
-                <span class="material-symbols-outlined">settings</span>
-            </a>
-            <div class="h-8 w-[1px] bg-outline-variant mx-sm"></div>
-            <div class="flex items-center gap-sm">
-                <div class="text-right hidden sm:block">
-                    <p class="font-label-md text-label-md font-semibold text-on-surface">@nomeLoja</p>
-                    <p class="font-label-sm text-label-sm text-outline">Administrador</p>
-                </div>
-                <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold overflow-hidden border-2 border-primary-fixed">
-                    @if (!string.IsNullOrEmpty(logo))
-                    {
-                        <img src="@logo" alt="Logo" class="w-full h-full object-cover" />
-                    }
-                    else
-                    {
-                        <span>@inicial</span>
-                    }
+            <div class="relative">
+                <button id="userMenuBtn" type="button" class="flex items-center gap-sm rounded-full hover:bg-surface-container-high transition-colors pl-sm pr-xs py-xs">
+                    <div class="text-right hidden sm:block">
+                        <p class="font-label-md text-label-md font-semibold text-on-surface">@nomeLoja</p>
+                        <p class="font-label-sm text-label-sm text-outline">Administrador</p>
+                    </div>
+                    <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold overflow-hidden border-2 border-primary-fixed">
+                        @if (!string.IsNullOrEmpty(logo))
+                        {
+                            <img src="@logo" alt="Logo" class="w-full h-full object-cover" />
+                        }
+                        else
+                        {
+                            <span>@inicial</span>
+                        }
+                    </div>
+                    <span class="material-symbols-outlined text-[20px] text-on-surface-variant hidden sm:inline">expand_more</span>
+                </button>
+                <div id="userMenu" class="hidden absolute right-0 top-full mt-sm w-56 bg-white rounded-xl border border-outline-variant shadow-lg py-xs z-50">
+                    <a asp-controller="Configuracao" asp-action="Index" class="flex items-center gap-sm px-md py-sm hover:bg-surface-container-low transition-colors text-on-surface">
+                        <span class="material-symbols-outlined text-[20px] text-on-surface-variant">manage_accounts</span>
+                        <span class="font-body-md text-body-md">Editar perfil</span>
+                    </a>
                 </div>
             </div>
         </div>
@@ -245,5 +249,17 @@
             </div>
         </section>
     </main>
+
+    <script>
+        (function () {
+            const btn = document.getElementById("userMenuBtn");
+            const menu = document.getElementById("userMenu");
+            if (!btn || !menu) return;
+            btn.addEventListener("click", function (e) { e.stopPropagation(); menu.classList.toggle("hidden"); });
+            document.addEventListener("click", function (e) {
+                if (!menu.contains(e.target) && !btn.contains(e.target)) menu.classList.add("hidden");
+            });
+        })();
+    </script>
 </body>
 </html>
