@@ -100,16 +100,44 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById(id).textContent = valor;
     }
 
+    function valor(id) {
+        return document.getElementById(id).value.trim();
+    }
+
+    function montarEndereco() {
+        const partes = [];
+        const rua = valor("clienteEndereco");
+        const num = valor("clienteNumero");
+        const linha = rua + (num ? ", " + num : "");
+        if (linha.trim()) partes.push(linha.trim());
+        if (valor("clienteBairro")) partes.push(valor("clienteBairro"));
+        const cidade = valor("clienteCidade");
+        const uf = valor("clienteUf");
+        const cidadeUf = cidade + (uf ? "/" + uf.toUpperCase() : "");
+        if (cidadeUf.trim()) partes.push(cidadeUf.trim());
+        if (valor("clienteCep")) partes.push("CEP " + valor("clienteCep"));
+        return partes.length ? partes.join(" - ") : "—";
+    }
+
+    // "Sem número de série / IMEI": desabilita o campo
+    const dispositivoSemSerie = document.getElementById("dispositivoSemSerie");
+    const dispositivoSerie = document.getElementById("dispositivoSerie");
+    dispositivoSemSerie.addEventListener("change", function () {
+        dispositivoSerie.disabled = dispositivoSemSerie.checked;
+        if (dispositivoSemSerie.checked) dispositivoSerie.value = "";
+    });
+
     function prepararImpressao() {
         definirTexto("osNumero", "OS-" + Date.now().toString().slice(-6));
         definirTexto("osData", new Date().toLocaleDateString("pt-BR"));
         definirTexto("osClienteNome", textoOuTraco(document.getElementById("clienteNome").value));
         definirTexto("osClienteTelefone", textoOuTraco(document.getElementById("clienteTelefone").value));
         definirTexto("osClienteDoc", textoOuTraco(document.getElementById("clienteDocumento").value));
+        definirTexto("osClienteEndereco", montarEndereco());
         definirTexto("osDispTipo", textoOuTraco(document.getElementById("dispositivoTipo").value));
         definirTexto("osDispMarca", textoOuTraco(document.getElementById("dispositivoMarca").value));
         definirTexto("osDispModelo", textoOuTraco(document.getElementById("dispositivoModelo").value));
-        definirTexto("osDispSerie", textoOuTraco(document.getElementById("dispositivoSerie").value));
+        definirTexto("osDispSerie", dispositivoSemSerie.checked ? "Não possui" : textoOuTraco(document.getElementById("dispositivoSerie").value));
         definirTexto("osDiagnostico", textoOuTraco(document.getElementById("diagnostico").value));
 
         const osItens = document.getElementById("osItens");

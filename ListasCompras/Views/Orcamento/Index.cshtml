@@ -171,6 +171,31 @@
                         <label class="font-label-md text-label-md text-on-surface-variant" for="clienteDocumento">CPF ou RG</label>
                         <input id="clienteDocumento" type="text" inputmode="numeric" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
                     </div>
+
+                    <div class="md:col-span-3">
+                        <label class="font-label-md text-label-md text-on-surface-variant" for="clienteCep">CEP</label>
+                        <input id="clienteCep" type="text" inputmode="numeric" placeholder="00000-000" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                    </div>
+                    <div class="md:col-span-6">
+                        <label class="font-label-md text-label-md text-on-surface-variant" for="clienteEndereco">Endereço (Rua / Av.)</label>
+                        <input id="clienteEndereco" type="text" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                    </div>
+                    <div class="md:col-span-3">
+                        <label class="font-label-md text-label-md text-on-surface-variant" for="clienteNumero">Número</label>
+                        <input id="clienteNumero" type="text" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                    </div>
+                    <div class="md:col-span-4">
+                        <label class="font-label-md text-label-md text-on-surface-variant" for="clienteBairro">Bairro</label>
+                        <input id="clienteBairro" type="text" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                    </div>
+                    <div class="md:col-span-5">
+                        <label class="font-label-md text-label-md text-on-surface-variant" for="clienteCidade">Cidade</label>
+                        <input id="clienteCidade" type="text" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                    </div>
+                    <div class="md:col-span-3">
+                        <label class="font-label-md text-label-md text-on-surface-variant" for="clienteUf">UF</label>
+                        <input id="clienteUf" type="text" maxlength="2" placeholder="Ex: PA" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30 uppercase" />
+                    </div>
                 </div>
             </section>
 
@@ -194,8 +219,14 @@
                         <input id="dispositivoModelo" type="text" placeholder="Ex: Galaxy A54" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
                     </div>
                     <div class="md:col-span-3">
-                        <label class="font-label-md text-label-md text-on-surface-variant" for="dispositivoSerie">Número de série</label>
-                        <input id="dispositivoSerie" type="text" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                        <div class="flex items-center justify-between gap-sm">
+                            <label class="font-label-md text-label-md text-on-surface-variant" for="dispositivoSerie">Número de série / IMEI</label>
+                            <label class="flex items-center gap-xs cursor-pointer shrink-0">
+                                <input id="dispositivoSemSerie" type="checkbox" class="w-4 h-4 accent-secondary" />
+                                <span class="font-label-sm text-label-sm text-outline">Sem número</span>
+                            </label>
+                        </div>
+                        <input id="dispositivoSerie" type="text" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30 disabled:opacity-50 disabled:cursor-not-allowed" />
                     </div>
                 </div>
             </section>
@@ -293,6 +324,7 @@
                 <div><span class="os-rot">Nome:</span> <span id="osClienteNome"></span></div>
                 <div><span class="os-rot">Telefone:</span> <span id="osClienteTelefone"></span></div>
                 <div><span class="os-rot">CPF/RG:</span> <span id="osClienteDoc"></span></div>
+                <div style="grid-column: 1 / -1"><span class="os-rot">Endereço:</span> <span id="osClienteEndereco"></span></div>
             </div>
         </div>
 
