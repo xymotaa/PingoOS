@@ -153,39 +153,35 @@
             </a>
         </section>
 
-        <!-- Indicadores (dados de exemplo) -->
+        <!-- Indicadores -->
         <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter mb-xl">
             <div class="bg-white p-lg rounded-xl border border-outline-variant shadow-sm">
                 <div class="flex justify-between items-start mb-md">
                     <span class="font-label-md text-label-md text-outline uppercase tracking-wider">Vendas Hoje</span>
-                    <span class="text-secondary bg-secondary-container px-2 py-1 rounded-full font-label-sm text-label-sm">+12.5%</span>
                 </div>
-                <h3 class="font-display-lg text-display-lg text-primary">R$ 12.450</h3>
-                <p class="font-body-md text-body-md text-on-surface-variant mt-sm">24 novas transações</p>
+                <h3 class="font-display-lg text-display-lg text-primary">R$ 0,00</h3>
+                <p class="font-body-md text-body-md text-on-surface-variant mt-sm">Sem dados ainda</p>
             </div>
             <div class="bg-white p-lg rounded-xl border border-outline-variant shadow-sm">
                 <div class="flex justify-between items-start mb-md">
                     <span class="font-label-md text-label-md text-outline uppercase tracking-wider">Itens em Falta</span>
-                    <span class="text-error bg-error-container px-2 py-1 rounded-full font-label-sm text-label-sm">Urgente</span>
                 </div>
-                <h3 class="font-display-lg text-display-lg text-primary">18</h3>
-                <p class="font-body-md text-body-md text-on-surface-variant mt-sm">Necessita reposição</p>
+                <h3 class="font-display-lg text-display-lg text-primary">0</h3>
+                <p class="font-body-md text-body-md text-on-surface-variant mt-sm">Sem dados ainda</p>
             </div>
             <div class="bg-white p-lg rounded-xl border border-outline-variant shadow-sm">
                 <div class="flex justify-between items-start mb-md">
                     <span class="font-label-md text-label-md text-outline uppercase tracking-wider">Contas a Pagar</span>
-                    <span class="text-on-surface-variant bg-surface-container px-2 py-1 rounded-full font-label-sm text-label-sm">7 dias</span>
                 </div>
-                <h3 class="font-display-lg text-display-lg text-primary">R$ 4.200</h3>
-                <p class="font-body-md text-body-md text-on-surface-variant mt-sm">Vencimentos próximos</p>
+                <h3 class="font-display-lg text-display-lg text-primary">R$ 0,00</h3>
+                <p class="font-body-md text-body-md text-on-surface-variant mt-sm">Sem dados ainda</p>
             </div>
             <div class="bg-white p-lg rounded-xl border border-outline-variant shadow-sm">
                 <div class="flex justify-between items-start mb-md">
                     <span class="font-label-md text-label-md text-outline uppercase tracking-wider">Novos Clientes</span>
-                    <span class="text-secondary bg-secondary-container px-2 py-1 rounded-full font-label-sm text-label-sm">+8%</span>
                 </div>
-                <h3 class="font-display-lg text-display-lg text-primary">42</h3>
-                <p class="font-body-md text-body-md text-on-surface-variant mt-sm">Este mês</p>
+                <h3 class="font-display-lg text-display-lg text-primary">0</h3>
+                <p class="font-body-md text-body-md text-on-surface-variant mt-sm">Sem dados ainda</p>
             </div>
         </section>
 
@@ -202,24 +198,8 @@
                         <option>Últimos 30 dias</option>
                     </select>
                 </div>
-                <div class="flex-1 p-lg relative min-h-[300px] flex items-end justify-between gap-md">
-                    @{
-                        var barras = new[] { ("Seg", 40, "R$2k"), ("Ter", 65, "R$3.5k"), ("Qua", 55, "R$2.8k"), ("Qui", 90, "R$5k"), ("Sex", 70, "R$3.8k"), ("Sáb", 45, "R$2.2k"), ("Dom", 80, "R$4.1k") };
-                    }
-                    @foreach (var (dia, altura, valor) in barras)
-                    {
-                        var destaque = altura >= 90;
-                        <div class="flex-1 @(destaque ? "bg-primary hover:bg-secondary" : "bg-surface-container-low hover:bg-primary-fixed") rounded-t-lg relative group transition-all cursor-pointer"
-                             style="height: @(altura)%">
-                            <div class="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-primary text-white px-2 py-1 rounded text-xs whitespace-nowrap">@valor</div>
-                        </div>
-                    }
-                </div>
-                <div class="px-lg pb-md flex justify-between text-outline font-label-md text-label-md">
-                    @foreach (var (dia, _, _) in barras)
-                    {
-                        <span>@dia</span>
-                    }
+                <div class="flex-1 p-lg min-h-[300px] flex items-center justify-center">
+                    <p class="font-body-md text-body-md text-on-surface-variant">Sem dados para exibir ainda.</p>
                 </div>
             </div>
 
@@ -227,45 +207,8 @@
                 <div class="p-lg border-b border-outline-variant">
                     <h4 class="font-title-lg text-title-lg text-primary">Atividades Recentes</h4>
                 </div>
-                <div class="flex-1 overflow-y-auto max-h-[400px] custom-scrollbar">
-                    <div class="p-md space-y-md">
-                        <div class="flex gap-md">
-                            <div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center shrink-0">
-                                <span class="material-symbols-outlined text-[18px] text-secondary">shopping_cart</span>
-                            </div>
-                            <div>
-                                <p class="font-body-md text-body-md text-on-surface">Nova lista de reposição gerada</p>
-                                <span class="font-label-sm text-label-sm text-outline">Há 5 minutos</span>
-                            </div>
-                        </div>
-                        <div class="flex gap-md">
-                            <div class="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center shrink-0">
-                                <span class="material-symbols-outlined text-[18px] text-primary">inventory_2</span>
-                            </div>
-                            <div>
-                                <p class="font-body-md text-body-md text-on-surface">Ajuste de estoque: "Capinha Silicone"</p>
-                                <span class="font-label-sm text-label-sm text-outline">Há 22 minutos</span>
-                            </div>
-                        </div>
-                        <div class="flex gap-md">
-                            <div class="w-8 h-8 rounded-full bg-tertiary-fixed flex items-center justify-center shrink-0">
-                                <span class="material-symbols-outlined text-[18px] text-tertiary">person</span>
-                            </div>
-                            <div>
-                                <p class="font-body-md text-body-md text-on-surface">Novo cliente cadastrado</p>
-                                <span class="font-label-sm text-label-sm text-outline">Há 1 hora</span>
-                            </div>
-                        </div>
-                        <div class="flex gap-md">
-                            <div class="w-8 h-8 rounded-full bg-error-container flex items-center justify-center shrink-0">
-                                <span class="material-symbols-outlined text-[18px] text-error">priority_high</span>
-                            </div>
-                            <div>
-                                <p class="font-body-md text-body-md text-on-surface">Alerta de estoque baixo: Película</p>
-                                <span class="font-label-sm text-label-sm text-outline">Há 3 horas</span>
-                            </div>
-                        </div>
-                    </div>
+                <div class="flex-1 overflow-y-auto max-h-[400px] custom-scrollbar flex items-center justify-center p-lg">
+                    <p class="font-body-md text-body-md text-on-surface-variant text-center">Nenhuma atividade recente.</p>
                 </div>
                 <div class="p-md border-t border-outline-variant text-center">
                     <a asp-controller="Dashboards" asp-action="Index" class="font-label-md text-label-md text-secondary font-bold hover:underline">Ver todo o histórico</a>
@@ -273,7 +216,7 @@
             </div>
         </section>
 
-        <!-- Tabela: últimos orçamentos (dados de exemplo) -->
+        <!-- Tabela: últimos orçamentos -->
         <section class="mt-xl bg-white rounded-xl border border-outline-variant shadow-sm overflow-hidden">
             <div class="p-lg flex justify-between items-center">
                 <h4 class="font-title-lg text-title-lg text-primary">Últimos Orçamentos</h4>
@@ -294,24 +237,9 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-outline-variant">
-                        <tr class="hover:bg-surface-container-low transition-colors">
-                            <td class="px-lg py-md font-body-md text-body-md">#ORC-1209</td>
-                            <td class="px-lg py-md font-body-md text-body-md">Auto Oficina Central</td>
-                            <td class="px-lg py-md font-body-md text-body-md">12/10/2023</td>
-                            <td class="px-lg py-md font-body-md text-body-md">R$ 1.850,00</td>
-                            <td class="px-lg py-md"><span class="bg-secondary-container text-secondary px-sm py-xs rounded-full font-label-sm text-label-sm">Aprovado</span></td>                        </tr>
-                        <tr class="hover:bg-surface-container-low transition-colors">
-                            <td class="px-lg py-md font-body-md text-body-md">#ORC-1210</td>
-                            <td class="px-lg py-md font-body-md text-body-md">Logística Express S.A.</td>
-                            <td class="px-lg py-md font-body-md text-body-md">12/10/2023</td>
-                            <td class="px-lg py-md font-body-md text-body-md">R$ 4.300,00</td>
-                            <td class="px-lg py-md"><span class="bg-surface-container text-on-surface-variant px-sm py-xs rounded-full font-label-sm text-label-sm">Pendente</span></td>                        </tr>
-                        <tr class="hover:bg-surface-container-low transition-colors">
-                            <td class="px-lg py-md font-body-md text-body-md">#ORC-1211</td>
-                            <td class="px-lg py-md font-body-md text-body-md">João Ricardo Mendes</td>
-                            <td class="px-lg py-md font-body-md text-body-md">11/10/2023</td>
-                            <td class="px-lg py-md font-body-md text-body-md">R$ 560,00</td>
-                            <td class="px-lg py-md"><span class="bg-secondary-container text-secondary px-sm py-xs rounded-full font-label-sm text-label-sm">Aprovado</span></td>                        </tr>
+                        <tr>
+                            <td colspan="5" class="px-lg py-xl text-center font-body-md text-body-md text-on-surface-variant">Nenhum orçamento cadastrado ainda.</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>

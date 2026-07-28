@@ -1,0 +1,343 @@
+@{
+    Layout = null;
+    ViewData["Title"] = "Orçamento";
+
+    var nomeLoja = ViewData["NomeLoja"] as string ?? "Minha Loja";
+    var logo = ViewData["LogoLoja"] as string;
+    var inicial = string.IsNullOrWhiteSpace(nomeLoja) ? "L" : nomeLoja.Trim()[0].ToString().ToUpper();
+}
+<!DOCTYPE html>
+<html class="light" lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>@nomeLoja — @ViewData["Title"]</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-tertiary-container": "#93baa7", "outline-variant": "#bfc9c3",
+                        "on-tertiary-fixed-variant": "#294e3f", "surface": "#f8f9ff",
+                        "inverse-on-surface": "#eaf1ff", "outline": "#707974", "on-primary": "#ffffff",
+                        "secondary": "#006c49", "error-container": "#ffdad6", "primary-fixed-dim": "#95d3ba",
+                        "on-secondary": "#ffffff", "inverse-primary": "#95d3ba", "primary": "#003527",
+                        "on-error-container": "#93000a", "on-tertiary-fixed": "#002115", "primary-fixed": "#b0f0d6",
+                        "on-surface": "#0b1c30", "tertiary-fixed": "#c3ecd7", "on-primary-container": "#80bea6",
+                        "surface-container-highest": "#d3e4fe", "on-primary-fixed-variant": "#0b513d",
+                        "on-error": "#ffffff", "surface-container-lowest": "#ffffff", "surface-container": "#e5eeff",
+                        "secondary-fixed": "#6ffbbe", "surface-container-low": "#eff4ff", "surface-tint": "#2b6954",
+                        "background": "#f8f9ff", "on-primary-fixed": "#002117", "primary-container": "#064e3b",
+                        "on-background": "#0b1c30", "tertiary-container": "#274b3c", "error": "#ba1a1a",
+                        "surface-bright": "#f8f9ff", "inverse-surface": "#213145", "tertiary": "#0e3427",
+                        "surface-dim": "#cbdbf5", "on-secondary-fixed-variant": "#005236", "tertiary-fixed-dim": "#a8cfbc",
+                        "secondary-fixed-dim": "#4edea3", "surface-container-high": "#dce9ff",
+                        "on-secondary-container": "#00714d", "secondary-container": "#6cf8bb",
+                        "surface-variant": "#d3e4fe", "on-surface-variant": "#404944", "on-tertiary": "#ffffff",
+                        "on-secondary-fixed": "#002113",
+                        "warning": "#8a5300", "warning-container": "#ffddb1"
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                    spacing: { "container-margin": "24px", "lg": "24px", "base": "4px", "gutter": "16px", "sm": "8px", "xs": "4px", "md": "16px", "xl": "32px" },
+                    fontFamily: {
+                        "body-md": ["Hanken Grotesk"], "headline-md": ["Hanken Grotesk"], "title-lg": ["Hanken Grotesk"],
+                        "body-lg": ["Hanken Grotesk"], "label-sm": ["Hanken Grotesk"], "headline-lg": ["Hanken Grotesk"],
+                        "display-lg": ["Hanken Grotesk"], "label-md": ["Hanken Grotesk"]
+                    },
+                    fontSize: {
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-md": ["22px", { "lineHeight": "30px", "fontWeight": "600" }],
+                        "title-lg": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-sm": ["11px", { "lineHeight": "14px", "fontWeight": "600" }],
+                        "headline-lg": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "display-lg": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500" }]
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        body { font-family: 'Hanken Grotesk', sans-serif; background-color: #f8f9ff; color: #0b1c30; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        input[type=number] { -moz-appearance: textfield; appearance: textfield; }
+        input[type=number]::-webkit-outer-spin-button,
+        input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+        /* Impressão: Ordem de Serviço */
+        .print-only { display: none; }
+        @@media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            html, body { background: #fff !important; }
+            @@page { size: A4; margin: 14mm; }
+        }
+        #osImpressao { color: #000; font-family: 'Hanken Grotesk', Arial, sans-serif; font-size: 12px; line-height: 1.4; }
+        #osImpressao .os-topo { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 14px; }
+        #osImpressao .os-loja { display: flex; align-items: center; gap: 10px; }
+        #osImpressao .os-logo { width: 52px; height: 52px; object-fit: contain; }
+        #osImpressao .os-loja-nome { font-size: 18px; font-weight: 700; }
+        #osImpressao .os-loja-sub { font-size: 11px; color: #444; }
+        #osImpressao .os-doc-meta { text-align: right; font-size: 11px; }
+        #osImpressao .os-doc-titulo { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
+        #osImpressao .os-bloco { margin-bottom: 12px; }
+        #osImpressao .os-bloco-titulo { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; background: #f0f0f0; border: 1px solid #ccc; padding: 3px 8px; margin-bottom: 6px; }
+        #osImpressao .os-linhas { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 24px; padding: 0 4px; }
+        #osImpressao .os-rot { font-weight: 600; }
+        #osImpressao .os-diag { padding: 2px 4px; white-space: pre-wrap; min-height: 36px; }
+        #osImpressao .os-tabela { width: 100%; border-collapse: collapse; }
+        #osImpressao .os-tabela th, #osImpressao .os-tabela td { border: 1px solid #ccc; padding: 5px 8px; font-size: 12px; }
+        #osImpressao .os-tabela th { background: #f0f0f0; }
+        #osImpressao .os-assinaturas { display: flex; justify-content: space-between; gap: 40px; margin-top: 48px; }
+        #osImpressao .os-assinatura { flex: 1; text-align: center; font-size: 11px; }
+        #osImpressao .os-linha-assinatura { border-top: 1px solid #000; margin-bottom: 4px; height: 0; }
+    </style>
+</head>
+<body class="bg-surface">
+    <!-- Barra superior -->
+    <header class="no-print fixed top-0 w-full z-50 bg-surface border-b border-outline-variant shadow-sm flex justify-between items-center h-16 px-lg">
+        <div class="flex items-center gap-md md:gap-xl">
+            <a asp-controller="Home" asp-action="Index" class="flex items-center gap-sm shrink-0">
+                <div class="w-9 h-9 rounded-lg bg-primary flex items-center justify-center overflow-hidden">
+                    <span class="material-symbols-outlined text-white text-[20px]">storefront</span>
+                </div>
+                <span class="font-headline-md text-headline-md font-bold text-primary">ERP XYM</span>
+            </a>
+        </div>
+        <div class="flex items-center gap-md">
+            <a class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors text-on-surface-variant"
+               asp-controller="Configuracao" asp-action="Index" title="Configurações">
+                <span class="material-symbols-outlined">settings</span>
+            </a>
+            <div class="h-8 w-[1px] bg-outline-variant mx-sm"></div>
+            <div class="flex items-center gap-sm">
+                <div class="text-right hidden sm:block">
+                    <p class="font-label-md text-label-md font-semibold text-on-surface">@nomeLoja</p>
+                    <p class="font-label-sm text-label-sm text-outline">Administrador</p>
+                </div>
+                <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold overflow-hidden border-2 border-primary-fixed">
+                    @if (!string.IsNullOrEmpty(logo))
+                    {
+                        <img src="@logo" alt="Logo" class="w-full h-full object-cover" />
+                    }
+                    else
+                    {
+                        <span>@inicial</span>
+                    }
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="no-print pt-24 px-lg pb-xl max-w-[1100px] mx-auto">
+
+        <div id="toast" class="hidden mb-md bg-secondary-container text-on-secondary-container px-md py-sm rounded-lg font-label-md text-label-md flex items-center gap-xs w-fit">
+            <span id="toastIcon" class="material-symbols-outlined text-[18px]">check_circle</span>
+            <span id="toastMsg"></span>
+        </div>
+
+        <!-- Cabeçalho da página -->
+        <section class="mb-md flex flex-wrap items-end justify-between gap-md">
+            <div>
+                <h1 class="font-headline-lg text-headline-lg text-primary">Novo Orçamento</h1>
+                <p class="font-body-md text-body-md text-on-surface-variant">Registre os dados do cliente, do aparelho e os itens do serviço.</p>
+            </div>
+        </section>
+
+        <div class="flex flex-col gap-md">
+
+            <!-- Cliente -->
+            <section class="bg-white rounded-xl border border-outline-variant shadow-sm p-lg">
+                <div class="flex items-center gap-sm mb-md">
+                    <span class="material-symbols-outlined text-[20px] text-secondary">person</span>
+                    <h2 class="font-title-lg text-title-lg text-primary">Cliente</h2>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-md">
+                    <div class="md:col-span-6">
+                        <label class="font-label-md text-label-md text-on-surface-variant" for="clienteNome">Nome</label>
+                        <input id="clienteNome" type="text" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                    </div>
+                    <div class="md:col-span-3">
+                        <label class="font-label-md text-label-md text-on-surface-variant" for="clienteTelefone">Telefone</label>
+                        <input id="clienteTelefone" type="tel" inputmode="tel" placeholder="(00) 00000-0000" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                    </div>
+                    <div class="md:col-span-3">
+                        <label class="font-label-md text-label-md text-on-surface-variant" for="clienteDocumento">CPF ou RG</label>
+                        <input id="clienteDocumento" type="text" inputmode="numeric" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                    </div>
+                </div>
+            </section>
+
+            <!-- Dados do dispositivo -->
+            <section class="bg-white rounded-xl border border-outline-variant shadow-sm p-lg">
+                <div class="flex items-center gap-sm mb-md">
+                    <span class="material-symbols-outlined text-[20px] text-secondary">smartphone</span>
+                    <h2 class="font-title-lg text-title-lg text-primary">Dados do dispositivo</h2>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-md">
+                    <div class="md:col-span-3">
+                        <label class="font-label-md text-label-md text-on-surface-variant" for="dispositivoTipo">Tipo de aparelho</label>
+                        <input id="dispositivoTipo" type="text" placeholder="Ex: Celular, Tablet, Notebook" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                    </div>
+                    <div class="md:col-span-3">
+                        <label class="font-label-md text-label-md text-on-surface-variant" for="dispositivoMarca">Marca</label>
+                        <input id="dispositivoMarca" type="text" placeholder="Ex: Samsung, Apple, Xiaomi" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                    </div>
+                    <div class="md:col-span-3">
+                        <label class="font-label-md text-label-md text-on-surface-variant" for="dispositivoModelo">Modelo</label>
+                        <input id="dispositivoModelo" type="text" placeholder="Ex: Galaxy A54" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                    </div>
+                    <div class="md:col-span-3">
+                        <label class="font-label-md text-label-md text-on-surface-variant" for="dispositivoSerie">Número de série</label>
+                        <input id="dispositivoSerie" type="text" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                    </div>
+                </div>
+            </section>
+
+            <!-- Diagnóstico -->
+            <section class="bg-white rounded-xl border border-outline-variant shadow-sm p-lg">
+                <div class="flex items-center gap-sm mb-md">
+                    <span class="material-symbols-outlined text-[20px] text-secondary">clinical_notes</span>
+                    <h2 class="font-title-lg text-title-lg text-primary">Diagnóstico</h2>
+                </div>
+                <label class="font-label-md text-label-md text-on-surface-variant" for="diagnostico">Diagnóstico Técnico Preliminar</label>
+                <textarea id="diagnostico" rows="4" placeholder="Descreva o problema relatado, os testes realizados e o serviço a ser executado..."
+                          class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30"></textarea>
+            </section>
+
+            <!-- Peças e Serviços -->
+            <section class="bg-white rounded-xl border border-outline-variant shadow-sm overflow-hidden">
+                <div class="p-lg flex flex-wrap items-center justify-between gap-sm">
+                    <div class="flex items-center gap-sm">
+                        <span class="material-symbols-outlined text-[20px] text-secondary">build</span>
+                        <h2 class="font-title-lg text-title-lg text-primary">Peças e Serviços</h2>
+                    </div>
+                    <button id="adicionarItemBtn" type="button"
+                            class="h-9 px-md rounded-lg bg-secondary text-white flex items-center justify-center gap-xs hover:bg-opacity-90 transition-colors">
+                        <span class="material-symbols-outlined text-[20px]">add</span>
+                        <span class="font-label-md text-label-md font-bold">Adicionar Item</span>
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-surface-container-low border-y border-outline-variant">
+                            <tr>
+                                <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider">Descrição (Peça / Mão de Obra)</th>
+                                <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider text-center w-24">Qtd</th>
+                                <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider text-right w-36">Valor Unit. (R$)</th>
+                                <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider text-right w-36">Total (R$)</th>
+                                <th class="w-10"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="itensBody"></tbody>
+                    </table>
+                </div>
+                <div id="itensVazio" class="hidden px-lg py-lg text-center font-body-md text-body-md text-on-surface-variant">
+                    Nenhum item adicionado. Clique em "Adicionar Item" para incluir peças ou mão de obra.
+                </div>
+                <div class="px-lg py-md border-t border-outline-variant flex items-center justify-end gap-md">
+                    <span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Total do orçamento</span>
+                    <span id="totalGeral" class="font-title-lg text-title-lg font-bold text-primary">R$ 0,00</span>
+                </div>
+            </section>
+
+            <!-- Ações -->
+            <div class="flex items-center justify-end gap-sm">
+                <a asp-controller="Home" asp-action="Index"
+                   class="border border-outline text-on-surface-variant rounded-full px-lg py-sm font-label-md text-label-md font-bold hover:bg-surface-container-low transition-colors">
+                    Cancelar
+                </a>
+                <button id="imprimirBtn" type="button"
+                        class="border border-secondary text-secondary rounded-full px-lg py-sm font-label-md text-label-md font-bold hover:bg-secondary-container/30 transition-colors flex items-center gap-xs">
+                    <span class="material-symbols-outlined text-[18px]">print</span>
+                    Imprimir
+                </button>
+                <button id="salvarOrcamentoBtn" type="button"
+                        class="bg-secondary text-white rounded-full px-lg py-sm font-label-md text-label-md font-bold hover:bg-opacity-90 transition-colors flex items-center gap-xs">
+                    <span class="material-symbols-outlined text-[18px]">save</span>
+                    Salvar orçamento
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Documento de impressão: Ordem de Serviço -->
+    <div id="osImpressao" class="print-only">
+        <div class="os-topo">
+            <div class="os-loja">
+                @if (!string.IsNullOrEmpty(logo))
+                {
+                    <img src="@logo" alt="@nomeLoja" class="os-logo" />
+                }
+                <div>
+                    <div class="os-loja-nome">@nomeLoja</div>
+                    <div class="os-loja-sub">Assistência Técnica</div>
+                </div>
+            </div>
+            <div class="os-doc-meta">
+                <div class="os-doc-titulo">ORDEM DE SERVIÇO</div>
+                <div>Nº <span id="osNumero"></span></div>
+                <div>Data: <span id="osData"></span></div>
+            </div>
+        </div>
+
+        <div class="os-bloco">
+            <div class="os-bloco-titulo">Cliente</div>
+            <div class="os-linhas">
+                <div><span class="os-rot">Nome:</span> <span id="osClienteNome"></span></div>
+                <div><span class="os-rot">Telefone:</span> <span id="osClienteTelefone"></span></div>
+                <div><span class="os-rot">CPF/RG:</span> <span id="osClienteDoc"></span></div>
+            </div>
+        </div>
+
+        <div class="os-bloco">
+            <div class="os-bloco-titulo">Aparelho</div>
+            <div class="os-linhas">
+                <div><span class="os-rot">Tipo:</span> <span id="osDispTipo"></span></div>
+                <div><span class="os-rot">Marca:</span> <span id="osDispMarca"></span></div>
+                <div><span class="os-rot">Modelo:</span> <span id="osDispModelo"></span></div>
+                <div><span class="os-rot">Nº de série:</span> <span id="osDispSerie"></span></div>
+            </div>
+        </div>
+
+        <div class="os-bloco">
+            <div class="os-bloco-titulo">Diagnóstico</div>
+            <div id="osDiagnostico" class="os-diag"></div>
+        </div>
+
+        <div class="os-bloco">
+            <div class="os-bloco-titulo">Peças e Serviços</div>
+            <table class="os-tabela">
+                <thead>
+                    <tr>
+                        <th style="text-align:left">Descrição (Peça / Mão de Obra)</th>
+                        <th style="width:56px;text-align:center">Qtd</th>
+                        <th style="width:110px;text-align:right">Valor Unit.</th>
+                        <th style="width:110px;text-align:right">Total</th>
+                    </tr>
+                </thead>
+                <tbody id="osItens"></tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="3" style="text-align:right;font-weight:700">Total do orçamento</td>
+                        <td id="osTotal" style="text-align:right;font-weight:700"></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <div class="os-assinaturas">
+            <div class="os-assinatura"><div class="os-linha-assinatura"></div>Assinatura do Cliente</div>
+            <div class="os-assinatura"><div class="os-linha-assinatura"></div>Responsável Técnico</div>
+        </div>
+    </div>
+
+    <script src="~/js/orcamento.js" asp-append-version="true"></script>
+</body>
+</html>
