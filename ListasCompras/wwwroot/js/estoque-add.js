@@ -36,14 +36,11 @@ document.addEventListener("DOMContentLoaded", function () {
         etapaAtual = Math.min(Math.max(n, 1), TOTAL_ETAPAS);
         npSteps.forEach(function (step) {
             const ativo = parseInt(step.dataset.step, 10) === etapaAtual;
-            const num = step.querySelector(".np-step-num");
-            const label = step.querySelector(".np-step-label");
-            step.classList.toggle("bg-secondary-container/40", ativo);
-            num.className = "np-step-num w-6 h-6 rounded-full flex items-center justify-center font-label-sm text-label-sm font-bold shrink-0 " +
-                (ativo ? "bg-secondary text-white" : "border border-outline-variant text-outline");
-            label.classList.toggle("text-secondary", ativo);
-            label.classList.toggle("font-semibold", ativo);
-            label.classList.toggle("text-on-surface-variant", !ativo);
+            step.classList.toggle("text-secondary", ativo);
+            step.classList.toggle("font-semibold", ativo);
+            step.classList.toggle("border-secondary", ativo);
+            step.classList.toggle("text-on-surface-variant", !ativo);
+            step.classList.toggle("border-transparent", !ativo);
         });
         npPanels.forEach(function (panel) {
             panel.classList.toggle("hidden", parseInt(panel.dataset.stepPanel, 10) !== etapaAtual);
