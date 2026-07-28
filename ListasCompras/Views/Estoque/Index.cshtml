@@ -124,7 +124,7 @@
         </section>
 
         <!-- Resumo compacto -->
-        <section class="grid grid-cols-2 md:grid-cols-4 gap-sm mb-md">
+        <section class="grid grid-cols-2 md:grid-cols-4 gap-sm mb-md max-w-5xl">
             <div class="bg-white px-md py-sm rounded-lg border border-outline-variant shadow-sm">
                 <span class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Produtos</span>
                 <p id="resumoTotalProdutos" class="font-title-lg text-title-lg text-primary">0</p>
@@ -220,8 +220,8 @@
 
     <!-- Trilho de ações lateral -->
     <aside class="fixed top-16 right-0 bottom-0 w-12 border-l border-outline-variant bg-white flex flex-col items-center py-md gap-md z-40">
-        <button type="button" data-acao="movimentacao" title="Registrar movimentação" class="rail-btn w-9 h-9 rounded-lg hover:bg-surface-container-low flex items-center justify-center text-on-surface-variant transition-colors">
-            <span class="material-symbols-outlined text-[20px]">sync_alt</span>
+        <button id="railNovoProdutoBtn" type="button" title="Cadastrar novo produto" class="w-9 h-9 rounded-lg bg-secondary text-white flex items-center justify-center hover:bg-opacity-90 transition-colors">
+            <span class="material-symbols-outlined text-[20px]">add</span>
         </button>
         <button type="button" data-acao="exportar" title="Exportar lista para planilha" class="rail-btn w-9 h-9 rounded-lg hover:bg-surface-container-low flex items-center justify-center text-on-surface-variant transition-colors">
             <span class="material-symbols-outlined text-[20px]">upload</span>
@@ -616,11 +616,6 @@
                             Cancelar
                         </button>
                         <div class="flex items-center gap-sm">
-                            <button id="npVoltarEtapaBtn" type="button"
-                                    class="hidden border border-outline text-on-surface-variant rounded-full px-lg py-sm font-label-md text-label-md font-bold hover:bg-surface-container-low transition-colors flex items-center gap-xs">
-                                <span class="material-symbols-outlined text-[18px]">arrow_back</span>
-                                Voltar
-                            </button>
                             <button id="salvarNovoProdutoBtn" type="button"
                                     class="border border-secondary text-secondary rounded-full px-lg py-sm font-label-md text-label-md font-bold hover:bg-secondary-container/30 transition-colors">
                                 Salvar produto

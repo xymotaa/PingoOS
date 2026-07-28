@@ -30,7 +30,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const fecharNovoProdutoBtn = document.getElementById("fecharNovoProdutoBtn");
     const cancelarNovoProdutoBtn = document.getElementById("cancelarNovoProdutoBtn");
     const salvarNovoProdutoBtn = document.getElementById("salvarNovoProdutoBtn");
-    const npVoltarEtapaBtn = document.getElementById("npVoltarEtapaBtn");
+    const railNovoProdutoBtn = document.getElementById("railNovoProdutoBtn");
     const npAvancarEtapaBtn = document.getElementById("npAvancarEtapaBtn");
     const npSteps = document.querySelectorAll(".np-step");
     const npPanels = document.querySelectorAll("[data-step-panel]");
@@ -241,7 +241,6 @@ document.addEventListener("DOMContentLoaded", function () {
         npPanels.forEach(function (panel) {
             panel.classList.toggle("hidden", parseInt(panel.dataset.stepPanel, 10) !== etapaAtual);
         });
-        npVoltarEtapaBtn.classList.toggle("hidden", etapaAtual === 1);
         npAvancarEtapaBtn.classList.toggle("hidden", etapaAtual === TOTAL_ETAPAS);
     }
 
@@ -296,10 +295,10 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     novoProdutoBtn.addEventListener("click", abrirNovoProduto);
+    railNovoProdutoBtn.addEventListener("click", abrirNovoProduto);
     fecharNovoProdutoBtn.addEventListener("click", fecharNovoProduto);
     cancelarNovoProdutoBtn.addEventListener("click", fecharNovoProduto);
     salvarNovoProdutoBtn.addEventListener("click", salvarNovoProduto);
-    npVoltarEtapaBtn.addEventListener("click", function () { irParaEtapa(etapaAtual - 1); });
     npAvancarEtapaBtn.addEventListener("click", function () { irParaEtapa(etapaAtual + 1); });
     npSteps.forEach(function (step) {
         step.addEventListener("click", function () { irParaEtapa(parseInt(step.dataset.step, 10)); });
@@ -362,7 +361,16 @@ document.addEventListener("DOMContentLoaded", function () {
             const menu = menuBtn.parentElement.querySelector(".row-menu");
             const jaAberto = !menu.classList.contains("hidden");
             fecharMenus();
-            menu.classList.toggle("hidden", jaAberto);
+            if (!jaAberto) {
+                // Abre para baixo por padrão; se estourar o rodapé da tabela, abre para cima
+                menu.classList.remove("hidden", "bottom-full", "mb-xs");
+                menu.classList.add("top-full", "mt-xs");
+                const scroller = estoqueBody.closest(".overflow-x-auto");
+                if (scroller && menu.getBoundingClientRect().bottom > scroller.getBoundingClientRect().bottom) {
+                    menu.classList.remove("top-full", "mt-xs");
+                    menu.classList.add("bottom-full", "mb-xs");
+                }
+            }
             return;
         }
 
