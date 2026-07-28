@@ -15,4 +15,9 @@ public class EstoqueController : LojaControllerBase
             Produtos = new(),
         });
     }
+
+    public IActionResult Add()
+    {
+        return View();
+    }
 }

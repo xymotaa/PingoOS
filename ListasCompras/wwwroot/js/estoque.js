@@ -1,5 +1,20 @@
 document.addEventListener("DOMContentLoaded", function () {
-    const produtos = PRODUTOS_ESTOQUE.map(function (p) { return Object.assign({}, p); });
+    const STORAGE_KEY = "xyEstoqueProdutos";
+
+    function carregarProdutos() {
+        try {
+            const salvos = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+            if (Array.isArray(salvos)) return salvos;
+        } catch (e) { /* ignora */ }
+        return PRODUTOS_ESTOQUE.map(function (p) { return Object.assign({}, p); });
+    }
+
+    const produtos = carregarProdutos();
+
+    function persistir() {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(produtos)); } catch (e) { /* ignora */ }
+    }
+
     const selecionados = new Set();
 
     const estoqueBody = document.getElementById("estoqueBody");
@@ -25,23 +40,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const toastMsg = document.getElementById("toastMsg");
     const toastIcon = document.getElementById("toastIcon");
 
-    const novoProdutoBtn = document.getElementById("novoProdutoBtn");
-    const novoProdutoOverlay = document.getElementById("novoProdutoOverlay");
-    const cancelarNovoProdutoBtn = document.getElementById("cancelarNovoProdutoBtn");
-    const salvarNovoProdutoBtn = document.getElementById("salvarNovoProdutoBtn");
     const railNovoProdutoBtn = document.getElementById("railNovoProdutoBtn");
-    const npAvancarEtapaBtn = document.getElementById("npAvancarEtapaBtn");
-    const npSteps = document.querySelectorAll(".np-step");
-    const npPanels = document.querySelectorAll("[data-step-panel]");
-    const npNome = document.getElementById("npNome");
-    const npCodigo = document.getElementById("npCodigo");
-    const npPreco = document.getElementById("npPreco");
-    const npCategoria = document.getElementById("npCategoria");
-    const npEstoqueInicial = document.getElementById("npEstoqueInicial");
-    const npEstoqueMinimo = document.getElementById("npEstoqueMinimo");
-    const npCusto = document.getElementById("npCusto");
-    const TOTAL_ETAPAS = 6;
-    let etapaAtual = 1;
 
     const fecharMovimentacaoBtn = document.getElementById("fecharMovimentacaoBtn");
     const modalMovimentacao = document.getElementById("modalMovimentacao");
@@ -55,7 +54,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const painelAcoes = document.getElementById("painelAcoes");
     const fecharPainelBtn = document.getElementById("fecharPainelBtn");
-    const painelIncluirCadastro = document.getElementById("painelIncluirCadastro");
     const maisAcoesToggle = document.getElementById("maisAcoesToggle");
     const maisAcoesIcone = document.getElementById("maisAcoesIcone");
     const maisAcoesConteudo = document.getElementById("maisAcoesConteudo");
@@ -176,6 +174,7 @@ document.addEventListener("DOMContentLoaded", function () {
         renderResumo();
         renderChipsFiltro();
         renderSelecionadosInfo();
+        persistir();
     }
 
     function mostrarToast(mensagem, erro) {
@@ -224,83 +223,7 @@ document.addEventListener("DOMContentLoaded", function () {
         modalMovimentacao.classList.add("hidden");
     }
 
-    function irParaEtapa(n) {
-        etapaAtual = Math.min(Math.max(n, 1), TOTAL_ETAPAS);
-        npSteps.forEach(function (step) {
-            const ativo = parseInt(step.dataset.step, 10) === etapaAtual;
-            const num = step.querySelector(".np-step-num");
-            const label = step.querySelector(".np-step-label");
-            step.classList.toggle("bg-secondary-container/40", ativo);
-            num.className = "np-step-num w-6 h-6 rounded-full flex items-center justify-center font-label-sm text-label-sm font-bold shrink-0 " +
-                (ativo ? "bg-secondary text-white" : "border border-outline-variant text-outline");
-            label.classList.toggle("text-secondary", ativo);
-            label.classList.toggle("font-semibold", ativo);
-            label.classList.toggle("text-on-surface-variant", !ativo);
-        });
-        npPanels.forEach(function (panel) {
-            panel.classList.toggle("hidden", parseInt(panel.dataset.stepPanel, 10) !== etapaAtual);
-        });
-        npAvancarEtapaBtn.classList.toggle("hidden", etapaAtual === TOTAL_ETAPAS);
-    }
-
-    function abrirNovoProduto() {
-        novoProdutoOverlay.querySelectorAll("input, textarea").forEach(function (campo) { campo.value = ""; });
-        novoProdutoOverlay.querySelectorAll("select").forEach(function (campo) { campo.selectedIndex = 0; });
-        irParaEtapa(1);
-        novoProdutoOverlay.classList.remove("hidden");
-        novoProdutoOverlay.scrollTop = 0;
-        npNome.focus();
-    }
-
-    function fecharNovoProduto() {
-        novoProdutoOverlay.classList.add("hidden");
-    }
-
-    function parseDecimal(valor) {
-        return parseFloat(String(valor).replace(/\./g, "").replace(",", ".")) || 0;
-    }
-
-    function salvarNovoProduto() {
-        const nome = npNome.value.trim();
-        if (!nome) {
-            irParaEtapa(1);
-            npNome.focus();
-            mostrarToast("Informe o nome do produto para continuar.", true);
-            return;
-        }
-
-        let codigo = npCodigo.value.trim();
-        if (!codigo) codigo = "P" + Date.now().toString().slice(-8);
-        if (produtos.some(function (p) { return p.codigo === codigo; })) {
-            irParaEtapa(1);
-            npCodigo.focus();
-            mostrarToast("Já existe um produto com o código \"" + codigo + "\".", true);
-            return;
-        }
-
-        produtos.push({
-            codigo: codigo,
-            nome: nome,
-            categoria: npCategoria.value || "Sem categoria",
-            saldoAtual: parseInt(npEstoqueInicial.value, 10) || 0,
-            estoqueMinimo: parseInt(npEstoqueMinimo.value, 10) || 0,
-            custoUnitario: parseDecimal(npCusto.value),
-            precoVenda: parseDecimal(npPreco.value)
-        });
-
-        renderTabela();
-        fecharNovoProduto();
-        mostrarToast("Produto \"" + nome + "\" cadastrado (exemplo, ainda não gravado no banco de dados).");
-    }
-
-    novoProdutoBtn.addEventListener("click", abrirNovoProduto);
     railNovoProdutoBtn.addEventListener("click", function () { painelAcoes.classList.remove("hidden"); });
-    cancelarNovoProdutoBtn.addEventListener("click", fecharNovoProduto);
-    salvarNovoProdutoBtn.addEventListener("click", salvarNovoProduto);
-    npAvancarEtapaBtn.addEventListener("click", function () { irParaEtapa(etapaAtual + 1); });
-    npSteps.forEach(function (step) {
-        step.addEventListener("click", function () { irParaEtapa(parseInt(step.dataset.step, 10)); });
-    });
 
     fecharMovimentacaoBtn.addEventListener("click", fecharModal);
     modalMovimentacao.addEventListener("click", function (e) {
@@ -318,6 +241,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (isNaN(novoPreco) || novoPreco < 0) novoPreco = item.precoVenda;
         const mudou = novoPreco !== item.precoVenda;
         item.precoVenda = novoPreco;
+        persistir();
         const celula = estoqueBody.querySelector('.preco-cell[data-codigo="' + codigo + '"]');
         if (celula) celula.outerHTML = precoCelulaHtml(item);
         if (mudou) mostrarToast("Preço de \"" + item.nome + "\" atualizado para " + formatBRL(novoPreco) + " (exemplo, ainda não gravado no banco de dados).");
@@ -556,11 +480,6 @@ document.addEventListener("DOMContentLoaded", function () {
         painelAcoes.classList.add("hidden");
     });
 
-    painelIncluirCadastro.addEventListener("click", function () {
-        painelAcoes.classList.add("hidden");
-        abrirNovoProduto();
-    });
-
     maisAcoesToggle.addEventListener("click", function () {
         const aberto = !maisAcoesConteudo.classList.contains("hidden");
         maisAcoesConteudo.classList.toggle("hidden");
@@ -572,4 +491,8 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     renderTabela();
+
+    if (new URLSearchParams(window.location.search).get("cadastrado") === "1") {
+        mostrarToast("Produto cadastrado (exemplo, ainda não gravado no banco de dados).");
+    }
 });
