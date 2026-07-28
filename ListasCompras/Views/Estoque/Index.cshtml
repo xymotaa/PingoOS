@@ -325,6 +325,7 @@
 
     <script>
         const PRODUTOS_ESTOQUE = @Html.Raw(Json.Serialize(Model.Produtos));
+        const ESTOQUE_EDIT_URL = "@Url.Action("Edit", "Estoque")";
     </script>
     <script src="~/js/estoque.js" asp-append-version="true"></script>
 </body>

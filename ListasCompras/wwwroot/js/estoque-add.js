@@ -19,8 +19,14 @@ document.addEventListener("DOMContentLoaded", function () {
     const TOTAL_ETAPAS = 6;
     let etapaAtual = 1;
 
+    const editarCodigo = (typeof EDITAR_CODIGO === "string") ? EDITAR_CODIGO : "";
+
     function parseDecimal(valor) {
         return parseFloat(String(valor).replace(/\./g, "").replace(",", ".")) || 0;
+    }
+
+    function formatarDecimal(valor) {
+        return (Number(valor) || 0).toFixed(2).replace(".", ",");
     }
 
     function mostrarToast(mensagem, erro) {
@@ -69,14 +75,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
         let codigo = npCodigo.value.trim();
         if (!codigo) codigo = "P" + Date.now().toString().slice(-8);
-        if (produtos.some(function (p) { return p.codigo === codigo; })) {
+        const conflito = produtos.some(function (p) { return p.codigo === codigo && p.codigo !== editarCodigo; });
+        if (conflito) {
             irParaEtapa(1);
             npCodigo.focus();
             mostrarToast("Já existe um produto com o código \"" + codigo + "\".", true);
             return;
         }
 
-        produtos.push({
+        const dados = {
             codigo: codigo,
             nome: nome,
             categoria: npCategoria.value || "Sem categoria",
@@ -84,11 +91,41 @@ document.addEventListener("DOMContentLoaded", function () {
             estoqueMinimo: parseInt(npEstoqueMinimo.value, 10) || 0,
             custoUnitario: parseDecimal(npCusto.value),
             precoVenda: parseDecimal(npPreco.value)
-        });
+        };
+
+        let flag;
+        if (editarCodigo) {
+            const idx = produtos.findIndex(function (p) { return p.codigo === editarCodigo; });
+            if (idx >= 0) produtos[idx] = dados; else produtos.push(dados);
+            flag = "editado=1";
+        } else {
+            produtos.push(dados);
+            flag = "cadastrado=1";
+        }
 
         try { localStorage.setItem(STORAGE_KEY, JSON.stringify(produtos)); } catch (e) { /* ignora */ }
 
-        window.location.href = ESTOQUE_INDEX_URL + "?cadastrado=1";
+        window.location.href = ESTOQUE_INDEX_URL + "?" + flag;
+    }
+
+    function preencherFormulario() {
+        if (!editarCodigo) return;
+        const produto = lerProdutos().find(function (p) { return p.codigo === editarCodigo; });
+        if (!produto) {
+            mostrarToast("Produto não encontrado para edição.", true);
+            return;
+        }
+        npNome.value = produto.nome || "";
+        npCodigo.value = produto.codigo || "";
+        npPreco.value = formatarDecimal(produto.precoVenda);
+        npCategoria.value = produto.categoria || "";
+        npEstoqueInicial.value = (produto.saldoAtual != null) ? produto.saldoAtual : "";
+        npEstoqueMinimo.value = (produto.estoqueMinimo != null) ? produto.estoqueMinimo : "";
+        npCusto.value = formatarDecimal(produto.custoUnitario);
+
+        document.getElementById("npTitulo").textContent = "Editar produto";
+        document.getElementById("npSubtitulo").textContent = "Edite os dados de “" + produto.nome + "”.";
+        salvarNovoProdutoBtn.textContent = "Salvar alterações";
     }
 
     salvarNovoProdutoBtn.addEventListener("click", salvarNovoProduto);
@@ -97,5 +134,6 @@ document.addEventListener("DOMContentLoaded", function () {
         step.addEventListener("click", function () { irParaEtapa(parseInt(step.dataset.step, 10)); });
     });
 
+    preencherFormulario();
     irParaEtapa(1);
 });

@@ -84,8 +84,8 @@
 
         <!-- Cabeçalho da página -->
         <section class="mb-md">
-            <h1 class="font-headline-lg text-headline-lg text-primary">Cadastrar novo produto</h1>
-            <p class="font-body-md text-body-md text-on-surface-variant">Preencha os dados básicos e, se quiser, complete as demais etapas.</p>
+            <h1 id="npTitulo" class="font-headline-lg text-headline-lg text-primary">Cadastrar novo produto</h1>
+            <p id="npSubtitulo" class="font-body-md text-body-md text-on-surface-variant">Preencha os dados básicos e, se quiser, complete as demais etapas.</p>
         </section>
 
         <div class="bg-white rounded-xl border border-outline-variant shadow-sm flex flex-col overflow-hidden">
@@ -328,6 +328,7 @@
 
     <script>
         const ESTOQUE_INDEX_URL = "@Url.Action("Index", "Estoque")";
+        const EDITAR_CODIGO = @Html.Raw(Json.Serialize(ViewData["EditarCodigo"] as string ?? ""));
     </script>
     <script src="~/js/estoque-add.js" asp-append-version="true"></script>
 </body>

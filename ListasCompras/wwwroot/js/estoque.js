@@ -15,6 +15,10 @@ document.addEventListener("DOMContentLoaded", function () {
         try { localStorage.setItem(STORAGE_KEY, JSON.stringify(produtos)); } catch (e) { /* ignora */ }
     }
 
+    function abrirEdicao(codigo) {
+        window.location.href = ESTOQUE_EDIT_URL + "/" + encodeURIComponent(codigo);
+    }
+
     const selecionados = new Set();
 
     const estoqueBody = document.getElementById("estoqueBody");
@@ -142,11 +146,11 @@ document.addEventListener("DOMContentLoaded", function () {
         lista.forEach(function (item) {
             const marcado = selecionados.has(item.codigo);
             const tr = document.createElement("tr");
-            tr.className = "border-t border-outline-variant row-in hover:bg-surface-container-low/60 transition-colors";
+            tr.className = "border-t border-outline-variant row-in hover:bg-surface-container-low/60 transition-colors cursor-pointer";
             tr.dataset.codigo = item.codigo;
             tr.innerHTML =
                 '<td class="pl-md"><input type="checkbox" data-codigo="' + item.codigo + '" class="linha-checkbox w-4 h-4 accent-secondary" ' + (marcado ? "checked" : "") + ' /></td>' +
-                '<td class="px-md py-sm font-body-md text-body-md text-on-surface">' + item.nome + '</td>' +
+                '<td class="px-md py-sm"><button type="button" data-codigo="' + item.codigo + '" class="produto-nome text-left font-body-md text-body-md text-on-surface hover:text-secondary transition-colors" title="Editar produto">' + item.nome + '</button></td>' +
                 '<td class="px-md py-sm font-body-md text-body-md text-on-surface-variant">' + item.codigo + '</td>' +
                 '<td class="px-md py-sm preco-td text-right">' + precoCelulaHtml(item) + '</td>' +
                 '<td class="px-md py-sm font-body-md text-body-md text-on-surface text-center">' + item.saldoAtual + '</td>' +
@@ -273,8 +277,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const editarProdutoBtn = e.target.closest(".editar-produto-btn");
         if (editarProdutoBtn) {
-            fecharMenus();
-            mostrarToast("Edição completa do produto ainda não está disponível nesta versão.", true);
+            abrirEdicao(editarProdutoBtn.dataset.codigo);
+            return;
+        }
+
+        const produtoNome = e.target.closest(".produto-nome");
+        if (produtoNome) {
+            abrirEdicao(produtoNome.dataset.codigo);
             return;
         }
 
@@ -307,6 +316,13 @@ document.addEventListener("DOMContentLoaded", function () {
             selecionados.delete(codigo);
             renderTabela();
             mostrarToast("Produto removido da listagem (exemplo, ainda não gravado no banco de dados).");
+            return;
+        }
+
+        // Clique em qualquer parte da linha (fora dos controles) abre a edição do produto
+        const linhaProduto = e.target.closest("tr[data-codigo]");
+        if (linhaProduto && !e.target.closest("button, a, input, select, textarea, label, .row-menu")) {
+            abrirEdicao(linhaProduto.dataset.codigo);
             return;
         }
 
@@ -492,7 +508,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
     renderTabela();
 
-    if (new URLSearchParams(window.location.search).get("cadastrado") === "1") {
+    const paramsUrl = new URLSearchParams(window.location.search);
+    if (paramsUrl.get("cadastrado") === "1") {
         mostrarToast("Produto cadastrado (exemplo, ainda não gravado no banco de dados).");
+    } else if (paramsUrl.get("editado") === "1") {
+        mostrarToast("Produto atualizado (exemplo, ainda não gravado no banco de dados).");
     }
 });

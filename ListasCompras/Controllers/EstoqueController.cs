@@ -20,4 +20,10 @@ public class EstoqueController : LojaControllerBase
     {
         return View();
     }
+
+    public IActionResult Edit(string id)
+    {
+        ViewData["EditarCodigo"] = id;
+        return View("Add");
+    }
 }
