@@ -76,48 +76,38 @@
 <body class="bg-surface custom-scrollbar">
     @await Html.PartialAsync("_Navbar")
 
+    <!-- Menu lateral (módulos) -->
+    <aside id="sidebar" class="hidden lg:flex fixed top-16 left-0 bottom-0 w-60 bg-surface border-r border-outline-variant flex-col py-md px-sm gap-xs z-40 overflow-y-auto custom-scrollbar">
+        <a asp-controller="ListaCompra" asp-action="Index" class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
+            <span class="material-symbols-outlined text-[22px]">shopping_cart</span>
+            <span class="font-body-lg text-body-lg">Lista de compra</span>
+        </a>
+        <a asp-controller="Caixa" asp-action="Index" class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
+            <span class="material-symbols-outlined text-[22px]">point_of_sale</span>
+            <span class="font-body-lg text-body-lg">Caixa</span>
+        </a>
+        <a asp-controller="Estoque" asp-action="Index" class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
+            <span class="material-symbols-outlined text-[22px]">inventory_2</span>
+            <span class="font-body-lg text-body-lg">Estoque</span>
+        </a>
+        <a asp-controller="Orcamento" asp-action="Index" class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
+            <span class="material-symbols-outlined text-[22px]">request_quote</span>
+            <span class="font-body-lg text-body-lg">Orçamento</span>
+        </a>
+        <a asp-controller="Dashboards" asp-action="Index" class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
+            <span class="material-symbols-outlined text-[22px]">analytics</span>
+            <span class="font-body-lg text-body-lg">Dashboards</span>
+        </a>
+    </aside>
+
     <!-- Conteúdo -->
-    <main class="pt-24 px-lg pb-xl max-w-[1440px] mx-auto">
+    <main class="pt-24 px-lg pb-xl lg:pl-[264px]">
         <!-- Boas-vindas -->
         <section class="mb-xl">
             <div class="flex flex-wrap items-center gap-md mb-xs">
                 <h2 class="font-headline-lg text-[26px] font-semibold text-primary">@saudacao, @nomeLoja</h2>
             </div>
             <p class="font-body-lg text-body-lg text-on-surface-variant">Tenha um bom trabalho! :)</p>
-        </section>
-
-        <!-- Acesso rápido aos módulos -->
-        <section class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-gutter mb-xl">
-            <a asp-controller="ListaCompra" asp-action="Index" class="glass-card p-md rounded-xl flex flex-col items-center justify-center gap-sm hover:border-secondary transition-all group">
-                <div class="w-12 h-12 rounded-full bg-tertiary-fixed flex items-center justify-center text-tertiary group-hover:scale-110 transition-transform">
-                    <span class="material-symbols-outlined text-[28px]">shopping_cart</span>
-                </div>
-                <span class="font-title-lg text-title-lg text-primary text-center">Lista de compra</span>
-            </a>
-            <a asp-controller="Caixa" asp-action="Index" class="glass-card p-md rounded-xl flex flex-col items-center justify-center gap-sm hover:border-secondary transition-all group">
-                <div class="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center text-secondary group-hover:scale-110 transition-transform">
-                    <span class="material-symbols-outlined text-[28px]">point_of_sale</span>
-                </div>
-                <span class="font-title-lg text-title-lg text-primary text-center">Caixa</span>
-            </a>
-            <a asp-controller="Estoque" asp-action="Index" class="glass-card p-md rounded-xl flex flex-col items-center justify-center gap-sm hover:border-secondary transition-all group">
-                <div class="w-12 h-12 rounded-full bg-primary-fixed flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                    <span class="material-symbols-outlined text-[28px]">inventory_2</span>
-                </div>
-                <span class="font-title-lg text-title-lg text-primary text-center">Estoque</span>
-            </a>
-            <a asp-controller="Orcamento" asp-action="Index" class="glass-card p-md rounded-xl flex flex-col items-center justify-center gap-sm hover:border-secondary transition-all group">
-                <div class="w-12 h-12 rounded-full bg-surface-container-highest flex items-center justify-center text-on-surface group-hover:scale-110 transition-transform">
-                    <span class="material-symbols-outlined text-[28px]">request_quote</span>
-                </div>
-                <span class="font-title-lg text-title-lg text-primary text-center">Orçamento</span>
-            </a>
-            <a asp-controller="Dashboards" asp-action="Index" class="glass-card p-md rounded-xl flex flex-col items-center justify-center gap-sm hover:border-secondary transition-all group col-span-2 md:col-span-1">
-                <div class="w-12 h-12 rounded-full bg-secondary flex items-center justify-center text-white group-hover:scale-110 transition-transform">
-                    <span class="material-symbols-outlined text-[28px]">analytics</span>
-                </div>
-                <span class="font-title-lg text-title-lg text-primary text-center">Dashboards</span>
-            </a>
         </section>
 
         <!-- Indicadores -->
@@ -215,6 +205,5 @@
             </div>
         </section>
     </main>
-
 </body>
 </html>
