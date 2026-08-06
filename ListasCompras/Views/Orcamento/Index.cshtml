@@ -80,26 +80,31 @@
             .no-print { display: none !important; }
             .print-only { display: block !important; }
             html, body { background: #fff !important; }
-            @@page { size: A4; margin: 14mm; }
+            @@page { size: A4; margin: 10mm; }
         }
-        #osImpressao { color: #000; font-family: 'Hanken Grotesk', Arial, sans-serif; font-size: 12px; line-height: 1.4; }
-        #osImpressao .os-topo { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 14px; }
+        #osImpressao { color: #000; font-family: 'Hanken Grotesk', Arial, sans-serif; font-size: 11px; line-height: 1.35; }
+        /* Cada "via" é um bloco idêntico; as duas cabem na mesma folha A4 */
+        #osImpressao .os-via { page-break-inside: avoid; break-inside: avoid; }
+        #osImpressao .os-corte { border-top: 1px dashed #999; text-align: center; margin: 10px 0 12px; }
+        #osImpressao .os-corte span { position: relative; top: -9px; background: #fff; padding: 0 8px; font-size: 11px; color: #777; letter-spacing: .04em; }
+        #osImpressao .os-topo { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #000; padding-bottom: 6px; margin-bottom: 8px; }
         #osImpressao .os-loja { display: flex; align-items: center; gap: 10px; }
-        #osImpressao .os-logo { width: 52px; height: 52px; object-fit: contain; }
-        #osImpressao .os-loja-nome { font-size: 18px; font-weight: 700; }
-        #osImpressao .os-loja-sub { font-size: 11px; color: #444; }
-        #osImpressao .os-doc-meta { text-align: right; font-size: 11px; }
-        #osImpressao .os-doc-titulo { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
-        #osImpressao .os-bloco { margin-bottom: 12px; }
-        #osImpressao .os-bloco-titulo { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; background: #f0f0f0; border: 1px solid #ccc; padding: 3px 8px; margin-bottom: 6px; }
-        #osImpressao .os-linhas { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 24px; padding: 0 4px; }
+        #osImpressao .os-logo { width: 42px; height: 42px; object-fit: contain; }
+        #osImpressao .os-loja-nome { font-size: 16px; font-weight: 700; }
+        #osImpressao .os-loja-sub { font-size: 10px; color: #444; }
+        #osImpressao .os-doc-meta { text-align: right; font-size: 10px; }
+        #osImpressao .os-doc-titulo { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+        #osImpressao .os-via-label { display: inline-block; border: 1px solid #000; padding: 1px 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 3px; }
+        #osImpressao .os-bloco { margin-bottom: 8px; }
+        #osImpressao .os-bloco-titulo { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; background: #f0f0f0; border: 1px solid #ccc; padding: 2px 8px; margin-bottom: 4px; }
+        #osImpressao .os-linhas { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 24px; padding: 0 4px; }
         #osImpressao .os-rot { font-weight: 600; }
-        #osImpressao .os-diag { padding: 2px 4px; white-space: pre-wrap; min-height: 36px; }
+        #osImpressao .os-diag { padding: 2px 4px; white-space: pre-wrap; min-height: 28px; }
         #osImpressao .os-tabela { width: 100%; border-collapse: collapse; }
-        #osImpressao .os-tabela th, #osImpressao .os-tabela td { border: 1px solid #ccc; padding: 5px 8px; font-size: 12px; }
+        #osImpressao .os-tabela th, #osImpressao .os-tabela td { border: 1px solid #ccc; padding: 3px 8px; font-size: 11px; }
         #osImpressao .os-tabela th { background: #f0f0f0; }
-        #osImpressao .os-assinaturas { display: flex; justify-content: space-between; gap: 40px; margin-top: 48px; }
-        #osImpressao .os-assinatura { flex: 1; text-align: center; font-size: 11px; }
+        #osImpressao .os-assinaturas { display: flex; justify-content: space-between; gap: 40px; margin-top: 26px; }
+        #osImpressao .os-assinatura { flex: 1; text-align: center; font-size: 10px; }
         #osImpressao .os-linha-assinatura { border-top: 1px solid #000; margin-bottom: 4px; height: 0; }
     </style>
 </head>
@@ -269,8 +274,9 @@
         </div>
     </main>
 
-    <!-- Documento de impressão: Ordem de Serviço -->
+    <!-- Documento de impressão: Ordem de Serviço (1ª via impressa aqui; a 2ª é clonada por JS) -->
     <div id="osImpressao" class="print-only">
+      <div class="os-via" id="osVia1">
         <div class="os-topo">
             <div class="os-loja">
                 @if (!string.IsNullOrEmpty(logo))
@@ -286,6 +292,7 @@
             </div>
             <div class="os-doc-meta">
                 <div class="os-doc-titulo">ORDEM DE SERVIÇO</div>
+                <div class="os-via-label">1ª via — Cliente</div>
                 <div>Nº <span id="osNumero"></span></div>
                 <div>Data: <span id="osData"></span></div>
             </div>
@@ -341,6 +348,12 @@
             <div class="os-assinatura"><div class="os-linha-assinatura"></div>Assinatura do Cliente</div>
             <div class="os-assinatura"><div class="os-linha-assinatura"></div>Responsável Técnico</div>
         </div>
+      </div>
+
+      <div class="os-corte" aria-hidden="true"><span>✂ - - - - - - - - - -  corte aqui  - - - - - - - - - -</span></div>
+
+      <!-- 2ª via: preenchida com um clone da 1ª via em prepararImpressao() -->
+      <div id="osVia2"></div>
     </div>
 
     <script src="~/js/orcamento.js" asp-append-version="true"></script>

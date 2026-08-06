@@ -163,6 +163,20 @@ document.addEventListener("DOMContentLoaded", function () {
             osItens.appendChild(linha);
         });
         definirTexto("osTotal", totalGeral.textContent);
+        gerarSegundaVia();
+    }
+
+    // Duplica a 1ª via na mesma folha para que cliente e técnico assinem cada uma a sua
+    function gerarSegundaVia() {
+        const via1 = document.getElementById("osVia1");
+        const via2 = document.getElementById("osVia2");
+        const copia = via1.cloneNode(true);
+        copia.removeAttribute("id");
+        copia.querySelectorAll("[id]").forEach(function (el) { el.removeAttribute("id"); });
+        const rotulo = copia.querySelector(".os-via-label");
+        if (rotulo) rotulo.textContent = "2ª via — Técnico";
+        via2.innerHTML = "";
+        via2.appendChild(copia);
     }
 
     imprimirBtn.addEventListener("click", function () {
