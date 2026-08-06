@@ -1,0 +1,3 @@
+# Ferramentas de agente (skills do Claude Code) — locais, não vão para o repositório
+.agents/
+skills-lock.json

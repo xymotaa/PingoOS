@@ -1,5 +1,52 @@
 # Registro de Alterações
 
+## [2026-08-06] NU1903 resolvido — pin do SQLitePCLRaw fixava a versão vulnerável
+
+### Problema
+O `.csproj` já tinha um `PackageReference` direto para `SQLitePCLRaw.lib.e_sqlite3`, adicionado seguindo a "ação recomendada" registrada aqui ("fixar versão segura"). Só que ele fixava a **v2.1.11 — a própria versão vulnerável**. O pin nunca teve efeito e o aviso NU1903 seguia em todo build.
+
+### Causa Raiz
+A v2.1.11 embute o SQLite 3.49.1. O CVE-2025-6965 (CVSS 7.2) exige SQLite ≥ 3.50.2. A página do GitHub Advisory ainda informa "no patched version available", mas a **v2.1.12** (jul/2026) já embute o SQLite 3.53.3 e corrige o problema, mantendo a linha 2.1.x compatível com o resto da stack que o EF Core 10 puxa.
+
+### Arquivos Alterados
+
+| Arquivo | Antes | Depois |
+|---|---|---|
+| `ListasCompras.csproj` | `SQLitePCLRaw.lib.e_sqlite3` v2.1.11 | v2.1.12 |
+
+### Resultado
+- Build com **0 erros e 0 avisos** (antes: 2 avisos NU1903).
+- `libe_sqlite3.so` publicado passa de SQLite 3.49.1 para **3.53.3**, verificado no binário.
+- O `PackageReference` direto **deve continuar existindo**: é ele que sobrescreve a v2.1.11 que o `Microsoft.EntityFrameworkCore.Sqlite` traz por transitividade.
+
+---
+
+## [2026-08-06] Remoção de código e dependências não utilizados
+
+### Problema
+Sobras de versões anteriores e do template padrão do ASP.NET ocupavam o repositório: bibliotecas front-end nunca carregadas, JS órfãos, seções de CSS de telas já reescritas em Tailwind e uma entidade EF nunca usada.
+
+### Arquivos Alterados
+
+| Removido | Motivo |
+|---|---|
+| `wwwroot/lib/bootstrap`, `jquery`, `jquery-validation`, `jquery-validation-unobtrusive` (9,5 MB) | Sem nenhuma referência; nada no código usa `$`/`jQuery` |
+| `Views/Shared/_ValidationScriptsPartial.cshtml` | Nunca renderizado — todas as views usam `Layout = null`, exceto `Error.cshtml` |
+| `wwwroot/js/site.js` | Só comentários do template padrão |
+| `wwwroot/js/configuracao.js` | Órfão: não referenciado e 3 dos 5 IDs que busca não existem mais na tela |
+| `Innovation-amico.svg`, `config.gif` | Sem referência; o `.gif` nem estava em `wwwroot` |
+| `site.css` (207 linhas), `print.css` (30 linhas) | Seções `Configurações`, `Painel de módulos` e `.report-topbar` — telas reescritas em Tailwind |
+| Pacote `QuestPDF` | Nenhum `using`; o PDF sai da impressão do navegador |
+| `Models/ProdutoModeloCompatibilidade.cs` + `DbSet` + navegações `Compatibilidades` | Nunca lida nem gravada; tabela vazia. Migration `RemoveProdutoModeloCompatibilidade` dropa a tabela (`Down` recria) |
+| `using ListasCompras.Models` em `OrcamentoController.cs` | Controller só faz `return View()` |
+
+### Resultado
+- 65 arquivos e ~82.700 linhas a menos; `wwwroot/` cai de ~9,6 MB para 88 KB.
+- Build limpo e as 7 rotas verificadas com a aplicação no ar, sem assets quebrados nem exceções.
+- Dados preservados (7 categorias, 4 marcas, 30 modelos, 12 produtos).
+
+---
+
 ## [2026-07-01] Namespace incorreto em SeedData.cs (recorrência)
 
 ### Problema
@@ -55,7 +102,4 @@ Mistura entre dois namespaces distintos:
 
 ## Avisos Pendentes
 
-### NU1903 – Vulnerabilidade Alta em SQLitePCLRaw.lib.e_sqlite3 v2.1.11
-- **CVE:** [GHSA-2m69-gcr7-jv3q](https://github.com/advisories/GHSA-2m69-gcr7-jv3q)
-- **Pacote afetado:** `Microsoft.EntityFrameworkCore.Sqlite` puxa `SQLitePCLRaw.lib.e_sqlite3` v2.1.11
-- **Ação recomendada:** Aguardar patch do EF Core 10 ou fixar versão segura via `PackageReference` direto no `.csproj`
+Nenhum. O NU1903 foi resolvido em 2026-08-06 (ver a primeira entrada acima).
