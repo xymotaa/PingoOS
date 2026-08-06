@@ -7,6 +7,4 @@ public class ModeloCelular
 
     public int MarcaCelularId { get; set; }
     public MarcaCelular MarcaCelular { get; set; } = null!;
-
-    public ICollection<ProdutoModeloCompatibilidade> Compatibilidades { get; set; } = new List<ProdutoModeloCompatibilidade>();
 }
