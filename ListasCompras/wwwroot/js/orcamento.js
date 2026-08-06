@@ -164,6 +164,26 @@ document.addEventListener("DOMContentLoaded", function () {
         });
         definirTexto("osTotal", totalGeral.textContent);
         gerarSegundaVia();
+        ajustarEscala();
+    }
+
+    // Área útil da A4 com as margens de 8mm definidas em @page, convertida para px (96dpi)
+    const A4_LARGURA_UTIL = 194 * 96 / 25.4;
+    const A4_ALTURA_UTIL = 281 * 96 / 25.4;
+    const ESCALA_MINIMA = 0.75;
+
+    // Com muitos itens as duas vias estouram a folha; reduz a escala o suficiente para caberem
+    function ajustarEscala() {
+        const doc = document.getElementById("osImpressao");
+        doc.style.zoom = "";
+        // o documento fica oculto na tela: exibe fora da área visível só para medir
+        const estiloOriginal = doc.getAttribute("style") || "";
+        doc.style.cssText = estiloOriginal + ";display:block;position:absolute;visibility:hidden;left:-10000px;top:0;width:" + A4_LARGURA_UTIL + "px;";
+        const altura = doc.getBoundingClientRect().height;
+        doc.setAttribute("style", estiloOriginal);
+        if (altura > A4_ALTURA_UTIL) {
+            doc.style.zoom = Math.max(ESCALA_MINIMA, A4_ALTURA_UTIL / altura).toFixed(3);
+        }
     }
 
     // Duplica a 1ª via na mesma folha para que cliente e técnico assinem cada uma a sua

@@ -80,32 +80,37 @@
             .no-print { display: none !important; }
             .print-only { display: block !important; }
             html, body { background: #fff !important; }
-            @@page { size: A4; margin: 10mm; }
+            @@page { size: A4; margin: 8mm; }
         }
-        #osImpressao { color: #000; font-family: 'Hanken Grotesk', Arial, sans-serif; font-size: 11px; line-height: 1.35; }
+        #osImpressao { color: #000; font-family: 'Hanken Grotesk', Arial, sans-serif; font-size: 10px; line-height: 1.3; }
         /* Cada "via" é um bloco idêntico; as duas cabem na mesma folha A4 */
         #osImpressao .os-via { page-break-inside: avoid; break-inside: avoid; }
-        #osImpressao .os-corte { border-top: 1px dashed #999; text-align: center; margin: 10px 0 12px; }
-        #osImpressao .os-corte span { position: relative; top: -9px; background: #fff; padding: 0 8px; font-size: 11px; color: #777; letter-spacing: .04em; }
-        #osImpressao .os-topo { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #000; padding-bottom: 6px; margin-bottom: 8px; }
-        #osImpressao .os-loja { display: flex; align-items: center; gap: 10px; }
-        #osImpressao .os-logo { width: 42px; height: 42px; object-fit: contain; }
-        #osImpressao .os-loja-nome { font-size: 16px; font-weight: 700; }
-        #osImpressao .os-loja-sub { font-size: 10px; color: #444; }
-        #osImpressao .os-doc-meta { text-align: right; font-size: 10px; }
-        #osImpressao .os-doc-titulo { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
-        #osImpressao .os-via-label { display: inline-block; border: 1px solid #000; padding: 1px 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 3px; }
-        #osImpressao .os-bloco { margin-bottom: 8px; }
-        #osImpressao .os-bloco-titulo { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; background: #f0f0f0; border: 1px solid #ccc; padding: 2px 8px; margin-bottom: 4px; }
-        #osImpressao .os-linhas { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 24px; padding: 0 4px; }
+        #osImpressao .os-corte { border-top: 1px dashed #999; text-align: center; margin: 8px 0 10px; }
+        #osImpressao .os-corte span { position: relative; top: -8px; background: #fff; padding: 0 8px; font-size: 10px; color: #777; letter-spacing: .04em; }
+        #osImpressao .os-topo { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #000; padding-bottom: 4px; margin-bottom: 6px; }
+        #osImpressao .os-loja { display: flex; align-items: center; gap: 8px; }
+        #osImpressao .os-logo { width: 36px; height: 36px; object-fit: contain; }
+        #osImpressao .os-loja-nome { font-size: 14px; font-weight: 700; }
+        #osImpressao .os-loja-sub { font-size: 9px; color: #444; }
+        #osImpressao .os-doc-meta { text-align: right; font-size: 9px; }
+        #osImpressao .os-doc-titulo { font-size: 13px; font-weight: 700; margin-bottom: 2px; }
+        #osImpressao .os-via-label { display: inline-block; border: 1px solid #000; padding: 0 5px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 2px; }
+        #osImpressao .os-bloco { margin-bottom: 5px; }
+        #osImpressao .os-bloco-titulo { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; background: #f0f0f0; border: 1px solid #ccc; padding: 1px 8px; margin-bottom: 3px; }
+        #osImpressao .os-linhas { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 16px; padding: 0 4px; }
+        #osImpressao .os-linhas-3 { grid-template-columns: 2fr 1fr 1fr; }
+        #osImpressao .os-linhas-4 { grid-template-columns: repeat(4, 1fr); }
         #osImpressao .os-rot { font-weight: 600; }
-        #osImpressao .os-diag { padding: 2px 4px; white-space: pre-wrap; min-height: 28px; }
+        #osImpressao .os-diag { padding: 1px 4px; white-space: pre-wrap; min-height: 22px; }
         #osImpressao .os-tabela { width: 100%; border-collapse: collapse; }
-        #osImpressao .os-tabela th, #osImpressao .os-tabela td { border: 1px solid #ccc; padding: 3px 8px; font-size: 11px; }
+        #osImpressao .os-tabela th, #osImpressao .os-tabela td { border: 1px solid #ccc; padding: 2px 8px; font-size: 10px; }
         #osImpressao .os-tabela th { background: #f0f0f0; }
-        #osImpressao .os-assinaturas { display: flex; justify-content: space-between; gap: 40px; margin-top: 26px; }
-        #osImpressao .os-assinatura { flex: 1; text-align: center; font-size: 10px; }
-        #osImpressao .os-linha-assinatura { border-top: 1px solid #000; margin-bottom: 4px; height: 0; }
+        /* Termos em texto corrido e justificado, em 2 colunas: ocupa bem menos altura que uma lista */
+        #osImpressao .os-termos-texto { column-count: 2; column-gap: 14px; margin: 0; padding: 0 4px; font-size: 7px; line-height: 1.32; text-align: justify; }
+        #osImpressao .os-aceite { font-size: 8px; font-weight: 600; margin-top: 3px; padding: 0 4px; }
+        #osImpressao .os-assinaturas { display: flex; justify-content: space-between; gap: 40px; margin-top: 16px; }
+        #osImpressao .os-assinatura { flex: 1; text-align: center; font-size: 9px; }
+        #osImpressao .os-linha-assinatura { border-top: 1px solid #000; margin-bottom: 3px; height: 0; }
     </style>
 </head>
 <body class="bg-surface">
@@ -300,7 +305,7 @@
 
         <div class="os-bloco">
             <div class="os-bloco-titulo">Cliente</div>
-            <div class="os-linhas">
+            <div class="os-linhas os-linhas-3">
                 <div><span class="os-rot">Nome:</span> <span id="osClienteNome"></span></div>
                 <div><span class="os-rot">Telefone:</span> <span id="osClienteTelefone"></span></div>
                 <div><span class="os-rot">CPF/RG:</span> <span id="osClienteDoc"></span></div>
@@ -310,7 +315,7 @@
 
         <div class="os-bloco">
             <div class="os-bloco-titulo">Aparelho</div>
-            <div class="os-linhas">
+            <div class="os-linhas os-linhas-4">
                 <div><span class="os-rot">Tipo:</span> <span id="osDispTipo"></span></div>
                 <div><span class="os-rot">Marca:</span> <span id="osDispMarca"></span></div>
                 <div><span class="os-rot">Modelo:</span> <span id="osDispModelo"></span></div>
@@ -342,6 +347,12 @@
                     </tr>
                 </tfoot>
             </table>
+        </div>
+
+        <div class="os-bloco os-termos">
+            <div class="os-bloco-titulo">Termos e condições do serviço</div>
+            <p class="os-termos-texto"><b>1. Aprovação prévia.</b> O serviço só é executado após aprovação expressa deste orçamento, válido por 10 dias. Uma vez aprovado, obriga ambas as partes: o cliente que desistir responde pelas peças já aplicadas e pela mão de obra executada (CDC, art. 40, §2º). <b>2. Dados e backup.</b> O backup é de responsabilidade do cliente; o reparo pode exigir formatação ou troca de componentes, não respondendo a empresa por perda de dados. <b>3. Privacidade e sigilo.</b> É vedado ao técnico acessar, copiar, compartilhar ou divulgar arquivos pessoais do aparelho, limitando-se o acesso ao estritamente necessário ao diagnóstico e ao teste do reparo, sob sigilo (Lei 13.709/2018 – LGPD; Código Penal, art. 154-A). <b>4. Garantia.</b> 90 dias sobre o serviço executado e as peças substituídas, contados da retirada, mediante apresentação desta Ordem de Serviço (CDC, art. 26, II). <b>5. Exclusões.</b> A garantia não cobre mau uso, quedas e impactos, contato com líquidos, umidade ou oxidação, sobrecarga da rede elétrica, acessórios não originais, software instalado pelo cliente, desgaste natural, nem defeito em componente diverso do reparado (CDC, art. 14, §3º, II). <b>6. Violação.</b> Abertura, reparo ou tentativa de conserto por terceiro não autorizado, durante o serviço ou no prazo de garantia, cancela a garantia integralmente. <b>7. Riscos.</b> Aparelhos com oxidação, queda ou intervenção anterior podem apresentar falhas ocultas, não detectáveis no diagnóstico inicial, inclusive deixar de ligar durante o reparo; o cliente declara ciência ao autorizar. <b>8. Retirada e abandono.</b> O aparelho deve ser retirado em até 90 dias da comunicação da conclusão ou da recusa do orçamento, sob taxa de armazenagem. Notificado o cliente e decorridos mais 90 dias sem manifestação, o bem será considerado abandonado (Código Civil, art. 1.275, III), autorizada sua destinação para cobrir os custos. <b>9. Identificação.</b> A entrega se dá mediante esta via e documento com foto, ou autorização escrita do cliente.</p>
+            <div class="os-aceite">O cliente declara ter lido, compreendido e aceito integralmente os termos acima e autoriza a execução dos serviços descritos nesta Ordem de Serviço.</div>
         </div>
 
         <div class="os-assinaturas">
