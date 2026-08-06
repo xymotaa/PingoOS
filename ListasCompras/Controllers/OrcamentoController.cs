@@ -1,5 +1,4 @@
 using ListasCompras.Data;
-using ListasCompras.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ListasCompras.Controllers;

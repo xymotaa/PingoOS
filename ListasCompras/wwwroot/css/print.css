@@ -21,36 +21,6 @@ body {
   color: var(--ink);
 }
 
-/* ===== Barra superior (tela, não impressa) ===== */
-.report-topbar {
-  background: var(--card);
-  border-bottom: 1px solid var(--line);
-  padding: 0.9rem 1.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.report-topbar .trilha {
-  font-size: 0.82rem;
-  color: var(--ink-soft);
-}
-
-.report-topbar .trilha a {
-  color: var(--ink-soft);
-  text-decoration: none;
-}
-
-.report-topbar .trilha a:hover {
-  color: var(--pine);
-}
-
-.report-topbar .atual {
-  color: var(--ink);
-  font-weight: 600;
-}
-
 .btn-app {
   display: inline-flex;
   align-items: center;
