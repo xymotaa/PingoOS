@@ -1,5 +1,34 @@
 # Registro de Alterações
 
+## [2026-08-07] ROADMAP reordenado a partir da comparação com o MapOS
+
+### Motivo
+Levantamento dos 19 módulos do [MapOS](https://github.com/RamonSilva20/mapos) (via API do GitHub)
+comparado com o que o Pingo OS tem hoje. A conclusão que mudou a ordem: **os itens mais valiosos não
+são módulos novos, são laços que nós mesmos abrimos e não fechamos** — imprimimos 90 dias de
+garantia sem guardar nada, coletamos dados de cliente sem armazenar, temos linha de assinatura do
+técnico sem registrar quem foi.
+
+### Lacunas encontradas
+Sem equivalente no Pingo OS: **Clientes**, Servicos, Garantias, Financeiro, Relatorios, Arquivos
+(anexos), Auditoria, Permissoes, Cobrancas, Email. Também têm duas telas que valem copiar:
+`imprimirOsTermica` (comprovante em impressora térmica de balcão) e `rel_receitas_brutas_mei`
+(acompanhamento do teto de faturamento do MEI).
+
+### Mudança de ordem
+O ROADMAP listava "persistir Orçamento, Estoque e Caixa" como item único. Passou a começar por
+**Clientes + Orçamento juntos**, com a dependência explícita no topo do arquivo: modelar a Ordem de
+Serviço com os dados do cliente embutidos e criar o cadastro depois obrigaria a migrar dados na
+marra.
+
+### Arquivos Alterados
+
+| Arquivo | Alteração |
+|---|---|
+| `ROADMAP.md` | reescrito: 17 itens numerados por dependência, seção "A ordem importa" no topo, e o que foi recusado do MapOS (permissões granulares, cobranças) com o motivo |
+
+---
+
 ## [2026-08-07] Licença Apache 2.0 e atribuição de terceiros
 
 ### Problema
