@@ -23,6 +23,7 @@ lista de compras e está virando um ERP, módulo por módulo.
 - [Estrutura do projeto](#estrutura-do-projeto)
 - [Como adicionar um módulo](#como-adicionar-um-módulo)
 - [Guia de alterações no banco de dados](#guia-de-alterações-no-banco-de-dados)
+- [Licença](#licença)
 - [Melhorias futuras](ROADMAP.md)
 
 ---
@@ -329,3 +330,19 @@ cp ListasCompras/bin/Debug/net10.0/loja.db.bak ListasCompras/bin/Debug/net10.0/l
 | Alteração não aparece no site | Esqueceu de "Escrever modificações" no DB Browser, ou salvou o arquivo em outro lugar. |
 | `FOREIGN KEY constraint failed` | `CategoriaId`/`MarcaCelularId` inexistente, ou tentativa de apagar um registro pai que ainda tem filhos. |
 | Editou `SeedData.cs` mas nada mudou | O seed só roda com o banco vazio. Altere direto no `loja.db`. |
+
+---
+
+## Licença
+
+Distribuído sob a **Licença Apache 2.0** — veja [LICENSE](LICENSE) para o texto completo.
+Em resumo: você pode usar, modificar e redistribuir, inclusive comercialmente, desde que
+mantenha o aviso de copyright e sinalize o que foi alterado.
+
+Materiais de terceiros usados no projeto (ilustração, fontes e Tailwind) estão listados em
+[NOTICE](NOTICE), com as respectivas licenças e atribuições.
+
+> **Hospedagem por conta própria.** O sistema foi feito para rodar no computador da loja. Se você
+> escolher hospedá-lo num servidor, a responsabilidade é sua: configure HTTPS, use senhas fortes e
+> avalie a exposição dos dados pessoais dos clientes (CPF, endereço, telefone) que o sistema
+> armazena.

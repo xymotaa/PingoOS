@@ -73,14 +73,13 @@ configurar — o .NET publica uma pasta com um executável e o SQLite é um arqu
 
 ## Baixa prioridade
 
-### Crédito da ilustração da tela de login
-**Falta porque** a ilustração de `wwwroot/img/code-typing.png` vem da [Storyset](https://storyset.com)
-(Freepik), cujo uso gratuito **exige atribuição visível**. O repositório é público, então a
-pendência é real.
+### Ilustração própria para a tela de login
+**Situação atual:** a atribuição da [Storyset](https://storyset.com) já está no arquivo `NOTICE`,
+então a obrigação de crédito está cumprida.
 
-**O que envolve:** uma linha de crédito no rodapé do README ou na própria tela — ou trocar por uma
-ilustração própria, o que também resolveria o fato de "code typing" não ter relação com o assunto
-do sistema (assistência técnica de celular).
+**O que ainda incomoda:** "code typing" mostra alguém programando, o que não tem relação com o
+assunto do sistema (assistência técnica de celular). Uma ilustração do mundo da loja — bancada,
+aparelho aberto, ferramenta — diria mais e dispensaria a dependência de terceiro.
 
 ### Unificar os dois visuais
 **Situação atual:** convivem dois sistemas de design. As telas novas (Painel, Orçamento, Estoque,

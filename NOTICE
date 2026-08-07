@@ -1,0 +1,22 @@
+Pingo OS
+Copyright 2026 Lucas Barros Mota
+
+Este produto é licenciado sob a Licença Apache, Versão 2.0 (veja o arquivo LICENSE).
+
+--------------------------------------------------------------------------------
+Materiais de terceiros
+--------------------------------------------------------------------------------
+
+Ilustração — wwwroot/img/code-typing.png
+    "Code typing" (estilo Cuate), por Storyset / Freepik — https://storyset.com
+    Uso gratuito mediante atribuição. A cor original foi alterada para a paleta
+    do projeto; a obra em si não foi modificada de outra forma.
+
+Tailwind CSS — carregado via CDN
+    https://tailwindcss.com — Licença MIT
+
+Fonte Hanken Grotesk — carregada via Google Fonts
+    https://fonts.google.com/specimen/Hanken+Grotesk — SIL Open Font License 1.1
+
+Material Symbols — carregados via Google Fonts
+    https://fonts.google.com/icons — Licença Apache 2.0

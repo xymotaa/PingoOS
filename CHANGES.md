@@ -1,5 +1,27 @@
 # Registro de Alterações
 
+## [2026-08-07] Licença Apache 2.0 e atribuição de terceiros
+
+### Problema
+O repositório era público **sem licença**, o que juridicamente equivale a "todos os direitos
+reservados": ninguém podia legalmente usar, copiar ou modificar o código, mesmo estando visível.
+A ilustração da tela de login, de terceiro, também estava sem o crédito que seu uso exige.
+
+### Arquivos Alterados
+
+| Arquivo | Alteração |
+|---|---|
+| `LICENSE` | Apache 2.0, adicionada pelo GitHub. Corrigidos os colchetes do template na linha de copyright (`Copyright [2026] [Lucas Barros Mota]` → `Copyright 2026 Lucas Barros Mota`) — o próprio texto da licença instrui a removê-los |
+| `NOTICE` | **novo** — materiais de terceiros: ilustração Storyset, Tailwind, Hanken Grotesk e Material Symbols, com as respectivas licenças |
+| `README.md` | seção "Licença" com o resumo do que a Apache 2.0 permite e o aviso de que hospedar é por conta e risco de quem hospeda |
+| `ROADMAP.md` | atribuição da ilustração deixa de ser pendência; sobra a troca por arte própria |
+
+### Nota
+A Apache 2.0 cobre o código do projeto, não os materiais de terceiros — daí o `NOTICE`, que é a
+convenção da própria licença para declarar essas atribuições.
+
+---
+
 ## [2026-08-07] Telas de entrada em duas colunas e alinhamento da tela de Usuários
 
 ### Problema
