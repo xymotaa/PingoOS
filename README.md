@@ -1,278 +1,298 @@
-# xypedidos — Guia do Projeto
+# Pingo OS
 
-Sistema em **ASP.NET Core MVC** (.NET 10) que começou como "Lista de Compras" e está
-sendo transformado em um **ERP** para a loja, módulo por módulo. Este guia tem duas
-partes: [Estrutura do ERP](#estrutura-do-erp-como-adicionar-módulos) (para criar/alterar
-telas) e o [Guia de Alterações no Banco de Dados](#guia-de-alterações-no-banco-de-dados)
-(mais abaixo).
+Sistema de gestão para loja de acessórios e assistência técnica de celulares. Começou como uma
+lista de compras e está virando um ERP, módulo por módulo.
+
+![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet&logoColor=white)
+![ASP.NET Core MVC](https://img.shields.io/badge/ASP.NET%20Core-MVC-5C2D91)
+![EF Core](https://img.shields.io/badge/EF%20Core-10.0.9-512BD4)
+![SQLite](https://img.shields.io/badge/SQLite-loja.db-003B57?logo=sqlite&logoColor=white)
+![Tailwind](https://img.shields.io/badge/Tailwind-CDN-06B6D4?logo=tailwindcss&logoColor=white)
+
+![Painel do Pingo OS](docs/screenshots/painel.png)
 
 ---
 
-## Estrutura do ERP (como adicionar módulos)
+## Índice
 
-A tela de início é um **Painel** (`HomeController.Index` → `Views/Home/Index.cshtml`) que
-funciona como um launcher: mostra um card para cada módulo do sistema.
+- [Módulos](#módulos)
+- [Telas](#telas)
+- [Requisitos](#requisitos)
+- [Instalação](#instalação)
+- [Stack](#stack)
+- [Estrutura do projeto](#estrutura-do-projeto)
+- [Como adicionar um módulo](#como-adicionar-um-módulo)
+- [Guia de alterações no banco de dados](#guia-de-alterações-no-banco-de-dados)
 
-### Módulos
+---
 
-| Módulo | Controller | Status | Rota |
+## Módulos
+
+| Módulo | Controller | Rota | Status |
 |---|---|---|---|
-| Lista de compras | `ListaCompraController` | ✅ Pronto | `/ListaCompra` |
-| Caixa | `CaixaController` | 🚧 Em breve | `/Caixa` |
-| Estoque | `EstoqueController` | 🚧 Em breve | `/Estoque` |
-| Orçamento | `OrcamentoController` | 🚧 Em breve | `/Orcamento` |
-| Dashboards | `DashboardsController` | 🚧 Em breve | `/Dashboards` |
+| Lista de compras | `ListaCompraController` | `/ListaCompra` | ✅ Completo — telas + banco + PDF |
+| Configuração (perfil da loja) | `ConfiguracaoController` | `/Configuracao` | ✅ Completo — telas + banco |
+| Orçamento / Ordem de Serviço | `OrcamentoController` | `/Orcamento` | 🟡 Telas prontas, ainda sem banco |
+| Estoque | `EstoqueController` | `/Estoque` | 🟡 Telas prontas, dados em `localStorage` |
+| Caixa | `CaixaController` | `/Caixa` | 🟡 Telas prontas, ainda sem banco |
+| Dashboards | `DashboardsController` | `/Dashboards` | 🚧 Placeholder "Em breve" |
 
-Cada módulo é construído **por partes**: primeiro as telas, e o **banco de dados de cada
-módulo fica para depois** — modelado com EF Core seguindo o mesmo esquema da Lista de
-Compras (veja a segunda parte deste guia).
+Cada módulo é construído **por partes**: primeiro as telas, o **banco de cada módulo fica para
+depois** — modelado com EF Core seguindo o mesmo esquema da Lista de Compras.
 
-### Tela inicial (Painel)
+Hoje só **Lista de compras** e **Configuração** persistem em banco. Os demais funcionam na tela
+mas ainda não gravam.
 
-`Views/Home/Index.cshtml` é uma tela **autônoma** (`Layout = null`, não usa o `_Layout`
-verde dos módulos). Estilo dashboard Material-3 via **Tailwind (CDN)**, fonte **Hanken
-Grotesk** e ícones **Material Symbols**; tokens/cores no `tailwind.config` inline.
+## Telas
 
-- **Sem barra lateral.** Layout de largura cheia. Topbar com marca da loja (logo/nome) +
-  engrenagem de Configurações.
-- **Navegação**: cards de acesso rápido (bento grid) que apontam para cada módulo, mais a
-  engrenagem. Os cards são HTML estático no próprio arquivo (não há mais array de módulos).
-- **KPIs, gráfico, atividades e tabela de orçamentos são dados de exemplo** (marcados com o
-  chip "dados de exemplo") até os módulos terem banco.
-- Nome/logo vêm do `ViewData` (`NomeLoja`/`LogoLoja`); saudação varia com a hora.
+| Orçamento / OS | Estoque |
+|---|---|
+| ![Orçamento](docs/screenshots/orcamento.png) | ![Estoque](docs/screenshots/estoque.png) |
 
-> Convivem dois visuais: o Painel (Tailwind) e os módulos internos (`site.css` verde/Inter).
-> É esperado por enquanto — unificar depois, se quiser.
+| Lista de compras |
+|---|
+| ![Lista de compras](docs/screenshots/lista-compras.png) |
 
-### Convenções
+### Orçamento com impressão em duas vias
 
-- **Um controller por módulo**, herdando de `LojaControllerBase` (isso injeta o
-  `AppDbContext` e preenche `NomeLoja`/`LogoLoja` no `ViewData` para o layout).
-- **Módulo ainda não construído** retorna a tela genérica "Em breve":
-  ```csharp
-  return View("EmBreve", new ModuloEmBreveViewModel
-  {
-      Icone = "💵",
-      Nome = "Caixa",
-      Descricao = "Registre vendas e controle as entradas e saídas do dia.",
-      Recursos = new() { "Abertura e fechamento de caixa", /* ... */ },
-  });
-  ```
-  A view fica em `Views/Shared/EmBreve.cshtml` e é compartilhada por todos os módulos.
-- **Design system** em `wwwroot/css/site.css`: identidade ERP verde institucional
-  (`--pine: #123f31`), fonte Inter, cards com borda fina. Reaproveite as classes
-  existentes (`.page-container`, `.card-forms`, `.btn-app`, `.app-table`, `.pill`...) em
-  vez de criar estilo novo. Orientação visual: skill `frontend-design` em `.agents/skills/`.
-- **Layout e navbar** em `Views/Shared/_Layout.cshtml`. A logo/nome da loja levam de volta
-  ao Painel.
+O módulo de Orçamento gera uma **Ordem de Serviço** pronta para impressão, com as duas vias na
+mesma folha A4 (1ª via do cliente, 2ª via do técnico) separadas por uma linha de corte. O
+documento inclui os termos e condições do serviço com as bases legais (CDC, LGPD, Código Civil):
+garantia de 90 dias, exclusão de mau uso, sigilo sobre os arquivos pessoais do aparelho e prazo
+de retirada.
 
-### Passo a passo: transformar um "Em breve" em módulo real
+Se o orçamento tiver muitos itens, o documento se ajusta sozinho para caber em uma folha
+(`ajustarEscala()` em `wwwroot/js/orcamento.js`).
 
-1. No controller do módulo, troque o `View("EmBreve", ...)` por uma `Index()` que monta o
-   view model real e retorna a view própria.
-2. Crie `Views/<Modulo>/Index.cshtml` (e demais telas), espelhando `Views/ListaCompra/`.
-3. Modele as tabelas/entidades no banco (segunda parte deste guia) e adicione a migration
-   EF Core correspondente.
+## Requisitos
 
-### Passo a passo: adicionar um módulo totalmente novo ao Painel
+- [.NET SDK 10.0](https://dotnet.microsoft.com/download) ou superior
+- `sqlite3` ou [DB Browser for SQLite](https://sqlitebrowser.org) — opcional, só para editar o banco à mão
 
-1. Crie `<Nome>Controller : LojaControllerBase` com `Index()` retornando `View("EmBreve", ...)`.
-2. Adicione um card de acesso rápido em `Views/Home/Index.cshtml` (copie um `<a>` do bento
-   grid, ajuste ícone Material Symbols, texto e `asp-controller`).
-3. Pronto — a rota `/{Controller}` já funciona pela rota padrão (`Program.cs`).
+Não precisa instalar servidor de banco: o SQLite é um arquivo, criado automaticamente.
+
+## Instalação
+
+```bash
+git clone https://github.com/xymotaa/xypedidos.git
+cd xypedidos/ListasCompras
+dotnet restore
+dotnet run
+```
+
+Acesse **http://localhost:5096** (ou https://localhost:7016).
+
+Na primeira execução o sistema cria o banco `loja.db`, aplica as migrations e popula os dados
+iniciais (categorias, marcas e modelos de celular) via `Data/SeedData.cs`.
+
+Para configurar o nome, logo, CNPJ e endereço da loja — que aparecem no cabeçalho da OS e do PDF
+— acesse **/Configuracao**.
+
+### Migrations
+
+O `dotnet-ef` já está declarado como ferramenta local do projeto:
+
+```bash
+dotnet tool restore
+dotnet dotnet-ef migrations add NomeDaMigration
+```
+
+As migrations são aplicadas sozinhas ao iniciar a aplicação (`db.Database.Migrate()` no `Program.cs`).
+
+## Stack
+
+| Camada | Tecnologia |
+|---|---|
+| Backend | ASP.NET Core MVC, .NET 10 |
+| ORM | Entity Framework Core 10.0.9 |
+| Banco | SQLite (`loja.db`) |
+| Front das telas novas | Tailwind CSS via CDN, fonte Hanken Grotesk, Material Symbols |
+| Front das telas antigas | `wwwroot/css/site.css` (verde institucional, fonte Inter) |
+| PDF / impressão | Impressão do navegador + CSS `@media print` |
+
+Sem jQuery, sem Bootstrap, sem build step de front-end.
+
+> **Dois visuais convivem hoje.** As telas novas (Painel, Orçamento, Estoque, Caixa,
+> Configuração) são autônomas com `Layout = null` e Tailwind. As telas antigas (Lista de compras,
+> "Em breve") usam o `site.css` verde. É esperado por enquanto — unificar depois, se quiser.
+
+## Estrutura do projeto
+
+```
+ListasCompras/
+├── Controllers/       um controller por módulo, herdando de LojaControllerBase
+├── Data/              AppDbContext + SeedData
+├── Migrations/        migrations do EF Core
+├── Models/            entidades e view models
+├── Views/
+│   ├── Home/          o Painel (tela inicial)
+│   ├── <Modulo>/      telas de cada módulo
+│   └── Shared/        _Navbar (topbar+sidebar), EmBreve, _Layout, Error
+└── wwwroot/
+    ├── css/           site.css (telas antigas) e print.css (PDF da lista)
+    └── js/            um arquivo por módulo
+```
+
+**Tela inicial (Painel)** — `Views/Home/Index.cshtml`, estilo dashboard Material-3: sidebar fixa
+com os módulos, topbar com a marca da loja e menu do usuário, KPIs, gráfico e tabela de
+orçamentos. Os KPIs mostram estado vazio ("Sem dados ainda") até os módulos terem banco.
+
+**Navbar compartilhada** — `Views/Shared/_Navbar.cshtml`, incluída via
+`@await Html.PartialAsync("_Navbar")` por todas as telas autônomas. Alterar a navbar = editar só
+o partial.
+
+**`_Layout.cshtml`** é usado apenas pela página de erro; todas as outras views definem
+`Layout = null`.
+
+## Como adicionar um módulo
+
+### Transformar um "Em breve" em módulo real
+
+1. No controller, troque o `View("EmBreve", ...)` por uma `Index()` que monta o view model e
+   retorna a view própria.
+2. Crie `Views/<Modulo>/Index.cshtml` — comece copiando uma tela Tailwind existente
+   (`Views/Orcamento/Index.cshtml` é um bom molde) e inclua o `_Navbar`.
+3. Modele as entidades e adicione a migration (veja a seção do banco abaixo).
+
+### Adicionar um módulo totalmente novo
+
+1. Crie `<Nome>Controller : LojaControllerBase` — a base injeta o `AppDbContext` e preenche os
+   dados da loja no `ViewData` (`NomeLoja`, `LogoLoja`, `LojaCnpj`, `LojaEndereco`...).
+2. Enquanto não houver tela, retorne o placeholder compartilhado:
+
+   ```csharp
+   return View("EmBreve", new ModuloEmBreveViewModel
+   {
+       Icone = "💵",
+       Nome = "Caixa",
+       Descricao = "Registre vendas e controle as entradas e saídas do dia.",
+       Recursos = new() { "Abertura e fechamento de caixa", /* ... */ },
+   });
+   ```
+
+3. Adicione o item na sidebar em `Views/Home/Index.cshtml` (copie um `<a>`, ajuste o ícone
+   Material Symbols, o texto e o `asp-controller`).
+4. Pronto — a rota `/{Controller}` já funciona pela rota padrão do `Program.cs`.
 
 ---
 
-## Guia de Alterações no Banco de Dados
+## Guia de alterações no banco de dados
 
-Este projeto usa um banco **SQLite** (`loja.db`), gerado automaticamente na primeira
-execução com dados iniciais (`ListasCompras/Data/SeedData.cs`). Como ainda não existe
-uma tela de administração no site para editar categorias, produtos ou modelos de
-celular, essas alterações precisam ser feitas direto no banco.
+O banco é um arquivo SQLite gerado na primeira execução com dados iniciais
+(`ListasCompras/Data/SeedData.cs`). Como ainda não existe tela de administração para editar
+categorias, produtos ou modelos de celular, essas alterações são feitas direto no banco.
 
-> ⚠️ O seed (`SeedData.cs`) só roda **uma vez**, quando o banco está vazio. Depois que
-> o banco já tem dados, editar `SeedData.cs` não muda nada — é preciso alterar o
-> arquivo `loja.db` diretamente, como mostrado abaixo.
+> ⚠️ O seed só roda **uma vez**, quando o banco está vazio. Depois que já tem dados, editar
+> `SeedData.cs` não muda nada — é preciso alterar o `loja.db` diretamente.
 
-## Onde fica o banco
+### Onde fica o banco
 
 ```
 ListasCompras/bin/Debug/net10.0/loja.db
 ```
 
-## Duas formas de editar o banco
-
-Você pode usar o terminal (`sqlite3`) ou uma interface gráfica (`DB Browser for
-SQLite` / `sqlitebrowser`). O resultado final é o mesmo — escolha a que preferir.
-
-### Opção A — Terminal (`sqlite3`)
-
-Pré-requisito: ter o `sqlite3` instalado. Para checar:
-
-```bash
-sqlite3 --version
-```
-
-Passo a passo:
-
-1. Abra o banco pelo terminal:
-   ```bash
-   sqlite3 ListasCompras/bin/Debug/net10.0/loja.db
-   ```
-2. Rode o comando SQL desejado (exemplos abaixo).
-3. Confira o resultado com um `SELECT`.
-4. Saia com `.quit`.
-5. Recarregue a página no navegador (F5) — não precisa reiniciar o site, o SQLite lê o
-   arquivo direto.
-
-Dica: você também pode rodar um comando único sem entrar no modo interativo:
-
-```bash
-sqlite3 ListasCompras/bin/Debug/net10.0/loja.db "SELECT * FROM Categorias;"
-```
-
-### Opção B — DB Browser for SQLite (interface gráfica)
-
-Pré-requisito: ter o `sqlitebrowser` instalado (pacote `sqlitebrowser` na maioria das
-distros Linux, ou baixar em https://sqlitebrowser.org).
-
-Para abrir já direto no banco do projeto, pelo terminal:
-
-```bash
-sqlitebrowser ListasCompras/bin/Debug/net10.0/loja.db
-```
-
-Passo a passo:
-
-1. Vá na aba **Execute SQL**.
-2. Cole o comando SQL desejado (exemplos abaixo).
-3. Execute com o botão **▶ (play)** ou `Ctrl+Enter`.
-4. Clique em **"Escrever modificações"** (Write Changes) — sem isso a alteração não é
-   salva de fato no arquivo.
-5. Se pedir para salvar o arquivo ao fechar, salve **por cima do mesmo arquivo
-   original** (`ListasCompras/bin/Debug/net10.0/loja.db`), não em outro lugar —
-   senão o site continua lendo o banco antigo sem a alteração.
-6. Recarregue a página no navegador (F5).
-
-> ⚠️ Enquanto o DB Browser está com o banco aberto, o arquivo fica "travado" para
-> escrita. Se o site (`dotnet run`) tentar gravar algo ao mesmo tempo (por exemplo,
-> alguém adicionando um item na lista), pode dar erro de `database is locked`. Feche o
-> DB Browser (ou pelo menos escreva as modificações) antes de usar o site normalmente.
-
----
-
-## Tabelas principais
+### Tabelas principais
 
 | Tabela | Colunas | Descrição |
 |---|---|---|
 | `Categorias` | Id, Nome, RequerModelo | Categorias do dropdown (Capinha, Película, Cabo...). `RequerModelo` = 1 se a categoria exige selecionar marca/modelo do celular. |
 | `Produtos` | Id, Nome, Descricao, CategoriaId | Itens vendidos, vinculados a uma categoria. |
 | `MarcasCelular` | Id, Nome | Marcas (Samsung, Apple, Motorola, Xiaomi...). |
-| `ModelosCelular` | Id, Nome, MarcaCelularId | Modelos de celular (Galaxy A22, iPhone 13...), vinculados a uma marca. Um modelo cadastrado fica disponível para **qualquer** categoria com `RequerModelo = 1` (não precisa cadastrar separado por categoria). |
+| `ModelosCelular` | Id, Nome, MarcaCelularId | Modelos (Galaxy A22, iPhone 13...), vinculados a uma marca. Um modelo cadastrado fica disponível para **qualquer** categoria com `RequerModelo = 1`. |
+| `ListasCompra` / `ItensListaCompra` | — | A lista de reposição e seus itens. |
+| `ConfiguracoesLoja` | — | Nome, logo, CNPJ, contato e endereço da loja. |
 
----
+### Duas formas de editar
 
-## Renomear uma categoria (ex: "Cabo USB" → outro nome)
+#### Opção A — Terminal (`sqlite3`)
+
+1. Abra o banco:
+   ```bash
+   sqlite3 ListasCompras/bin/Debug/net10.0/loja.db
+   ```
+2. Rode o SQL desejado (exemplos abaixo) e confira com um `SELECT`.
+3. Saia com `.quit` e recarregue a página no navegador (F5) — não precisa reiniciar o site.
+
+Também dá para rodar um comando único sem entrar no modo interativo:
+
+```bash
+sqlite3 ListasCompras/bin/Debug/net10.0/loja.db "SELECT * FROM Categorias;"
+```
+
+#### Opção B — DB Browser for SQLite
+
+```bash
+sqlitebrowser ListasCompras/bin/Debug/net10.0/loja.db
+```
+
+1. Aba **Execute SQL**, cole o comando e execute (**▶** ou `Ctrl+Enter`).
+2. Clique em **"Escrever modificações"** (Write Changes) — sem isso nada é salvo no arquivo.
+3. Ao fechar, salve **por cima do arquivo original**, não em outro lugar.
+4. Recarregue a página (F5).
+
+> ⚠️ Com o DB Browser aberto o arquivo fica travado para escrita. Se o site tentar gravar ao
+> mesmo tempo, dá `database is locked`. Feche o DB Browser antes de usar o site.
+
+### Receitas de SQL
 
 ```sql
+-- Renomear uma categoria
 UPDATE Categorias SET Nome = 'Novo Nome' WHERE Nome = 'Cabo USB';
-```
 
-## Adicionar uma nova categoria
-
-```sql
+-- Nova categoria (RequerModelo = 1 se precisar de marca/modelo)
 INSERT INTO Categorias (Nome, RequerModelo) VALUES ('Suporte Veicular', 0);
-```
 
-Use `RequerModelo = 1` se a categoria precisar de marca/modelo de celular (como Capinha
-e Película).
-
-## Adicionar um novo produto dentro de uma categoria existente
-
-```sql
+-- Novo produto numa categoria existente
 INSERT INTO Produtos (Nome, CategoriaId)
 VALUES ('Suporte Magnético', (SELECT Id FROM Categorias WHERE Nome = 'Suporte Veicular'));
-```
 
-## Adicionar um novo modelo de celular (ex: Galaxy A22 na Samsung)
-
-```sql
+-- Novo modelo de celular
 INSERT INTO ModelosCelular (Nome, MarcaCelularId)
 VALUES ('Galaxy A22', (SELECT Id FROM MarcasCelular WHERE Nome = 'Samsung'));
-```
 
-Esse modelo passa a aparecer automaticamente no dropdown "Modelo" para qualquer
-categoria que exija modelo (Capinha, Película etc.), sem precisar repetir o cadastro.
-
-## Adicionar uma nova marca de celular
-
-```sql
+-- Nova marca
 INSERT INTO MarcasCelular (Nome) VALUES ('Realme');
-```
 
-## Editar (renomear/corrigir) outros registros
-
-```sql
--- Renomear um produto
+-- Renomear registros
 UPDATE Produtos SET Nome = 'Capinha Transparente' WHERE Nome = 'Capinha Silicone';
-
--- Renomear um modelo de celular
 UPDATE ModelosCelular SET Nome = 'Galaxy A23s' WHERE Nome = 'Galaxy A23';
 
--- Trocar uma categoria para exigir modelo (ou deixar de exigir)
+-- Passar a exigir modelo numa categoria
 UPDATE Categorias SET RequerModelo = 1 WHERE Nome = 'Suporte Veicular';
-```
 
-## Remover um registro
-
-```sql
+-- Remover
 DELETE FROM Produtos WHERE Nome = 'Nome do Produto';
 DELETE FROM ModelosCelular WHERE Nome = 'Galaxy A05';
-DELETE FROM Categorias WHERE Nome = 'Suporte Veicular';
-```
 
-> ⚠️ Cuidado: apagar uma `Categoria` ou `Produto` que já tem itens em listas de compras
-> vinculados apaga **em cascata** esses itens (`ON DELETE CASCADE`). O mesmo vale para
-> `MarcasCelular` → `ModelosCelular`. Se não tiver certeza, faça um backup antes (veja
-> abaixo) ou rode um `SELECT` primeiro para ver o que seria afetado.
-
-## Conferir se um registro foi inserido/alterado corretamente
-
-```sql
+-- Conferir
 SELECT * FROM Categorias WHERE Nome LIKE '%Suporte%';
-SELECT * FROM ModelosCelular WHERE Nome = 'Galaxy A22';
-SELECT * FROM Produtos ORDER BY Id DESC LIMIT 5; -- últimos produtos inseridos
-```
+SELECT * FROM Produtos ORDER BY Id DESC LIMIT 5;
 
-## Ver o que seria apagado antes de um DELETE
-
-```sql
--- Quantos itens de lista usam esse produto?
+-- Ver o que um DELETE afetaria antes de rodar
 SELECT COUNT(*) FROM ItensListaCompra WHERE ProdutoId =
   (SELECT Id FROM Produtos WHERE Nome = 'Nome do Produto');
 ```
 
----
+> ⚠️ Apagar uma `Categoria` ou `Produto` que já tem itens vinculados apaga **em cascata** esses
+> itens (`ON DELETE CASCADE`). O mesmo vale para `MarcasCelular` → `ModelosCelular`. Na dúvida,
+> faça backup ou rode um `SELECT` antes.
 
-## Fazer backup antes de mexer no banco
+### Backup
 
-Como o banco é só um arquivo, basta copiá-lo antes de qualquer alteração:
+O banco é só um arquivo — copie antes de mexer:
 
 ```bash
 cp ListasCompras/bin/Debug/net10.0/loja.db ListasCompras/bin/Debug/net10.0/loja.db.bak
-```
 
-Se algo der errado, é só restaurar a cópia:
-
-```bash
+# restaurar
 cp ListasCompras/bin/Debug/net10.0/loja.db.bak ListasCompras/bin/Debug/net10.0/loja.db
 ```
 
-## Erros comuns
+### Erros comuns
 
 | Erro | Causa provável |
 |---|---|
-| `database is locked` | O DB Browser (ou outro programa) está com o banco aberto ao mesmo tempo que o site. Feche um dos dois. |
-| Alteração não aparece no site | Esqueceu de clicar em "Escrever modificações" no DB Browser, ou salvou o arquivo em outro lugar. Confirme o caminho `ListasCompras/bin/Debug/net10.0/loja.db`. |
-| `FOREIGN KEY constraint failed` | Está tentando inserir um `CategoriaId`/`MarcaCelularId` que não existe, ou apagar um registro "pai" (Categoria/Marca) que ainda tem "filhos" (Produtos/Modelos) vinculados. |
-| Editou `SeedData.cs` mas nada mudou | O seed só roda quando o banco está vazio. Depois que já tem dados, altere direto no `loja.db` (não no código). |
+| `database is locked` | O DB Browser está com o banco aberto ao mesmo tempo que o site. Feche um dos dois. |
+| Alteração não aparece no site | Esqueceu de "Escrever modificações" no DB Browser, ou salvou o arquivo em outro lugar. |
+| `FOREIGN KEY constraint failed` | `CategoriaId`/`MarcaCelularId` inexistente, ou tentativa de apagar um registro pai que ainda tem filhos. |
+| Editou `SeedData.cs` mas nada mudou | O seed só roda com o banco vazio. Altere direto no `loja.db`. |
