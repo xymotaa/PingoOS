@@ -93,6 +93,13 @@ iniciais (categorias, marcas e modelos de celular) via `Data/SeedData.cs`.
 Para configurar o nome, logo, CNPJ e endereço da loja — que aparecem no cabeçalho da OS e do PDF
 — acesse **/Configuracao**.
 
+### Como o acesso funciona
+
+Todas as telas exigem login. Abrir `http://localhost:5096` sem sessão leva direto ao **login**, e
+depois de entrar o sistema segue para o painel — ou para a página que a pessoa tentou abrir, se ela
+tiver vindo de um link. A sessão dura 8 horas e renova enquanto o sistema está em uso, então o
+expediente do dia seguinte começa pedindo login.
+
 ### Primeiro acesso e senhas
 
 Na primeira vez que abrir, o sistema pede para criar a conta do responsável e nomear a loja.

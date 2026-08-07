@@ -13,9 +13,10 @@ Login e recuperação passaram a dividir a tela: **card à esquerda, painel de i
 `_PainelIlustracao.cshtml` — as duas telas são a mesma moldura, muda só o card. Abaixo de `lg` o
 painel some e o card ocupa a largura toda.
 
-O card à esquerda abre com **Pingo OS** e a frase do que o sistema faz, acima do título da ação
-("Entrar" ou "Esqueci minha senha"). O painel à direita ficou só com a ilustração, centralizada e
-alinhada com o card, sobre o verde institucional (`primary #003527`).
+No login, o título do card é o próprio nome do sistema — **Pingo OS** — em vez de "Entrar": a tela
+é a porta de entrada do produto, e o botão já diz qual é a ação. A recuperação de senha mantém o
+título da ação, porque ali o usuário precisa saber em que página está. O painel à direita ficou só
+com a ilustração, centralizada e alinhada com o card, sobre o verde institucional (`primary #003527`).
 
 O bloco de identidade da loja saiu do card: exibia o nome da loja onde se espera o nome do sistema,
 e a loja já aparece na barra superior depois do login.
