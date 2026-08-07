@@ -1,0 +1,73 @@
+@{
+    Layout = null;
+    ViewData["Title"] = "Entrar";
+    var nomeLoja = ViewData["NomeLoja"] as string ?? "Minha Loja";
+    var logo = ViewData["LogoLoja"] as string;
+    var erro = ViewData["Erro"] as string;
+}
+<!DOCTYPE html>
+<html class="light" lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Entrar — @nomeLoja</title>
+    @await Html.PartialAsync("_HeadTailwind")
+</head>
+<body class="bg-surface min-h-screen flex items-center justify-center px-md py-xl">
+
+    <main class="w-full max-w-[400px]">
+
+        <div class="text-center mb-lg">
+            <div class="w-16 h-16 mx-auto mb-md rounded-xl bg-primary text-white flex items-center justify-center overflow-hidden">
+                @if (!string.IsNullOrEmpty(logo))
+                {
+                    <img src="@logo" alt="@nomeLoja" class="w-full h-full object-cover" />
+                }
+                else
+                {
+                    <span class="font-headline-md text-headline-md font-bold">@nomeLoja.Trim()[0]</span>
+                }
+            </div>
+            <h1 class="font-headline-lg text-headline-lg text-primary">@nomeLoja</h1>
+            <p class="font-body-md text-body-md text-on-surface-variant">Entre para continuar</p>
+        </div>
+
+        <div class="bg-white rounded-xl border border-outline-variant shadow-sm p-lg">
+            @if (!string.IsNullOrEmpty(erro))
+            {
+                <div class="mb-md bg-error-container text-error px-md py-sm rounded-lg font-label-md text-label-md flex items-center gap-xs">
+                    <span class="material-symbols-outlined text-[18px]">error</span>
+                    <span>@erro</span>
+                </div>
+            }
+
+            <form asp-action="Login" method="post" class="flex flex-col gap-md">
+                <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
+
+                <div>
+                    <label class="font-label-md text-label-md text-on-surface-variant" for="email">E-mail</label>
+                    <input id="email" name="email" type="email" required autofocus autocomplete="username"
+                           class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                </div>
+
+                <div>
+                    <label class="font-label-md text-label-md text-on-surface-variant" for="senha">Senha</label>
+                    <input id="senha" name="senha" type="password" required autocomplete="current-password"
+                           class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                </div>
+
+                <button type="submit"
+                        class="mt-xs bg-secondary text-white rounded-full px-lg py-sm font-label-md text-label-md font-bold hover:bg-opacity-90 transition-colors flex items-center justify-center gap-xs">
+                    <span class="material-symbols-outlined text-[18px]">login</span>
+                    Entrar
+                </button>
+            </form>
+        </div>
+
+        <p class="mt-md text-center font-label-sm text-label-sm text-outline">
+            Esqueceu a senha? Peça ao administrador da loja para redefinir.
+        </p>
+    </main>
+
+</body>
+</html>

@@ -1,0 +1,92 @@
+@{
+    Layout = null;
+    ViewData["Title"] = "Novo usuário";
+    var nomeLoja = ViewData["NomeLoja"] as string ?? "Minha Loja";
+    var erro = ViewData["Erro"] as string;
+}
+<!DOCTYPE html>
+<html class="light" lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>@nomeLoja — Novo usuário</title>
+    @await Html.PartialAsync("_HeadTailwind")
+</head>
+<body class="bg-surface">
+    @await Html.PartialAsync("_Navbar")
+
+    <main class="pt-24 px-lg pb-xl max-w-[560px] mx-auto">
+
+        <section class="mb-md">
+            <a asp-action="Usuarios" class="font-label-md text-label-md text-on-surface-variant hover:text-primary flex items-center gap-xs w-fit mb-sm">
+                <span class="material-symbols-outlined text-[18px]">arrow_back</span> Usuários
+            </a>
+            <h1 class="font-headline-lg text-headline-lg text-primary">Novo usuário</h1>
+            <p class="font-body-md text-body-md text-on-surface-variant">Cadastre um técnico ou outro administrador.</p>
+        </section>
+
+        <div class="bg-white rounded-xl border border-outline-variant shadow-sm p-lg">
+            @if (!string.IsNullOrEmpty(erro))
+            {
+                <div class="mb-md bg-error-container text-error px-md py-sm rounded-lg font-label-md text-label-md flex items-center gap-xs">
+                    <span class="material-symbols-outlined text-[18px]">error</span>
+                    <span>@erro</span>
+                </div>
+            }
+
+            <form asp-action="NovoUsuario" method="post" class="flex flex-col gap-md">
+
+                <div>
+                    <label class="font-label-md text-label-md text-on-surface-variant" for="nome">Nome</label>
+                    <input id="nome" name="nome" type="text" required autofocus
+                           class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                </div>
+
+                <div>
+                    <label class="font-label-md text-label-md text-on-surface-variant" for="email">E-mail (será o login)</label>
+                    <input id="email" name="email" type="email" required autocomplete="off"
+                           class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                </div>
+
+                <div>
+                    <label class="font-label-md text-label-md text-on-surface-variant" for="papel">Papel</label>
+                    <select id="papel" name="papel"
+                            class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30">
+                        <option value="Tecnico">Técnico — usa o sistema no dia a dia</option>
+                        <option value="Admin">Administrador — também gerencia usuários</option>
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-md">
+                    <div>
+                        <label class="font-label-md text-label-md text-on-surface-variant" for="senha">Senha</label>
+                        <input id="senha" name="senha" type="password" required minlength="6" autocomplete="new-password"
+                               class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                    </div>
+                    <div>
+                        <label class="font-label-md text-label-md text-on-surface-variant" for="confirmacao">Confirmar senha</label>
+                        <input id="confirmacao" name="confirmacao" type="password" required minlength="6" autocomplete="new-password"
+                               class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                    </div>
+                </div>
+
+                <p class="font-label-sm text-label-sm text-outline">
+                    Combine a senha com a pessoa e peça para ela trocar depois. Mínimo de 6 caracteres.
+                </p>
+
+                <div class="flex items-center justify-end gap-sm">
+                    <a asp-action="Usuarios"
+                       class="border border-outline text-on-surface-variant rounded-full px-lg py-sm font-label-md text-label-md font-bold hover:bg-surface-container-low transition-colors">
+                        Cancelar
+                    </a>
+                    <button type="submit"
+                            class="bg-secondary text-white rounded-full px-lg py-sm font-label-md text-label-md font-bold hover:bg-opacity-90 transition-colors flex items-center gap-xs">
+                        <span class="material-symbols-outlined text-[18px]">person_add</span>
+                        Cadastrar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
+</body>
+</html>

@@ -2,6 +2,10 @@
     var navNomeLoja = ViewData["NomeLoja"] as string ?? "Minha Loja";
     var navLogo = ViewData["LogoLoja"] as string;
     var navInicial = string.IsNullOrWhiteSpace(navNomeLoja) ? "L" : navNomeLoja.Trim()[0].ToString().ToUpper();
+
+    var navUsuario = User.Identity?.Name;
+    var navAdmin = User.IsInRole("Admin");
+    var navPapel = navAdmin ? "Administrador" : "Técnico";
 }
 <!-- Barra superior -->
 <header class="no-print fixed top-0 w-full z-50 bg-surface border-b border-outline-variant shadow-sm flex justify-between items-center h-16 px-lg">
@@ -14,8 +18,8 @@
         <div class="relative">
             <button id="userMenuBtn" type="button" class="flex items-center gap-sm rounded-full hover:bg-surface-container-high transition-colors pl-sm pr-xs py-xs">
                 <div class="text-right hidden sm:block">
-                    <p class="font-label-md text-label-md font-semibold text-on-surface">@navNomeLoja</p>
-                    <p class="font-label-sm text-label-sm text-outline">Administrador</p>
+                    <p class="font-label-md text-label-md font-semibold text-on-surface">@(navUsuario ?? navNomeLoja)</p>
+                    <p class="font-label-sm text-label-sm text-outline">@navPapel</p>
                 </div>
                 <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold overflow-hidden border-2 border-primary-fixed">
                     @if (!string.IsNullOrEmpty(navLogo))
@@ -29,10 +33,22 @@
                 </div>
                 <span class="material-symbols-outlined text-[20px] text-on-surface-variant hidden sm:inline">expand_more</span>
             </button>
-            <div id="userMenu" class="hidden absolute right-0 top-full mt-sm w-48 bg-white rounded-xl border border-outline-variant shadow-lg p-xs z-50">
+            <div id="userMenu" class="hidden absolute right-0 top-full mt-sm w-56 bg-white rounded-xl border border-outline-variant shadow-lg p-xs z-50">
                 <a asp-controller="Configuracao" asp-action="Index" class="flex items-center gap-xs px-sm py-xs rounded-lg hover:bg-surface-container-low transition-colors text-on-surface">
-                    <span class="material-symbols-outlined text-[18px] text-on-surface-variant">manage_accounts</span>
-                    <span class="font-label-md text-label-md">Editar perfil</span>
+                    <span class="material-symbols-outlined text-[18px] text-on-surface-variant">storefront</span>
+                    <span class="font-label-md text-label-md">Perfil da loja</span>
+                </a>
+                @if (navAdmin)
+                {
+                    <a asp-controller="Conta" asp-action="Usuarios" class="flex items-center gap-xs px-sm py-xs rounded-lg hover:bg-surface-container-low transition-colors text-on-surface">
+                        <span class="material-symbols-outlined text-[18px] text-on-surface-variant">group</span>
+                        <span class="font-label-md text-label-md">Usuários</span>
+                    </a>
+                }
+                <hr class="my-xs border-outline-variant" />
+                <a asp-controller="Conta" asp-action="Sair" class="flex items-center gap-xs px-sm py-xs rounded-lg hover:bg-error-container hover:text-error transition-colors text-on-surface">
+                    <span class="material-symbols-outlined text-[18px]">logout</span>
+                    <span class="font-label-md text-label-md">Sair</span>
                 </a>
             </div>
         </div>

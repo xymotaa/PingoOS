@@ -1,0 +1,88 @@
+@{
+    Layout = null;
+    ViewData["Title"] = "Primeiro acesso";
+    var erro = ViewData["Erro"] as string;
+}
+<!DOCTYPE html>
+<html class="light" lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Primeiro acesso — Pingo OS</title>
+    @await Html.PartialAsync("_HeadTailwind")
+</head>
+<body class="bg-surface min-h-screen flex items-center justify-center px-md py-xl">
+
+    <main class="w-full max-w-[520px]">
+
+        <div class="text-center mb-lg">
+            <span class="material-symbols-outlined text-[40px] text-secondary">storefront</span>
+            <h1 class="font-headline-lg text-headline-lg text-primary">Bem-vindo ao Pingo OS</h1>
+            <p class="font-body-md text-body-md text-on-surface-variant">
+                Nenhuma conta existe ainda. Crie a conta do responsável pela loja para começar.
+            </p>
+        </div>
+
+        <div class="bg-white rounded-xl border border-outline-variant shadow-sm p-lg">
+            @if (!string.IsNullOrEmpty(erro))
+            {
+                <div class="mb-md bg-error-container text-error px-md py-sm rounded-lg font-label-md text-label-md flex items-center gap-xs">
+                    <span class="material-symbols-outlined text-[18px]">error</span>
+                    <span>@erro</span>
+                </div>
+            }
+
+            <form asp-action="PrimeiroAcesso" method="post" class="flex flex-col gap-md">
+
+                <div>
+                    <label class="font-label-md text-label-md text-on-surface-variant" for="nomeLoja">Nome da loja</label>
+                    <input id="nomeLoja" name="nomeLoja" type="text" required autofocus placeholder="Ex: Pingo Celulares"
+                           class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                    <p class="mt-xs font-label-sm text-label-sm text-outline">
+                        Aparece no cabeçalho do sistema e nas ordens de serviço impressas. Dá para completar CNPJ, endereço e logo depois, em Configurações.
+                    </p>
+                </div>
+
+                <hr class="border-outline-variant" />
+
+                <div>
+                    <label class="font-label-md text-label-md text-on-surface-variant" for="nome">Seu nome</label>
+                    <input id="nome" name="nome" type="text" required
+                           class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                </div>
+
+                <div>
+                    <label class="font-label-md text-label-md text-on-surface-variant" for="email">E-mail (será seu login)</label>
+                    <input id="email" name="email" type="email" required autocomplete="username"
+                           class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-md">
+                    <div>
+                        <label class="font-label-md text-label-md text-on-surface-variant" for="senha">Senha</label>
+                        <input id="senha" name="senha" type="password" required minlength="6" autocomplete="new-password"
+                               class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                    </div>
+                    <div>
+                        <label class="font-label-md text-label-md text-on-surface-variant" for="confirmacao">Confirmar senha</label>
+                        <input id="confirmacao" name="confirmacao" type="password" required minlength="6" autocomplete="new-password"
+                               class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                    </div>
+                </div>
+
+                <p class="font-label-sm text-label-sm text-outline">
+                    Mínimo de 6 caracteres. Guarde bem: o sistema ainda não envia e-mail, então não há
+                    recuperação automática de senha para esta conta.
+                </p>
+
+                <button type="submit"
+                        class="mt-xs bg-secondary text-white rounded-full px-lg py-sm font-label-md text-label-md font-bold hover:bg-opacity-90 transition-colors flex items-center justify-center gap-xs">
+                    <span class="material-symbols-outlined text-[18px]">check</span>
+                    Criar conta e começar
+                </button>
+            </form>
+        </div>
+    </main>
+
+</body>
+</html>

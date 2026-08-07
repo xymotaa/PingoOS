@@ -1,0 +1,31 @@
+@{
+    Layout = null;
+    ViewData["Title"] = "Sem permissão";
+    var nomeLoja = ViewData["NomeLoja"] as string ?? "Minha Loja";
+}
+<!DOCTYPE html>
+<html class="light" lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>@nomeLoja — Sem permissão</title>
+    @await Html.PartialAsync("_HeadTailwind")
+</head>
+<body class="bg-surface">
+    @await Html.PartialAsync("_Navbar")
+
+    <main class="pt-24 px-lg pb-xl max-w-[520px] mx-auto text-center">
+        <span class="material-symbols-outlined text-[48px] text-outline">lock</span>
+        <h1 class="font-headline-lg text-headline-lg text-primary">Sem permissão</h1>
+        <p class="font-body-md text-body-md text-on-surface-variant mb-lg">
+            Esta área é restrita aos administradores da loja. Se você precisa de acesso, peça ao
+            responsável para alterar o seu papel em Usuários.
+        </p>
+        <a asp-controller="Home" asp-action="Index"
+           class="bg-secondary text-white rounded-full px-lg py-sm font-label-md text-label-md font-bold hover:bg-opacity-90 transition-colors inline-flex items-center gap-xs">
+            <span class="material-symbols-outlined text-[18px]">home</span>
+            Voltar ao painel
+        </a>
+    </main>
+</body>
+</html>
