@@ -17,31 +17,31 @@ Três itens têm dependência entre si e **precisam ser feitos na sequência aba
 retrabalho garantido:
 
 ```
-1. Clientes + Orçamento no banco   (juntos, não em sequência)
+✅ Clientes                          (feito em 2026-08-07)
         ↓
-2. Garantia, autoria da OS, anexos  (tudo pendura na OS gravada)
+1. Ordem de Serviço no banco         (referenciando ClienteId)
         ↓
-3. Financeiro e relatórios          (precisam de venda e OS gravadas)
+2. Garantia, autoria da OS, anexos   (tudo pendura na OS gravada)
+        ↓
+3. Financeiro e relatórios           (precisam de venda e OS gravadas)
 ```
 
-O erro a evitar: modelar a Ordem de Serviço com os dados do cliente embutidos e criar o cadastro
-de Clientes depois. Isso obriga a migrar dados na marra.
+O erro que essa ordem evita: modelar a Ordem de Serviço com os dados do cliente embutidos e criar o
+cadastro de Clientes depois — o que obrigaria a migrar dados na marra. Por isso Clientes veio antes.
 
 ---
 
 ## Alta prioridade
 
-### 1. Cadastro de clientes + Orçamento no banco
-**Falta porque** é a maior lacuna do sistema hoje. O formulário de Orçamento pede nome, CPF,
-telefone, CEP, endereço, número, bairro, cidade e UF — **tudo redigitado a cada visita**. O cliente
-que volta pela terceira vez é redigitado pela terceira vez. E não existe resposta para "o que já
-fizemos para esse cliente?", que é o que o balcão pergunta.
+### 1. Ordem de Serviço no banco
+**Metade já feita.** O cadastro de **Clientes** existe e o Orçamento já puxa os dados de lá em vez
+de pedir para digitar (2026-08-07, ver [CHANGES.md](CHANGES.md)). Falta a outra metade: a Ordem de
+Serviço em si não é gravada — ao fechar a tela, o orçamento se perde.
 
-O MapOS tem `Clientes` como módulo de primeira classe, e é isso que sustenta todo o resto lá.
-
-**O que envolve:** entidades `Cliente` e `OrdemServico` (com itens), busca de cliente por
-nome/telefone/CPF no formulário de Orçamento, e histórico de ordens na ficha do cliente. Seguir o
-padrão de modelagem da Lista de Compras.
+**O que envolve:** entidade `OrdemServico` com itens, referenciando `ClienteId` (não copiando os
+dados do cliente), número sequencial de OS, situação (aberta/pronta/entregue) e listagem com
+histórico por cliente. Hoje o número da OS é gerado do relógio no JavaScript e não sobrevive à
+impressão.
 
 ### 2. Estoque e Caixa no banco
 **Falta porque** as telas existem mas não gravam. O Estoque usa `localStorage` (chave

@@ -1,0 +1,123 @@
+@model List<ListasCompras.Models.Cliente>
+@{
+    Layout = null;
+    ViewData["Title"] = "Clientes";
+    var nomeLoja = ViewData["NomeLoja"] as string ?? "Minha Loja";
+}
+<!DOCTYPE html>
+<html class="light" lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>@nomeLoja — Clientes</title>
+    @await Html.PartialAsync("_HeadTailwind")
+</head>
+<body class="bg-surface">
+    @await Html.PartialAsync("_Navbar")
+
+    <main class="pt-24 px-lg pb-xl max-w-[1440px] mx-auto">
+
+        @if (TempData["Sucesso"] != null)
+        {
+            <div class="mb-md bg-secondary-container text-on-secondary-container px-md py-sm rounded-lg font-label-md text-label-md flex items-center gap-xs w-fit">
+                <span class="material-symbols-outlined text-[18px]">check_circle</span>
+                <span>@TempData["Sucesso"]</span>
+            </div>
+        }
+
+        <!-- Cabeçalho da página -->
+        <section class="mb-md">
+            <h1 class="font-headline-lg text-headline-lg text-primary">Clientes</h1>
+            <p class="font-body-md text-body-md text-on-surface-variant">Cadastre uma vez e reaproveite os dados em cada ordem de serviço.</p>
+        </section>
+
+        <!-- Barra de ferramentas -->
+        <section class="bg-white rounded-t-xl border border-b-0 border-outline-variant p-sm flex flex-wrap items-center gap-sm">
+            <div class="relative flex-1 min-w-[200px]">
+                <input id="filtroBusca" type="text" placeholder="Pesquisar por nome, telefone, CPF/RG ou cidade..."
+                       class="w-full bg-surface-container-low border-none rounded-full pl-md pr-10 py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline text-[20px]">search</span>
+            </div>
+
+            <div class="flex items-center gap-xs shrink-0 ml-auto">
+                <a asp-action="Add" title="Cadastrar novo cliente"
+                   class="h-9 px-md rounded-lg bg-secondary text-white flex items-center justify-center gap-xs hover:bg-opacity-90 transition-colors shrink-0">
+                    <span class="material-symbols-outlined text-[20px]">add</span>
+                    <span class="font-label-md text-label-md font-bold hidden sm:inline">Novo</span>
+                </a>
+                <button id="imprimirBtn" type="button" title="Imprimir lista"
+                        class="w-9 h-9 rounded-lg hover:bg-surface-container-low flex items-center justify-center text-on-surface-variant transition-colors">
+                    <span class="material-symbols-outlined text-[20px]">print</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Tabela -->
+        <section class="bg-white rounded-b-xl border border-outline-variant shadow-sm overflow-hidden">
+            <div class="px-lg py-xs border-b border-outline-variant flex items-center gap-sm">
+                <span id="contagemInfo" class="font-label-sm text-label-sm text-outline"></span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-surface-container-low">
+                        <tr>
+                            <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider">Nome</th>
+                            <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider">Telefone</th>
+                            <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider">CPF / RG</th>
+                            <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider">Cidade</th>
+                            <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider text-center w-28">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="clientesBody">
+                        @foreach (var c in Model)
+                        {
+                            var cidadeUf = string.IsNullOrWhiteSpace(c.Cidade)
+                                ? "—"
+                                : (string.IsNullOrWhiteSpace(c.Uf) ? c.Cidade : $"{c.Cidade}/{c.Uf}");
+                            <tr class="linha-cliente border-t border-outline-variant hover:bg-surface-container-low transition-colors"
+                                data-busca="@($"{c.Nome} {c.Telefone} {c.Documento} {c.Cidade}".ToLower())">
+                                <td class="px-md py-sm font-body-md text-body-md text-on-surface">@c.Nome</td>
+                                <td class="px-md py-sm font-body-md text-body-md text-on-surface-variant">@(string.IsNullOrWhiteSpace(c.Telefone) ? "—" : c.Telefone)</td>
+                                <td class="px-md py-sm font-body-md text-body-md text-on-surface-variant">@(string.IsNullOrWhiteSpace(c.Documento) ? "—" : c.Documento)</td>
+                                <td class="px-md py-sm font-body-md text-body-md text-on-surface-variant">@cidadeUf</td>
+                                <td class="px-md py-sm">
+                                    <div class="flex items-center justify-center gap-xs">
+                                        <a asp-action="Add" asp-route-id="@c.Id" title="Editar cliente"
+                                           class="w-8 h-8 rounded-full hover:bg-surface-container-high inline-flex items-center justify-center text-on-surface-variant transition-colors">
+                                            <span class="material-symbols-outlined text-[18px]">edit</span>
+                                        </a>
+                                        <form asp-action="Excluir" method="post" class="inline"
+                                              onsubmit="return confirm('Excluir @c.Nome do cadastro?');">
+                                            <input type="hidden" name="id" value="@c.Id" />
+                                            <button type="submit" title="Excluir cliente"
+                                                    class="w-8 h-8 rounded-full hover:bg-error-container inline-flex items-center justify-center text-outline transition-colors">
+                                                <span class="material-symbols-outlined text-[18px]">delete</span>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="vazioState" class="@(Model.Count == 0 ? "" : "hidden") p-xl text-center">
+                <span class="material-symbols-outlined text-[40px] text-outline">group</span>
+                <p class="font-body-md text-body-md text-on-surface-variant">
+                    @(Model.Count == 0 ? "Nenhum cliente cadastrado ainda." : "Nenhum cliente encontrado para essa busca.")
+                </p>
+                @if (Model.Count == 0)
+                {
+                    <a asp-action="Add" class="mt-md inline-flex items-center gap-xs bg-secondary text-white rounded-full px-lg py-sm font-label-md text-label-md font-bold hover:bg-opacity-90 transition-colors">
+                        <span class="material-symbols-outlined text-[18px]">add</span>
+                        Cadastrar o primeiro
+                    </a>
+                }
+            </div>
+        </section>
+    </main>
+
+    <script src="~/js/cliente.js" asp-append-version="true"></script>
+</body>
+</html>

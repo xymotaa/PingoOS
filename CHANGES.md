@@ -1,5 +1,56 @@
 # Registro de Alterações
 
+## [2026-08-07] Cadastro de clientes e integração com o Orçamento
+
+### Problema
+O formulário de Orçamento pedia nome, telefone, CPF/RG, CEP, endereço, número, bairro, cidade e UF
+— **tudo redigitado a cada visita**. O cliente que voltava pela terceira vez era redigitado pela
+terceira vez, com risco de divergência entre uma OS e outra. E não havia como responder "o que já
+fizemos para esse cliente?".
+
+É o item 1 do [ROADMAP](ROADMAP.md), e a metade que precisa vir primeiro: com o cadastro pronto, o
+Orçamento passa a **referenciar** o cliente em vez de embutir os dados — que era o retrabalho que o
+roadmap alertava para evitar.
+
+### Solução
+Módulo `Cliente` novo, seguindo o padrão de tela do Estoque: listagem com busca, cadastro, edição e
+exclusão. Sem cartões de contagem — a lista é o conteúdo.
+
+No Orçamento, os campos do cliente **deixaram de ser digitáveis**. O campo Nome ganhou uma lupa que
+abre a busca; escolhido o cliente, os outros oito campos são preenchidos e todos ficam
+`readonly`, o que garante que o que sai impresso na OS é igual ao que está no cadastro. Um botão de
+fechar troca de cliente. O restante da tela não foi alterado.
+
+### Arquivos Alterados
+
+| Arquivo | Alteração |
+|---|---|
+| `Models/Cliente.cs` | **novo** — inclui `EnderecoCompleto`, o endereço em uma linha como sai na OS |
+| `Controllers/ClienteController.cs` | **novo** — Index, Add/editar, Salvar, Excluir e `Buscar` (JSON, usado pelo Orçamento) |
+| `Views/Cliente/Index.cshtml`, `Add.cshtml` | **novas** telas |
+| `wwwroot/js/cliente.js` | **novo** — filtro da listagem no cliente |
+| `Views/Orcamento/Index.cshtml` | campos do cliente `readonly`, lupa no Nome, modal de busca |
+| `wwwroot/js/orcamento.js` | busca, seleção e limpeza do cliente |
+| `Views/Home/Index.cshtml` | item "Clientes" na sidebar, abaixo de Dashboards |
+| `Data/AppDbContext.cs` | `DbSet<Cliente>`, índice em Nome, `EnderecoCompleto` ignorado |
+| Migration `AddClientes` | tabela nova |
+
+### Bug encontrado e corrigido durante os testes
+A busca por nome não achava nada: `maria` não encontrava "Maria Aparecida Souza". O EF Core traduz
+`string.Contains` para `instr()` do SQLite, que **diferencia maiúsculas** — telefone e CPF
+funcionavam só porque são números. Trocado por `EF.Functions.Like`, cujo `LIKE` do SQLite dobra
+maiúsculas ASCII antes de comparar.
+
+> Fica um limite conhecido: acentos não são normalizados, então `jose` não encontra "José".
+
+### Resultado
+Testado numa instalação limpa: 3 clientes cadastrados e gravados, busca por nome em qualquer caixa,
+por telefone parcial e por CPF parcial, todas retornando o registro certo. O endpoint `Buscar`
+exige login (redireciona anônimo). JS validado com `node --check` e os 34 ids que o
+`orcamento.js` procura conferidos contra a view.
+
+---
+
 ## [2026-08-07] ROADMAP reordenado a partir da comparação com o MapOS
 
 ### Motivo

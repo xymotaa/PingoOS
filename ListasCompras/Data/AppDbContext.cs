@@ -15,6 +15,7 @@ public class AppDbContext : DbContext
     public DbSet<ItemListaCompra> ItensListaCompra { get; set; }
     public DbSet<ConfiguracaoLoja> ConfiguracoesLoja { get; set; }
     public DbSet<Usuario> Usuarios { get; set; }
+    public DbSet<Cliente> Clientes { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -22,5 +23,12 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Usuario>()
             .HasIndex(u => u.Email)
             .IsUnique();
+
+        // Endereço completo é montado em memória, não é coluna
+        modelBuilder.Entity<Cliente>()
+            .Ignore(c => c.EnderecoCompleto);
+
+        modelBuilder.Entity<Cliente>()
+            .HasIndex(c => c.Nome);
     }
 }

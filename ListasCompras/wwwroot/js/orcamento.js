@@ -119,6 +119,107 @@ document.addEventListener("DOMContentLoaded", function () {
         return partes.length ? partes.join(" - ") : "—";
     }
 
+    // ===== Cliente: os dados vêm do cadastro, não são digitados aqui =====
+
+    const modalCliente = document.getElementById("modalCliente");
+    const buscarClienteBtn = document.getElementById("buscarClienteBtn");
+    const limparClienteBtn = document.getElementById("limparClienteBtn");
+    const fecharModalCliente = document.getElementById("fecharModalCliente");
+    const buscaClienteInput = document.getElementById("buscaClienteInput");
+    const resultadosCliente = document.getElementById("resultadosCliente");
+
+    const camposCliente = ["clienteNome", "clienteTelefone", "clienteDocumento", "clienteCep",
+                           "clienteEndereco", "clienteNumero", "clienteBairro", "clienteCidade", "clienteUf"];
+
+    function abrirModalCliente() {
+        modalCliente.classList.remove("hidden");
+        buscaClienteInput.value = "";
+        buscaClienteInput.focus();
+        procurarClientes("");
+    }
+
+    function fecharModal() {
+        modalCliente.classList.add("hidden");
+    }
+
+    function procurarClientes(termo) {
+        resultadosCliente.innerHTML = '<p class="px-md py-lg text-center font-body-md text-body-md text-on-surface-variant">Procurando...</p>';
+
+        fetch("/Cliente/Buscar?termo=" + encodeURIComponent(termo))
+            .then(function (r) { return r.json(); })
+            .then(function (clientes) {
+                resultadosCliente.innerHTML = "";
+
+                if (clientes.length === 0) {
+                    resultadosCliente.innerHTML =
+                        '<p class="px-md py-lg text-center font-body-md text-body-md text-on-surface-variant">Nenhum cliente encontrado.</p>';
+                    return;
+                }
+
+                clientes.forEach(function (c) {
+                    const item = document.createElement("button");
+                    item.type = "button";
+                    item.className = "w-full text-left px-md py-sm border-b border-outline-variant hover:bg-surface-container-low transition-colors";
+
+                    const nome = document.createElement("p");
+                    nome.className = "font-body-md text-body-md text-on-surface";
+                    nome.textContent = c.nome;
+
+                    const detalhe = document.createElement("p");
+                    detalhe.className = "font-label-sm text-label-sm text-outline";
+                    detalhe.textContent = [c.telefone, c.documento, c.cidade].filter(Boolean).join(" · ") || "sem outros dados";
+
+                    item.append(nome, detalhe);
+                    item.addEventListener("click", function () { selecionarCliente(c); });
+                    resultadosCliente.appendChild(item);
+                });
+            })
+            .catch(function () {
+                resultadosCliente.innerHTML =
+                    '<p class="px-md py-lg text-center font-body-md text-body-md text-error">Não foi possível buscar os clientes.</p>';
+            });
+    }
+
+    function selecionarCliente(c) {
+        document.getElementById("clienteNome").value = c.nome;
+        document.getElementById("clienteTelefone").value = c.telefone;
+        document.getElementById("clienteDocumento").value = c.documento;
+        document.getElementById("clienteCep").value = c.cep;
+        document.getElementById("clienteEndereco").value = c.endereco;
+        document.getElementById("clienteNumero").value = c.numero;
+        document.getElementById("clienteBairro").value = c.bairro;
+        document.getElementById("clienteCidade").value = c.cidade;
+        document.getElementById("clienteUf").value = c.uf;
+
+        buscarClienteBtn.classList.add("hidden");
+        limparClienteBtn.classList.remove("hidden");
+        fecharModal();
+    }
+
+    function limparCliente() {
+        camposCliente.forEach(function (id) { document.getElementById(id).value = ""; });
+        limparClienteBtn.classList.add("hidden");
+        buscarClienteBtn.classList.remove("hidden");
+    }
+
+    buscarClienteBtn.addEventListener("click", abrirModalCliente);
+    limparClienteBtn.addEventListener("click", limparCliente);
+    fecharModalCliente.addEventListener("click", fecharModal);
+    // O campo é somente leitura: clicar nele também abre a busca
+    document.getElementById("clienteNome").addEventListener("click", function () {
+        if (limparClienteBtn.classList.contains("hidden")) abrirModalCliente();
+    });
+    modalCliente.addEventListener("click", function (e) { if (e.target === modalCliente) fecharModal(); });
+    document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape" && !modalCliente.classList.contains("hidden")) fecharModal();
+    });
+
+    let buscaTimer;
+    buscaClienteInput.addEventListener("input", function () {
+        window.clearTimeout(buscaTimer);
+        buscaTimer = window.setTimeout(function () { procurarClientes(buscaClienteInput.value); }, 250);
+    });
+
     // "Sem número de série / IMEI": desabilita o campo
     const dispositivoSemSerie = document.getElementById("dispositivoSemSerie");
     const dispositivoSerie = document.getElementById("dispositivoSerie");

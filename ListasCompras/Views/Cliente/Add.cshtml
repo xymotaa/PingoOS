@@ -1,0 +1,137 @@
+@model ListasCompras.Models.Cliente
+@{
+    Layout = null;
+    var editando = Model.Id > 0;
+    ViewData["Title"] = editando ? "Editar cliente" : "Novo cliente";
+    var nomeLoja = ViewData["NomeLoja"] as string ?? "Minha Loja";
+    var erro = ViewData["Erro"] as string;
+}
+<!DOCTYPE html>
+<html class="light" lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>@nomeLoja — @ViewData["Title"]</title>
+    @await Html.PartialAsync("_HeadTailwind")
+</head>
+<body class="bg-surface">
+    @await Html.PartialAsync("_Navbar")
+
+    <main class="pt-24 px-lg pb-xl max-w-[1440px] mx-auto">
+
+        <!-- Cabeçalho da página -->
+        <section class="mb-md">
+            <a asp-action="Index" class="font-label-md text-label-md text-on-surface-variant hover:text-primary flex items-center gap-xs w-fit mb-sm">
+                <span class="material-symbols-outlined text-[18px]">arrow_back</span> Clientes
+            </a>
+            <h1 class="font-headline-lg text-headline-lg text-primary">@ViewData["Title"]</h1>
+            <p class="font-body-md text-body-md text-on-surface-variant">
+                Estes dados vão para o cabeçalho da ordem de serviço, então preencha como deve sair impresso.
+            </p>
+        </section>
+
+        @if (!string.IsNullOrEmpty(erro))
+        {
+            <div class="mb-md bg-error-container text-error px-md py-sm rounded-lg font-label-md text-label-md flex items-center gap-xs w-fit">
+                <span class="material-symbols-outlined text-[18px]">error</span>
+                <span>@erro</span>
+            </div>
+        }
+
+        <form asp-action="Salvar" method="post" class="flex flex-col gap-md">
+            <input type="hidden" asp-for="Id" />
+
+            <!-- Identificação -->
+            <section class="bg-white rounded-xl border border-outline-variant shadow-sm p-lg">
+                <div class="flex items-center gap-sm mb-md">
+                    <span class="material-symbols-outlined text-[20px] text-secondary">person</span>
+                    <h2 class="font-title-lg text-title-lg text-primary">Identificação</h2>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-md">
+                    <div class="md:col-span-6">
+                        <label class="font-label-md text-label-md text-on-surface-variant" for="Nome">Nome</label>
+                        <input asp-for="Nome" id="Nome" type="text" required autofocus
+                               class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                    </div>
+                    <div class="md:col-span-3">
+                        <label class="font-label-md text-label-md text-on-surface-variant" for="Telefone">Telefone</label>
+                        <input asp-for="Telefone" id="Telefone" type="tel" inputmode="tel" placeholder="(00) 00000-0000"
+                               class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                    </div>
+                    <div class="md:col-span-3">
+                        <label class="font-label-md text-label-md text-on-surface-variant" for="Documento">CPF ou RG</label>
+                        <input asp-for="Documento" id="Documento" type="text" inputmode="numeric"
+                               class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                    </div>
+                </div>
+            </section>
+
+            <!-- Endereço -->
+            <section class="bg-white rounded-xl border border-outline-variant shadow-sm p-lg">
+                <div class="flex items-center gap-sm mb-md">
+                    <span class="material-symbols-outlined text-[20px] text-secondary">location_on</span>
+                    <h2 class="font-title-lg text-title-lg text-primary">Endereço</h2>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-md">
+                    <div class="md:col-span-3">
+                        <label class="font-label-md text-label-md text-on-surface-variant" for="Cep">CEP</label>
+                        <input asp-for="Cep" id="Cep" type="text" inputmode="numeric" placeholder="00000-000"
+                               class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                    </div>
+                    <div class="md:col-span-6">
+                        <label class="font-label-md text-label-md text-on-surface-variant" for="Endereco">Endereço (Rua / Av.)</label>
+                        <input asp-for="Endereco" id="Endereco" type="text"
+                               class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                    </div>
+                    <div class="md:col-span-3">
+                        <label class="font-label-md text-label-md text-on-surface-variant" for="Numero">Número</label>
+                        <input asp-for="Numero" id="Numero" type="text"
+                               class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                    </div>
+                    <div class="md:col-span-4">
+                        <label class="font-label-md text-label-md text-on-surface-variant" for="Bairro">Bairro</label>
+                        <input asp-for="Bairro" id="Bairro" type="text"
+                               class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                    </div>
+                    <div class="md:col-span-5">
+                        <label class="font-label-md text-label-md text-on-surface-variant" for="Cidade">Cidade</label>
+                        <input asp-for="Cidade" id="Cidade" type="text"
+                               class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                    </div>
+                    <div class="md:col-span-3">
+                        <label class="font-label-md text-label-md text-on-surface-variant" for="Uf">UF</label>
+                        <input asp-for="Uf" id="Uf" type="text" maxlength="2" placeholder="Ex: PA"
+                               class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30 uppercase" />
+                    </div>
+                </div>
+            </section>
+
+            <!-- Observações -->
+            <section class="bg-white rounded-xl border border-outline-variant shadow-sm p-lg">
+                <div class="flex items-center gap-sm mb-md">
+                    <span class="material-symbols-outlined text-[20px] text-secondary">sticky_note_2</span>
+                    <h2 class="font-title-lg text-title-lg text-primary">Observações</h2>
+                </div>
+                <label class="font-label-md text-label-md text-on-surface-variant" for="Observacao">Anotações internas</label>
+                <textarea asp-for="Observacao" id="Observacao" rows="3"
+                          placeholder="Ex: prefere contato por WhatsApp; sempre traz aparelhos da loja X..."
+                          class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30"></textarea>
+                <p class="mt-xs font-label-sm text-label-sm text-outline">Não sai impresso na ordem de serviço.</p>
+            </section>
+
+            <!-- Ações -->
+            <div class="flex items-center justify-end gap-sm">
+                <a asp-action="Index"
+                   class="border border-outline text-on-surface-variant rounded-full px-lg py-sm font-label-md text-label-md font-bold hover:bg-surface-container-low transition-colors">
+                    Cancelar
+                </a>
+                <button type="submit"
+                        class="bg-secondary text-white rounded-full px-lg py-sm font-label-md text-label-md font-bold hover:bg-opacity-90 transition-colors flex items-center gap-xs">
+                    <span class="material-symbols-outlined text-[18px]">save</span>
+                    @(editando ? "Salvar alterações" : "Cadastrar cliente")
+                </button>
+            </div>
+        </form>
+    </main>
+</body>
+</html>
