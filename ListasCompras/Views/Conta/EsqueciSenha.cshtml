@@ -1,0 +1,86 @@
+@{
+    Layout = null;
+    ViewData["Title"] = "Esqueci minha senha";
+    var nomeLoja = ViewData["NomeLoja"] as string ?? "Minha Loja";
+    var erro = ViewData["Erro"] as string;
+}
+<!DOCTYPE html>
+<html class="light" lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Esqueci minha senha — @nomeLoja</title>
+    @await Html.PartialAsync("_HeadTailwind")
+</head>
+<body class="bg-surface min-h-screen flex items-center justify-center px-md py-xl">
+
+    <main class="w-full max-w-[440px]">
+
+        <div class="text-center mb-lg">
+            <span class="material-symbols-outlined text-[36px] text-secondary">key</span>
+            <h1 class="font-headline-md text-headline-md text-primary">Esqueci minha senha</h1>
+            <p class="font-body-md text-body-md text-on-surface-variant">
+                Use o código de recuperação que você anotou quando a conta foi criada.
+            </p>
+        </div>
+
+        <div class="bg-white rounded-xl border border-outline-variant shadow-sm p-lg">
+            @if (!string.IsNullOrEmpty(erro))
+            {
+                <div class="mb-md bg-error-container text-error px-md py-sm rounded-lg font-label-md text-label-md flex items-center gap-xs">
+                    <span class="material-symbols-outlined text-[18px]">error</span>
+                    <span>@erro</span>
+                </div>
+            }
+
+            <form asp-action="EsqueciSenha" method="post" class="flex flex-col gap-md">
+
+                <div>
+                    <label class="font-label-md text-label-md text-on-surface-variant" for="email">E-mail da conta</label>
+                    <input id="email" name="email" type="email" required autofocus
+                           class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                </div>
+
+                <div>
+                    <label class="font-label-md text-label-md text-on-surface-variant" for="codigo">Código de recuperação</label>
+                    <input id="codigo" name="codigo" type="text" required placeholder="XXXX-XXXX-XXXX-XXXX" autocomplete="off"
+                           class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-mono text-body-md tracking-wider uppercase focus:ring-2 focus:ring-secondary/30" />
+                    <p class="mt-xs font-label-sm text-label-sm text-outline">Pode digitar com ou sem os hífens.</p>
+                </div>
+
+                <hr class="border-outline-variant" />
+
+                <div>
+                    <label class="font-label-md text-label-md text-on-surface-variant" for="senha">Nova senha</label>
+                    <input id="senha" name="senha" type="password" required minlength="6" autocomplete="new-password"
+                           class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                </div>
+
+                <div>
+                    <label class="font-label-md text-label-md text-on-surface-variant" for="confirmacao">Confirmar nova senha</label>
+                    <input id="confirmacao" name="confirmacao" type="password" required minlength="6" autocomplete="new-password"
+                           class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                </div>
+
+                <button type="submit"
+                        class="mt-xs bg-secondary text-white rounded-full px-lg py-sm font-label-md text-label-md font-bold hover:bg-opacity-90 transition-colors flex items-center justify-center gap-xs">
+                    <span class="material-symbols-outlined text-[18px]">lock_reset</span>
+                    Redefinir senha
+                </button>
+            </form>
+        </div>
+
+        <div class="mt-md text-center">
+            <a asp-action="Login" class="font-label-md text-label-md text-on-surface-variant hover:text-primary">
+                Voltar para o login
+            </a>
+        </div>
+
+        <p class="mt-md text-center font-label-sm text-label-sm text-outline">
+            Perdeu o código também? Quem tem acesso ao computador da loja pode redefinir pelo terminal —
+            veja "Esqueci a senha e o código" no README.
+        </p>
+    </main>
+
+</body>
+</html>

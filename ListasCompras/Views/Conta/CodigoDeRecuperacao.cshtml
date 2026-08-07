@@ -1,0 +1,90 @@
+@{
+    Layout = null;
+    ViewData["Title"] = "Código de recuperação";
+    var codigo = ViewData["Codigo"] as string;
+    var de = ViewData["CodigoDe"] as string;
+    var redefinida = TempData["SenhaRedefinida"] != null;
+}
+<!DOCTYPE html>
+<html class="light" lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Código de recuperação — Pingo OS</title>
+    @await Html.PartialAsync("_HeadTailwind")
+    <style>
+        @@media print {
+            .no-print { display: none !important; }
+            body { background: #fff !important; }
+        }
+    </style>
+</head>
+<body class="bg-surface min-h-screen flex items-center justify-center px-md py-xl">
+
+    <main class="w-full max-w-[520px]">
+
+        @if (redefinida)
+        {
+            <div class="mb-md bg-secondary-container text-on-secondary-container px-md py-sm rounded-lg font-label-md text-label-md flex items-center gap-xs no-print">
+                <span class="material-symbols-outlined text-[18px]">check_circle</span>
+                <span>Senha redefinida. Já pode entrar com a nova senha.</span>
+            </div>
+        }
+
+        <div class="bg-white rounded-xl border border-outline-variant shadow-sm p-lg">
+
+            <div class="text-center mb-md">
+                <span class="material-symbols-outlined text-[36px] text-secondary">key</span>
+                <h1 class="font-headline-md text-headline-md text-primary">Código de recuperação</h1>
+                <p class="font-body-md text-body-md text-on-surface-variant">
+                    de <strong>@de</strong>
+                </p>
+            </div>
+
+            <div class="bg-surface-container-low border border-outline-variant rounded-lg py-lg px-md text-center my-md">
+                <code class="font-mono text-[22px] font-bold tracking-[0.12em] text-primary select-all">@codigo</code>
+            </div>
+
+            <div class="bg-warning-container text-on-surface px-md py-sm rounded-lg font-body-md text-body-md flex items-start gap-xs mb-md">
+                <span class="material-symbols-outlined text-[18px] shrink-0">warning</span>
+                <span>
+                    <strong>Anote agora, em papel.</strong> Este código não será mostrado de novo — o
+                    sistema guarda apenas uma versão embaralhada dele, então nem consultando o banco
+                    é possível recuperá-lo.
+                </span>
+            </div>
+
+            <p class="font-body-md text-body-md text-on-surface-variant mb-lg">
+                Se um dia você esquecer a senha, é com ele que vai poder criar uma nova, sozinho, pela
+                tela de login. Guarde longe do computador — quem tiver o código e o e-mail consegue
+                trocar a senha desta conta.
+            </p>
+
+            <div class="flex items-center justify-end gap-sm no-print">
+                <button type="button" onclick="window.print()"
+                        class="border border-outline text-on-surface-variant rounded-full px-lg py-sm font-label-md text-label-md font-bold hover:bg-surface-container-low transition-colors flex items-center gap-xs">
+                    <span class="material-symbols-outlined text-[18px]">print</span>
+                    Imprimir
+                </button>
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <a asp-controller="Home" asp-action="Index"
+                       class="bg-secondary text-white rounded-full px-lg py-sm font-label-md text-label-md font-bold hover:bg-opacity-90 transition-colors flex items-center gap-xs">
+                        Guardei o código
+                        <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+                    </a>
+                }
+                else
+                {
+                    <a asp-controller="Conta" asp-action="Login"
+                       class="bg-secondary text-white rounded-full px-lg py-sm font-label-md text-label-md font-bold hover:bg-opacity-90 transition-colors flex items-center gap-xs">
+                        Guardei o código, entrar
+                        <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+                    </a>
+                }
+            </div>
+        </div>
+    </main>
+
+</body>
+</html>

@@ -89,6 +89,27 @@ iniciais (categorias, marcas e modelos de celular) via `Data/SeedData.cs`.
 Para configurar o nome, logo, CNPJ e endereço da loja — que aparecem no cabeçalho da OS e do PDF
 — acesse **/Configuracao**.
 
+### Primeiro acesso e senhas
+
+Na primeira vez que abrir, o sistema pede para criar a conta do responsável e nomear a loja.
+Logo depois ele mostra um **código de recuperação** (formato `XXXX-XXXX-XXXX-XXXX`) **uma única
+vez** — anote em papel. O sistema guarda só uma versão embaralhada dele; nem consultando o banco
+dá para descobrir qual era.
+
+- **Esqueci a senha:** na tela de login, "Esqueci minha senha". Informe o e-mail e o código
+  (com ou sem hífen, maiúscula ou minúscula) e defina a nova senha. O código usado é queimado e um
+  novo é entregue na hora.
+- **Gerar um código novo:** menu do usuário → Usuários → "Novo código". O anterior deixa de valer.
+- **Esqueci a senha E o código:** quem tem acesso ao computador da loja redefine pelo terminal:
+
+  ```bash
+  cd ListasCompras
+  dotnet run -- redefinir-senha dono@loja.com novasenha123
+  ```
+
+  Depois entre no sistema e gere um código novo em Usuários. O comando também reativa a conta, se
+  estiver desativada.
+
 ### Migrations
 
 O `dotnet-ef` já está declarado como ferramenta local do projeto:

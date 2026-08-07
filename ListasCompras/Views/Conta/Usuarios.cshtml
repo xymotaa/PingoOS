@@ -85,6 +85,14 @@
                                                 class="px-sm py-xs rounded-lg border border-outline text-on-surface-variant font-label-sm text-label-sm hover:bg-surface-container-low transition-colors">
                                             Redefinir senha
                                         </button>
+                                        <form asp-action="GerarCodigo" method="post" class="inline"
+                                              onsubmit="return confirm('Gerar um código novo para @u.Nome? O código anterior deixa de valer.');">
+                                            <input type="hidden" name="id" value="@u.Id" />
+                                            <button type="submit"
+                                                    class="px-sm py-xs rounded-lg border border-outline text-on-surface-variant font-label-sm text-label-sm hover:bg-surface-container-low transition-colors">
+                                                Novo código
+                                            </button>
+                                        </form>
                                         @if (!souEu)
                                         {
                                             <form asp-action="AlternarAtivo" method="post" class="inline">

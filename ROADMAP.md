@@ -50,13 +50,13 @@ e destinatário, que é a prova) e um `BackgroundService` para reenviar as que f
 > Nota de stack: **não precisamos de cron.** O `BackgroundService` do .NET roda dentro da própria
 > aplicação. Sistemas em PHP precisam de duas linhas no crontab do servidor para a mesma coisa.
 
-### Recuperação de senha
-**Falta porque** depende do envio de e-mail acima. Hoje quem esquece a senha depende do
-administrador redefinir, e o administrador que esquecer a própria fica trancado do lado de fora —
-só mexendo direto no banco.
+### Recuperação de senha por e-mail
+**Já existe** recuperação por código anotado no papel e por comando de terminal (feito em
+2026-08-07, ver [CHANGES.md](CHANGES.md)). O que falta é a via por e-mail, que dispensa guardar
+código: link de uso único com validade curta enviado para o endereço da conta.
 
-**O que envolve:** token de uso único com validade curta, gravado no banco, e a tela de troca.
-Só faz sentido depois que o e-mail funcionar.
+**Depende de** o envio de e-mail acima estar pronto. Prioridade baixa agora que o caso de tranca
+está coberto.
 
 ### Script de instalação para o usuário final
 **Falta porque** o público do sistema é dono de loja, não desenvolvedor. Hoje instalar exige clonar

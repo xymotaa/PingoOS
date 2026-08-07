@@ -6,10 +6,17 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
 
-var builder = WebApplication.CreateBuilder(args);
-
 // SQLite — arquivo loja.db na mesma pasta do executável
 var dbPath = Path.Combine(AppContext.BaseDirectory, "loja.db");
+
+// Rede de segurança: quem perdeu a senha E o código de recuperação redefine pelo terminal.
+// Faz sentido porque o sistema roda local — quem alcança a máquina já alcança o loja.db.
+if (args.Length > 0 && args[0] == "redefinir-senha")
+{
+    return RedefinirSenhaPeloTerminal(dbPath, args);
+}
+
+var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite($"Data Source={dbPath}"));
 
@@ -78,3 +85,48 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();
+return 0;
+
+// Uso: dotnet run -- redefinir-senha <e-mail> <nova senha>
+static int RedefinirSenhaPeloTerminal(string dbPath, string[] args)
+{
+    if (args.Length < 3)
+    {
+        Console.WriteLine("Uso: redefinir-senha <e-mail> <nova senha>");
+        Console.WriteLine("Ex.:  dotnet run -- redefinir-senha dono@loja.com novasenha123");
+        return 1;
+    }
+
+    var email = args[1].Trim().ToLowerInvariant();
+    var senha = args[2];
+
+    if (senha.Length < 6)
+    {
+        Console.WriteLine("A senha precisa ter ao menos 6 caracteres.");
+        return 1;
+    }
+
+    var opcoes = new DbContextOptionsBuilder<AppDbContext>()
+        .UseSqlite($"Data Source={dbPath}")
+        .Options;
+
+    using var db = new AppDbContext(opcoes);
+    var usuario = db.Usuarios.FirstOrDefault(u => u.Email == email);
+    if (usuario == null)
+    {
+        Console.WriteLine($"Nenhum usuário com o e-mail {email}.");
+        Console.WriteLine("Usuários cadastrados: " + string.Join(", ", db.Usuarios.Select(u => u.Email)));
+        return 1;
+    }
+
+    var hasher = new PasswordHasher<Usuario>();
+    usuario.SenhaHash = hasher.HashPassword(usuario, senha);
+
+    // Reativa a conta: de nada adianta a senha nova se o acesso está desligado
+    usuario.Ativo = true;
+    db.SaveChanges();
+
+    Console.WriteLine($"Senha de {usuario.Nome} ({usuario.Email}) redefinida.");
+    Console.WriteLine("Entre no sistema e gere um novo código de recuperação em Usuários.");
+    return 0;
+}

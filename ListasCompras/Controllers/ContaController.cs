@@ -58,9 +58,25 @@ public class ContaController : LojaControllerBase
             Context.ConfiguracoesLoja.Add(new ConfiguracaoLoja { NomeLoja = nomeLoja.Trim() });
         }
 
+        var codigo = DefinirCodigo(admin);
         Context.SaveChanges();
         await Autenticar(admin);
-        return RedirectToAction("Index", "Home");
+
+        TempData["Codigo"] = codigo;
+        TempData["CodigoDe"] = admin.Nome;
+        return RedirectToAction(nameof(CodigoDeRecuperacao));
+    }
+
+    // Mostra o código UMA vez. Depois daqui nem o banco sabe qual era.
+    // Anônimo de propósito: quem acabou de recuperar a senha ainda não está logado e
+    // precisa ver o código novo. Só exibe o que está no próprio TempData da sessão.
+    [AllowAnonymous]
+    public IActionResult CodigoDeRecuperacao()
+    {
+        if (TempData["Codigo"] == null) return RedirectToAction(nameof(Login));
+        ViewData["Codigo"] = TempData["Codigo"];
+        ViewData["CodigoDe"] = TempData["CodigoDe"];
+        return View();
     }
 
     // ===== Login / logout =====
@@ -105,6 +121,70 @@ public class ContaController : LojaControllerBase
 
     public IActionResult SemPermissao() => View();
 
+    // ===== Esqueci minha senha (com o código de recuperação) =====
+
+    [AllowAnonymous]
+    public IActionResult EsqueciSenha() => View();
+
+    [AllowAnonymous]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult EsqueciSenha(string email, string codigo, string senha, string confirmacao)
+    {
+        if ((senha ?? "").Length < 6)
+        {
+            ViewData["Erro"] = "A nova senha precisa ter ao menos 6 caracteres.";
+            return View();
+        }
+        if (senha != confirmacao)
+        {
+            ViewData["Erro"] = "As senhas não conferem.";
+            return View();
+        }
+
+        var normalizado = (email ?? "").Trim().ToLowerInvariant();
+        var usuario = Context.Usuarios.FirstOrDefault(u => u.Email == normalizado);
+        var digitado = CodigoRecuperacao.Normalizar(codigo);
+
+        // Mensagem única: não revela se o e-mail existe nem se o código é que estava errado
+        if (usuario == null || !usuario.Ativo || string.IsNullOrEmpty(usuario.CodigoRecuperacaoHash) ||
+            _hasher.VerifyHashedPassword(usuario, usuario.CodigoRecuperacaoHash, digitado) == PasswordVerificationResult.Failed)
+        {
+            ViewData["Erro"] = "E-mail ou código de recuperação inválido.";
+            return View();
+        }
+
+        usuario.SenhaHash = _hasher.HashPassword(usuario, senha!);
+
+        // O código usado queima; a pessoa sai daqui com um novo para guardar
+        var novoCodigo = DefinirCodigo(usuario);
+        Context.SaveChanges();
+
+        TempData["Codigo"] = novoCodigo;
+        TempData["CodigoDe"] = usuario.Nome;
+        TempData["SenhaRedefinida"] = true;
+        return RedirectToAction(nameof(CodigoDeRecuperacao));
+    }
+
+    // Gera um código novo para quem já está logado (ou para outro usuário, se for admin)
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult GerarCodigo(int id)
+    {
+        var souAdmin = User.IsInRole(Papeis.Admin);
+        if (!souAdmin && id != IdDoUsuarioLogado()) return Forbid();
+
+        var usuario = Context.Usuarios.Find(id);
+        if (usuario == null) return RedirectToAction(nameof(Usuarios));
+
+        var codigo = DefinirCodigo(usuario);
+        Context.SaveChanges();
+
+        TempData["Codigo"] = codigo;
+        TempData["CodigoDe"] = usuario.Nome;
+        return RedirectToAction(nameof(CodigoDeRecuperacao));
+    }
+
     // ===== Gestão de usuários (só admin) =====
 
     [Authorize(Roles = Papeis.Admin)]
@@ -135,11 +215,13 @@ public class ContaController : LojaControllerBase
             Papel = papel == Papeis.Admin ? Papeis.Admin : Papeis.Tecnico,
         };
         usuario.SenhaHash = _hasher.HashPassword(usuario, senha);
+        var codigo = DefinirCodigo(usuario);
         Context.Usuarios.Add(usuario);
         Context.SaveChanges();
 
-        TempData["Sucesso"] = $"Usuário {usuario.Nome} cadastrado.";
-        return RedirectToAction(nameof(Usuarios));
+        TempData["Codigo"] = codigo;
+        TempData["CodigoDe"] = usuario.Nome;
+        return RedirectToAction(nameof(CodigoDeRecuperacao));
     }
 
     [Authorize(Roles = Papeis.Admin)]
@@ -195,6 +277,14 @@ public class ContaController : LojaControllerBase
         if (Context.Usuarios.Any(u => u.Email == normalizado)) return "Já existe um usuário com esse e-mail.";
 
         return null;
+    }
+
+    // Gera um código, guarda só o hash e devolve o texto para ser mostrado uma única vez
+    private string DefinirCodigo(Usuario usuario)
+    {
+        var codigo = CodigoRecuperacao.Gerar();
+        usuario.CodigoRecuperacaoHash = _hasher.HashPassword(usuario, CodigoRecuperacao.Normalizar(codigo));
+        return codigo;
     }
 
     private int IdDoUsuarioLogado()
