@@ -62,14 +62,14 @@
 
             <div class="flex items-center justify-end gap-sm no-print">
                 <button type="button" onclick="window.print()"
-                        class="border border-outline text-on-surface-variant rounded-full px-lg py-sm font-label-md text-label-md font-bold hover:bg-surface-container-low transition-colors flex items-center gap-xs">
+                        class="border border-outline text-on-surface-variant rounded-lg px-lg py-sm font-label-md text-label-md font-bold hover:bg-surface-container-low transition-colors flex items-center gap-xs">
                     <span class="material-symbols-outlined text-[18px]">print</span>
                     Imprimir
                 </button>
                 @if (User.Identity?.IsAuthenticated == true)
                 {
                     <a asp-controller="Home" asp-action="Index"
-                       class="bg-secondary text-white rounded-full px-lg py-sm font-label-md text-label-md font-bold hover:bg-opacity-90 transition-colors flex items-center gap-xs">
+                       class="bg-secondary text-white rounded-lg px-lg py-sm font-label-md text-label-md font-bold hover:bg-opacity-90 transition-colors flex items-center gap-xs">
                         Guardei o código
                         <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
                     </a>
@@ -77,7 +77,7 @@
                 else
                 {
                     <a asp-controller="Conta" asp-action="Login"
-                       class="bg-secondary text-white rounded-full px-lg py-sm font-label-md text-label-md font-bold hover:bg-opacity-90 transition-colors flex items-center gap-xs">
+                       class="bg-secondary text-white rounded-lg px-lg py-sm font-label-md text-label-md font-bold hover:bg-opacity-90 transition-colors flex items-center gap-xs">
                         Guardei o código, entrar
                         <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
                     </a>

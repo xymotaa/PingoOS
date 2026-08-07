@@ -162,7 +162,7 @@
         <section class="bg-white rounded-b-xl border border-outline-variant shadow-sm overflow-hidden">
             <div class="px-lg py-xs border-b border-outline-variant flex items-center gap-sm">
                 <input id="selecionarTodosCheckbox" type="checkbox" class="w-4 h-4 accent-secondary" />
-                <button id="atualizarListaBtn" type="button" title="Atualizar lista" class="w-7 h-7 rounded-full hover:bg-surface-container-low flex items-center justify-center text-on-surface-variant transition-colors">
+                <button id="atualizarListaBtn" type="button" title="Atualizar lista" class="w-7 h-7 rounded-lg hover:bg-surface-container-low flex items-center justify-center text-on-surface-variant transition-colors">
                     <span class="material-symbols-outlined text-[18px]">refresh</span>
                 </button>
                 <span id="selecionadosInfo" class="font-label-sm text-label-sm text-outline"></span>
@@ -213,7 +213,7 @@
     <!-- Painel de ações (expande a partir do trilho) -->
     <div id="painelAcoes" class="hidden fixed top-16 right-12 bottom-0 w-[280px] border-l border-outline-variant bg-white shadow-lg z-40 flex flex-col overflow-y-auto custom-scrollbar">
         <div class="p-md">
-            <a asp-controller="Estoque" asp-action="Add" class="w-full bg-secondary text-white rounded-full py-sm font-label-md text-label-md font-bold hover:bg-opacity-90 transition-all flex items-center justify-center gap-xs">
+            <a asp-controller="Estoque" asp-action="Add" class="w-full bg-secondary text-white rounded-lg py-sm font-label-md text-label-md font-bold hover:bg-opacity-90 transition-all flex items-center justify-center gap-xs">
                 <span class="material-symbols-outlined text-[18px]">add</span>
                 Incluir cadastro
             </a>
@@ -271,7 +271,7 @@
         <div class="bg-white rounded-xl shadow-lg w-full max-w-[440px] p-lg">
             <div class="flex justify-between items-center mb-md">
                 <h2 class="font-title-lg text-title-lg text-primary">Registrar Movimentação</h2>
-                <button id="fecharMovimentacaoBtn" type="button" class="w-8 h-8 rounded-full hover:bg-surface-container-low flex items-center justify-center text-on-surface-variant">
+                <button id="fecharMovimentacaoBtn" type="button" class="w-8 h-8 rounded-lg hover:bg-surface-container-low flex items-center justify-center text-on-surface-variant">
                     <span class="material-symbols-outlined text-[20px]">close</span>
                 </button>
             </div>
@@ -301,9 +301,9 @@
                 <div>
                     <label class="font-label-md text-label-md text-on-surface-variant">Quantidade</label>
                     <div class="mt-xs inline-flex items-center gap-sm bg-surface-container-low rounded-lg px-sm py-xs">
-                        <button type="button" id="movQtdMenos" class="w-7 h-7 rounded-full hover:bg-white flex items-center justify-center text-on-surface-variant font-bold leading-none transition-colors">−</button>
+                        <button type="button" id="movQtdMenos" class="w-7 h-7 rounded-lg hover:bg-white flex items-center justify-center text-on-surface-variant font-bold leading-none transition-colors">−</button>
                         <span id="movQtdValor" class="w-8 text-center font-title-lg text-title-lg font-bold text-primary">1</span>
-                        <button type="button" id="movQtdMais" class="w-7 h-7 rounded-full hover:bg-white flex items-center justify-center text-on-surface-variant font-bold leading-none transition-colors">+</button>
+                        <button type="button" id="movQtdMais" class="w-7 h-7 rounded-lg hover:bg-white flex items-center justify-center text-on-surface-variant font-bold leading-none transition-colors">+</button>
                     </div>
                 </div>
 
@@ -315,7 +315,7 @@
 
                 <p id="movSaldoInfo" class="font-body-md text-body-md text-on-surface-variant"></p>
 
-                <button id="confirmarMovimentacaoBtn" type="button" class="w-full py-md rounded-lg font-title-lg text-title-lg bg-primary text-white hover:bg-opacity-90 transition-all flex items-center justify-center gap-xs">
+                <button id="confirmarMovimentacaoBtn" type="button" class="w-full py-md rounded-lg font-title-lg text-title-lg bg-secondary text-white hover:bg-opacity-90 transition-all flex items-center justify-center gap-xs">
                     Confirmar
                     <span class="material-symbols-outlined">check_circle</span>
                 </button>

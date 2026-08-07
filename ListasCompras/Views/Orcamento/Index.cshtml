@@ -146,11 +146,11 @@
                             <input id="clienteNome" type="text" readonly placeholder="Pesquise o cliente cadastrado"
                                    class="w-full bg-surface-container-low border-none rounded-lg pl-md pr-10 py-2 font-body-md text-body-md cursor-pointer focus:ring-2 focus:ring-secondary/30" />
                             <button id="buscarClienteBtn" type="button" title="Pesquisar cliente"
-                                    class="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full hover:bg-surface-container-high flex items-center justify-center text-outline transition-colors">
+                                    class="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg hover:bg-surface-container-high flex items-center justify-center text-outline transition-colors">
                                 <span class="material-symbols-outlined text-[20px]">search</span>
                             </button>
                             <button id="limparClienteBtn" type="button" title="Trocar de cliente"
-                                    class="hidden absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full hover:bg-error-container flex items-center justify-center text-outline transition-colors">
+                                    class="hidden absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg hover:bg-error-container flex items-center justify-center text-outline transition-colors">
                                 <span class="material-symbols-outlined text-[20px]">close</span>
                             </button>
                         </div>
@@ -273,16 +273,16 @@
             <!-- Ações -->
             <div class="flex items-center justify-end gap-sm">
                 <a asp-controller="Home" asp-action="Index"
-                   class="border border-outline text-on-surface-variant rounded-full px-lg py-sm font-label-md text-label-md font-bold hover:bg-surface-container-low transition-colors">
+                   class="border border-outline text-on-surface-variant rounded-lg px-lg py-sm font-label-md text-label-md font-bold hover:bg-surface-container-low transition-colors">
                     Cancelar
                 </a>
                 <button id="imprimirBtn" type="button"
-                        class="border border-secondary text-secondary rounded-full px-lg py-sm font-label-md text-label-md font-bold hover:bg-secondary-container/30 transition-colors flex items-center gap-xs">
+                        class="border border-outline text-on-surface-variant rounded-lg px-lg py-sm font-label-md text-label-md font-bold hover:bg-surface-container-low transition-colors flex items-center gap-xs">
                     <span class="material-symbols-outlined text-[18px]">print</span>
                     Imprimir
                 </button>
                 <button id="salvarOrcamentoBtn" type="button"
-                        class="bg-secondary text-white rounded-full px-lg py-sm font-label-md text-label-md font-bold hover:bg-opacity-90 transition-colors flex items-center gap-xs">
+                        class="bg-secondary text-white rounded-lg px-lg py-sm font-label-md text-label-md font-bold hover:bg-opacity-90 transition-colors flex items-center gap-xs">
                     <span class="material-symbols-outlined text-[18px]">save</span>
                     Salvar orçamento
                 </button>
@@ -386,7 +386,7 @@
                 <div class="flex items-center justify-between gap-sm mb-sm">
                     <h2 class="font-title-lg text-title-lg text-primary">Selecionar cliente</h2>
                     <button id="fecharModalCliente" type="button" title="Fechar"
-                            class="w-8 h-8 rounded-full hover:bg-surface-container-low flex items-center justify-center text-on-surface-variant transition-colors">
+                            class="w-8 h-8 rounded-lg hover:bg-surface-container-low flex items-center justify-center text-on-surface-variant transition-colors">
                         <span class="material-symbols-outlined text-[20px]">close</span>
                     </button>
                 </div>

@@ -1,5 +1,45 @@
 # Registro de Alterações
 
+## [2026-08-07] Botões padronizados em 8px e cores unificadas
+
+### Problema
+Os botões do sistema misturavam dois formatos: **32 em `rounded-full`** (pílula) e 21 em
+`rounded-lg` (8px). E havia três variações de cor para a mesma função.
+
+### Arquivos Alterados
+
+| Alteração | Alcance |
+|---|---|
+| `rounded-full` → `rounded-lg` (8px) em botões | 32 botões, 13 arquivos |
+| `border-secondary text-secondary` → `border-outline text-on-surface-variant` | 3 botões (Orçamento e Estoque/Add) — havia 16 usando o cinza contra 3 no verde |
+| `bg-secondary text-on-secondary` → `bg-secondary text-white` | 1 botão — mesma cor (`#ffffff`), token diferente |
+| `bg-primary` → `bg-secondary` | 2 botões — "Confirmar" (Estoque) e "Adicionar" (Caixa) usavam o verde escuro `#003527` |
+| `site.css`: verde e raio dos botões | "Adicionar à Lista" e "Gerar PDF" da Lista de Compras usavam `--pine #123f31` e raio de 6px |
+| Ícone de voltar removido | `Views/Cliente/Add.cshtml` |
+
+Ficou: **53 botões em 8px**, com apenas duas variantes de cor — **24 preenchidos**
+(`bg-secondary #006c49` + `text-white`) e **18 de contorno** (`border-outline` +
+`text-on-surface-variant`).
+
+### O que ficou de fora, de propósito
+- **Cards** mantidos em `rounded-xl`, conforme pedido.
+- **Campos de busca** continuam `rounded-full` — são inputs, não botões.
+- **Abas** (`np-step`, Estoque/Add) e **linhas de lista** (`painel-acao`, Estoque/Index) não têm
+  raio: são sublinhado de aba e item de lista, não botões.
+O verde escuro `bg-primary` deixou de ser usado em botões — segue apenas em títulos, na sidebar e
+no painel das telas de entrada.
+
+### Os dois sistemas visuais, agora com o mesmo botão
+A Lista de Compras usa o `site.css` antigo, com paleta própria (`--pine #123f31`), e ficava de fora
+da varredura do Tailwind. Foram criadas as variáveis `--acao: #006c49` e `--acao-ink: #005236`
+usadas por `.btn-app-primary` e `.fab-pdf`, e o raio de `.btn-app` e `.acao-btn` subiu de 6px para
+8px. O `--pine` continua valendo para navbar, links e títulos — só os botões foram unificados.
+
+Isso adianta parte do item 15 do [ROADMAP](ROADMAP.md) (unificar os dois visuais): os botões das
+duas famílias de tela agora são idênticos em cor e raio.
+
+---
+
 ## [2026-08-07] Cadastro de clientes e integração com o Orçamento
 
 ### Problema

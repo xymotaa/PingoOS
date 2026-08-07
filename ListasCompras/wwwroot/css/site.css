@@ -3,6 +3,9 @@
 
 :root {
   --pine: #123f31;
+  /* Verde das ações, igual ao das telas Tailwind (secondary #006c49) */
+  --acao: #006c49;
+  --acao-ink: #005236;
   --pine-ink: #0c2e23;
   --moss: #4f9d75;
   --pill-bg: #e3f5ea;
@@ -208,7 +211,7 @@ a {
   align-items: center;
   gap: 0.5rem;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   padding: 0.55rem 1.1rem;
   font-size: 0.9rem;
   font-weight: 600;
@@ -218,12 +221,12 @@ a {
 }
 
 .btn-app-primary {
-  background: var(--pine);
+  background: var(--acao);
   color: var(--card);
 }
 
 .btn-app-primary:hover {
-  background: var(--pine-ink);
+  background: var(--acao-ink);
   color: var(--card);
 }
 
@@ -352,7 +355,7 @@ table.app-table tbody tr:hover {
   cursor: pointer;
   font-size: 1.25rem;
   padding: 0.3rem;
-  border-radius: 6px;
+  border-radius: 8px;
   line-height: 1;
   display: inline-flex;
   align-items: center;
@@ -377,7 +380,7 @@ table.app-table tbody tr:hover {
   position: fixed;
   right: 1.5rem;
   bottom: 1.5rem;
-  background: var(--pine);
+  background: var(--acao);
   color: var(--card);
   border: none;
   border-radius: 8px;
@@ -393,7 +396,7 @@ table.app-table tbody tr:hover {
 }
 
 .fab-pdf:hover {
-  background: var(--pine-ink);
+  background: var(--acao-ink);
   color: var(--card);
 }
 

@@ -83,14 +83,14 @@
                                 <td class="px-md py-sm">
                                     <div class="flex items-center justify-center gap-xs">
                                         <a asp-action="Add" asp-route-id="@c.Id" title="Editar cliente"
-                                           class="w-8 h-8 rounded-full hover:bg-surface-container-high inline-flex items-center justify-center text-on-surface-variant transition-colors">
+                                           class="w-8 h-8 rounded-lg hover:bg-surface-container-high inline-flex items-center justify-center text-on-surface-variant transition-colors">
                                             <span class="material-symbols-outlined text-[18px]">edit</span>
                                         </a>
                                         <form asp-action="Excluir" method="post" class="inline"
                                               onsubmit="return confirm('Excluir @c.Nome do cadastro?');">
                                             <input type="hidden" name="id" value="@c.Id" />
                                             <button type="submit" title="Excluir cliente"
-                                                    class="w-8 h-8 rounded-full hover:bg-error-container inline-flex items-center justify-center text-outline transition-colors">
+                                                    class="w-8 h-8 rounded-lg hover:bg-error-container inline-flex items-center justify-center text-outline transition-colors">
                                                 <span class="material-symbols-outlined text-[18px]">delete</span>
                                             </button>
                                         </form>
@@ -109,7 +109,7 @@
                 </p>
                 @if (Model.Count == 0)
                 {
-                    <a asp-action="Add" class="mt-md inline-flex items-center gap-xs bg-secondary text-white rounded-full px-lg py-sm font-label-md text-label-md font-bold hover:bg-opacity-90 transition-colors">
+                    <a asp-action="Add" class="mt-md inline-flex items-center gap-xs bg-secondary text-white rounded-lg px-lg py-sm font-label-md text-label-md font-bold hover:bg-opacity-90 transition-colors">
                         <span class="material-symbols-outlined text-[18px]">add</span>
                         Cadastrar o primeiro
                     </a>

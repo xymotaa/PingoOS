@@ -21,9 +21,6 @@
 
         <!-- Cabeçalho da página -->
         <section class="mb-md">
-            <a asp-action="Index" class="font-label-md text-label-md text-on-surface-variant hover:text-primary flex items-center gap-xs w-fit mb-sm">
-                <span class="material-symbols-outlined text-[18px]">arrow_back</span> Clientes
-            </a>
             <h1 class="font-headline-lg text-headline-lg text-primary">@ViewData["Title"]</h1>
             <p class="font-body-md text-body-md text-on-surface-variant">
                 Estes dados vão para o cabeçalho da ordem de serviço, então preencha como deve sair impresso.
@@ -122,11 +119,11 @@
             <!-- Ações -->
             <div class="flex items-center justify-end gap-sm">
                 <a asp-action="Index"
-                   class="border border-outline text-on-surface-variant rounded-full px-lg py-sm font-label-md text-label-md font-bold hover:bg-surface-container-low transition-colors">
+                   class="border border-outline text-on-surface-variant rounded-lg px-lg py-sm font-label-md text-label-md font-bold hover:bg-surface-container-low transition-colors">
                     Cancelar
                 </a>
                 <button type="submit"
-                        class="bg-secondary text-white rounded-full px-lg py-sm font-label-md text-label-md font-bold hover:bg-opacity-90 transition-colors flex items-center gap-xs">
+                        class="bg-secondary text-white rounded-lg px-lg py-sm font-label-md text-label-md font-bold hover:bg-opacity-90 transition-colors flex items-center gap-xs">
                     <span class="material-symbols-outlined text-[18px]">save</span>
                     @(editando ? "Salvar alterações" : "Cadastrar cliente")
                 </button>
