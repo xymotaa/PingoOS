@@ -23,6 +23,7 @@ lista de compras e está virando um ERP, módulo por módulo.
 - [Estrutura do projeto](#estrutura-do-projeto)
 - [Como adicionar um módulo](#como-adicionar-um-módulo)
 - [Guia de alterações no banco de dados](#guia-de-alterações-no-banco-de-dados)
+- [Melhorias futuras](ROADMAP.md)
 
 ---
 

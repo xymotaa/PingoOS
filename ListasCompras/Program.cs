@@ -1,6 +1,7 @@
 using ListasCompras.Data;
 using ListasCompras.Models;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -19,16 +20,20 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.LoginPath = "/Conta/Login";
         options.LogoutPath = "/Conta/Sair";
         options.AccessDeniedPath = "/Conta/SemPermissao";
-        options.ExpireTimeSpan = TimeSpan.FromDays(7);
+
+        // Uma jornada de trabalho: renova enquanto o sistema está em uso, mas expira da noite
+        // para o dia. Assim o balcão sempre começa o expediente pedindo login.
+        options.ExpireTimeSpan = TimeSpan.FromHours(8);
         options.SlidingExpiration = true;
     });
 
 builder.Services.AddSingleton<IPasswordHasher<Usuario>, PasswordHasher<Usuario>>();
 
 // Tudo exige login por padrão; o que é público leva [AllowAnonymous]
+var exigirLogin = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
 builder.Services.AddControllersWithViews(options =>
 {
-    options.Filters.Add(new AuthorizeFilter());
+    options.Filters.Add(new AuthorizeFilter(exigirLogin));
 });
 
 var app = builder.Build();
