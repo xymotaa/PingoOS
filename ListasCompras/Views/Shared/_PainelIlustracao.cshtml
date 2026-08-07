@@ -1,26 +1,5 @@
 @* Painel direito das telas de entrada (login / recuperação). O card fica à esquerda. *@
-@{
-    var painelLoja = ViewData["NomeLoja"] as string ?? "Minha Loja";
-}
-<aside class="hidden lg:flex flex-col justify-between bg-primary text-white p-xl relative overflow-hidden">
-
-    <div class="relative z-10">
-        <p class="font-label-sm text-label-sm uppercase tracking-[0.18em] text-primary-fixed-dim">Pingo OS</p>
-        <p class="font-headline-md text-headline-md mt-xs max-w-[26ch]">
-            A loja inteira num lugar só: orçamento, estoque, caixa e reposição.
-        </p>
-    </div>
-
+<aside class="hidden lg:flex items-center justify-center bg-primary p-xl">
     <img src="~/img/code-typing.png" alt="" aria-hidden="true"
-         class="relative z-10 w-full max-w-[420px] mx-auto my-lg" />
-
-    <div class="relative z-10">
-        <p class="font-body-md text-body-md text-primary-fixed-dim max-w-[34ch]">
-            Cada ordem de serviço sai em duas vias, com os termos e a garantia impressos no papel.
-        </p>
-        <p class="font-label-sm text-label-sm text-on-tertiary-container mt-md">@painelLoja</p>
-    </div>
-
-    @* Marca d'água: a chave inglesa da assistência técnica, grande e cortada pela borda *@
-    <span class="material-symbols-outlined absolute -right-8 -bottom-10 text-[220px] text-white/5 select-none pointer-events-none" aria-hidden="true">build</span>
+         class="w-full max-w-[600px]" />
 </aside>

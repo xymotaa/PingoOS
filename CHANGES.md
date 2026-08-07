@@ -13,16 +13,19 @@ Login e recuperação passaram a dividir a tela: **card à esquerda, painel de i
 `_PainelIlustracao.cshtml` — as duas telas são a mesma moldura, muda só o card. Abaixo de `lg` o
 painel some e o card ocupa a largura toda.
 
-O painel usa o verde institucional (`primary #003527`), a ilustração, uma frase do que o sistema
-faz e o nome da loja. Como assinatura, o ícone de chave inglesa em escala grande, cortado pela
-borda inferior direita a 5% de opacidade.
+O card à esquerda abre com **Pingo OS** e a frase do que o sistema faz, acima do título da ação
+("Entrar" ou "Esqueci minha senha"). O painel à direita ficou só com a ilustração, centralizada e
+alinhada com o card, sobre o verde institucional (`primary #003527`).
+
+O bloco de identidade da loja saiu do card: exibia o nome da loja onde se espera o nome do sistema,
+e a loja já aparece na barra superior depois do login.
 
 ### Arquivos Alterados
 
 | Arquivo | Alteração |
 |---|---|
 | `Views/Shared/_PainelIlustracao.cshtml` | **novo** — painel direito compartilhado |
-| `Views/Conta/Login.cshtml` | reescrita em duas colunas; identidade da loja acima do formulário |
+| `Views/Conta/Login.cshtml` | reescrita em duas colunas; só o formulário no card |
 | `Views/Conta/EsqueciSenha.cshtml` | reescrita na mesma moldura do login |
 | `Views/Conta/Usuarios.cshtml` | `max-w-[1000px]` → `max-w-[1440px]` |
 | `wwwroot/img/code-typing.png` | **novo** — ilustração Storyset recolorida |
@@ -31,8 +34,8 @@ borda inferior direita a 5% de opacidade.
 ### Sobre a ilustração
 O Storyset não serve o SVG do estilo *cuate* publicamente — só o PNG 600×400, no amarelo padrão
 (`#FFC727`). Baixei o PNG e remapeei a família do amarelo para o verde `#357A49` pedido,
-preservando as variações de tom (10.566 pixels). Como é PNG, é exibido em no máximo 420px de
-largura para não perder nitidez.
+preservando as variações de tom (10.566 pixels). Exibida em no máximo 600px — a resolução nativa
+do arquivo, o limite antes de perder nitidez.
 
 > **Atribuição:** ilustração da [Storyset](https://storyset.com) (Freepik). O uso gratuito exige
 > crédito visível no projeto — ainda **não** adicionado. Ver ROADMAP.

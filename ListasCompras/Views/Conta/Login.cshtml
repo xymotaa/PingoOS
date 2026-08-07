@@ -2,7 +2,6 @@
     Layout = null;
     ViewData["Title"] = "Entrar";
     var nomeLoja = ViewData["NomeLoja"] as string ?? "Minha Loja";
-    var logo = ViewData["LogoLoja"] as string;
     var erro = ViewData["Erro"] as string;
 }
 <!DOCTYPE html>
@@ -21,21 +20,11 @@
         <main class="flex items-center justify-center px-lg py-xl">
             <div class="w-full max-w-[380px]">
 
-                <div class="flex items-center gap-sm mb-lg">
-                    <div class="w-12 h-12 rounded-xl bg-primary text-white flex items-center justify-center overflow-hidden shrink-0">
-                        @if (!string.IsNullOrEmpty(logo))
-                        {
-                            <img src="@logo" alt="" class="w-full h-full object-cover" />
-                        }
-                        else
-                        {
-                            <span class="font-title-lg text-title-lg font-bold">@nomeLoja.Trim()[0]</span>
-                        }
-                    </div>
-                    <div>
-                        <p class="font-title-lg text-title-lg text-primary leading-tight">@nomeLoja</p>
-                        <p class="font-label-sm text-label-sm text-outline">Sistema da loja</p>
-                    </div>
+                <div class="mb-xl">
+                    <p class="font-display-lg text-display-lg text-primary">Pingo OS</p>
+                    <p class="font-body-lg text-body-lg text-on-surface-variant mt-xs max-w-[30ch]">
+                        A loja inteira num lugar só: orçamento, estoque, caixa e reposição.
+                    </p>
                 </div>
 
                 <h1 class="font-headline-lg text-headline-lg text-primary">Entrar</h1>
