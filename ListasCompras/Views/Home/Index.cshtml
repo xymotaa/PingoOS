@@ -78,31 +78,31 @@
 
     <!-- Menu lateral (módulos) -->
     <aside id="sidebar" class="hidden lg:flex fixed top-16 left-0 bottom-0 w-60 bg-surface border-r border-outline-variant flex-col py-md px-sm gap-xs z-40 overflow-y-auto custom-scrollbar">
-        <a asp-controller="ListaCompra" asp-action="Index" class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
-            <span class="material-symbols-outlined text-[22px]">shopping_cart</span>
-            <span class="font-body-lg text-body-lg">Lista de compra</span>
-        </a>
         <a asp-controller="Caixa" asp-action="Index" class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
             <span class="material-symbols-outlined text-[22px]">point_of_sale</span>
             <span class="font-body-lg text-body-lg">Caixa</span>
-        </a>
-        <a asp-controller="Estoque" asp-action="Index" class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
-            <span class="material-symbols-outlined text-[22px]">inventory_2</span>
-            <span class="font-body-lg text-body-lg">Estoque</span>
         </a>
         <a asp-controller="Orcamento" asp-action="Index" class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
             <span class="material-symbols-outlined text-[22px]">request_quote</span>
             <span class="font-body-lg text-body-lg">Orçamento</span>
         </a>
-        <a asp-controller="Dashboards" asp-action="Index" class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
-            <span class="material-symbols-outlined text-[22px]">analytics</span>
-            <span class="font-body-lg text-body-lg">Dashboards</span>
+        <a asp-controller="Estoque" asp-action="Index" class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
+            <span class="material-symbols-outlined text-[22px]">inventory_2</span>
+            <span class="font-body-lg text-body-lg">Estoque</span>
         </a>
         <a asp-controller="Cliente" asp-action="Index" class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
             <span class="material-symbols-outlined text-[22px]">group</span>
             <span class="font-body-lg text-body-lg">Clientes</span>
         </a>
-    </aside>
+        <a asp-controller="ListaCompra" asp-action="Index" class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
+            <span class="material-symbols-outlined text-[22px]">shopping_cart</span>
+            <span class="font-body-lg text-body-lg">Lista de compra</span>
+        </a>
+        <a asp-controller="Dashboards" asp-action="Index" class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
+            <span class="material-symbols-outlined text-[22px]">analytics</span>
+            <span class="font-body-lg text-body-lg">Dashboards</span>
+        </a>
+</aside>
 
     <!-- Conteúdo -->
     <main class="pt-24 px-lg pb-xl lg:pl-[264px]">
@@ -157,7 +157,7 @@
                         <h4 class="font-title-lg text-title-lg text-primary">Desempenho Semanal</h4>
                         <p class="font-body-md text-body-md text-on-surface-variant">Fluxo de caixa e vendas</p>
                     </div>
-                    <select class="bg-surface border-outline-variant rounded-lg font-label-md text-label-md px-md py-sm">
+                    <select class="bg-surface border-outline-variant rounded-lg font-label-md text-label-md pl-md pr-10 py-sm">
                         <option>Últimos 7 dias</option>
                         <option>Últimos 30 dias</option>
                     </select>

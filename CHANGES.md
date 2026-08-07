@@ -1,5 +1,25 @@
 # Registro de Alterações
 
+## [2026-08-07] Seta dos selects sobre o texto, ordem da sidebar e voltar da nova OS
+
+### Problema
+Em **10 selects** de 5 telas a seta do menu suspenso caía em cima do texto ("Todas as situações⌄").
+Causa: o plugin `forms` do Tailwind desenha a seta como fundo e reserva `padding-right: 2.5rem`
+para ela, mas a classe `px-md` vinha depois e sobrescrevia esse espaço com 16px.
+
+### Arquivos Alterados
+
+| Alteração | Alcance |
+|---|---|
+| `px-md` → `pl-md pr-10` em `<select>` | 10 selects em Orcamento, Estoque (Index e Add), Home e Conta/NovoUsuario |
+| Link "voltar" removido | `Views/Orcamento/Add.cshtml` |
+| Ordem da sidebar | Caixa → Orçamento → Estoque → Clientes → Lista de compra → Dashboards |
+
+A ordem nova segue o dia da loja: primeiro o que se usa a toda hora (venda e ordem de serviço),
+depois consulta (estoque, clientes), e por último o que se abre de vez em quando.
+
+---
+
 ## [2026-08-07] Ordem de Serviço no banco (item 1 do roadmap)
 
 ### Problema
