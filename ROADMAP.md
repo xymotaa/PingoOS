@@ -73,6 +73,15 @@ configurar — o .NET publica uma pasta com um executável e o SQLite é um arqu
 
 ## Baixa prioridade
 
+### Crédito da ilustração da tela de login
+**Falta porque** a ilustração de `wwwroot/img/code-typing.png` vem da [Storyset](https://storyset.com)
+(Freepik), cujo uso gratuito **exige atribuição visível**. O repositório é público, então a
+pendência é real.
+
+**O que envolve:** uma linha de crédito no rodapé do README ou na própria tela — ou trocar por uma
+ilustração própria, o que também resolveria o fato de "code typing" não ter relação com o assunto
+do sistema (assistência técnica de celular).
+
 ### Unificar os dois visuais
 **Situação atual:** convivem dois sistemas de design. As telas novas (Painel, Orçamento, Estoque,
 Caixa, Configuração, Login) usam Tailwind via CDN com a paleta Material-3. As telas antigas

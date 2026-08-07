@@ -13,63 +13,76 @@
     <title>Entrar — @nomeLoja</title>
     @await Html.PartialAsync("_HeadTailwind")
 </head>
-<body class="bg-surface min-h-screen flex items-center justify-center px-md py-xl">
+<body class="bg-surface">
 
-    <main class="w-full max-w-[400px]">
+    <div class="min-h-screen grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
 
-        <div class="text-center mb-lg">
-            <div class="w-16 h-16 mx-auto mb-md rounded-xl bg-primary text-white flex items-center justify-center overflow-hidden">
-                @if (!string.IsNullOrEmpty(logo))
+        <!-- Card -->
+        <main class="flex items-center justify-center px-lg py-xl">
+            <div class="w-full max-w-[380px]">
+
+                <div class="flex items-center gap-sm mb-lg">
+                    <div class="w-12 h-12 rounded-xl bg-primary text-white flex items-center justify-center overflow-hidden shrink-0">
+                        @if (!string.IsNullOrEmpty(logo))
+                        {
+                            <img src="@logo" alt="" class="w-full h-full object-cover" />
+                        }
+                        else
+                        {
+                            <span class="font-title-lg text-title-lg font-bold">@nomeLoja.Trim()[0]</span>
+                        }
+                    </div>
+                    <div>
+                        <p class="font-title-lg text-title-lg text-primary leading-tight">@nomeLoja</p>
+                        <p class="font-label-sm text-label-sm text-outline">Sistema da loja</p>
+                    </div>
+                </div>
+
+                <h1 class="font-headline-lg text-headline-lg text-primary">Entrar</h1>
+                <p class="font-body-md text-body-md text-on-surface-variant mb-lg">
+                    Use o e-mail e a senha cadastrados para a loja.
+                </p>
+
+                @if (!string.IsNullOrEmpty(erro))
                 {
-                    <img src="@logo" alt="@nomeLoja" class="w-full h-full object-cover" />
+                    <div class="mb-md bg-error-container text-error px-md py-sm rounded-lg font-label-md text-label-md flex items-center gap-xs">
+                        <span class="material-symbols-outlined text-[18px]">error</span>
+                        <span>@erro</span>
+                    </div>
                 }
-                else
-                {
-                    <span class="font-headline-md text-headline-md font-bold">@nomeLoja.Trim()[0]</span>
-                }
+
+                <form asp-action="Login" method="post" class="flex flex-col gap-md">
+                    <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
+
+                    <div>
+                        <label class="font-label-md text-label-md text-on-surface-variant" for="email">E-mail</label>
+                        <input id="email" name="email" type="email" required autofocus autocomplete="username"
+                               class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2.5 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                    </div>
+
+                    <div>
+                        <label class="font-label-md text-label-md text-on-surface-variant" for="senha">Senha</label>
+                        <input id="senha" name="senha" type="password" required autocomplete="current-password"
+                               class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2.5 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                    </div>
+
+                    <button type="submit"
+                            class="mt-xs bg-secondary text-white rounded-full px-lg py-sm font-label-md text-label-md font-bold hover:bg-opacity-90 transition-colors flex items-center justify-center gap-xs">
+                        <span class="material-symbols-outlined text-[18px]">login</span>
+                        Entrar
+                    </button>
+                </form>
+
+                <div class="mt-lg pt-md border-t border-outline-variant">
+                    <a asp-action="EsqueciSenha" class="font-label-md text-label-md text-secondary font-bold hover:underline">
+                        Esqueci minha senha
+                    </a>
+                </div>
             </div>
-            <h1 class="font-headline-lg text-headline-lg text-primary">@nomeLoja</h1>
-            <p class="font-body-md text-body-md text-on-surface-variant">Entre para continuar</p>
-        </div>
+        </main>
 
-        <div class="bg-white rounded-xl border border-outline-variant shadow-sm p-lg">
-            @if (!string.IsNullOrEmpty(erro))
-            {
-                <div class="mb-md bg-error-container text-error px-md py-sm rounded-lg font-label-md text-label-md flex items-center gap-xs">
-                    <span class="material-symbols-outlined text-[18px]">error</span>
-                    <span>@erro</span>
-                </div>
-            }
-
-            <form asp-action="Login" method="post" class="flex flex-col gap-md">
-                <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
-
-                <div>
-                    <label class="font-label-md text-label-md text-on-surface-variant" for="email">E-mail</label>
-                    <input id="email" name="email" type="email" required autofocus autocomplete="username"
-                           class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
-                </div>
-
-                <div>
-                    <label class="font-label-md text-label-md text-on-surface-variant" for="senha">Senha</label>
-                    <input id="senha" name="senha" type="password" required autocomplete="current-password"
-                           class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
-                </div>
-
-                <button type="submit"
-                        class="mt-xs bg-secondary text-white rounded-full px-lg py-sm font-label-md text-label-md font-bold hover:bg-opacity-90 transition-colors flex items-center justify-center gap-xs">
-                    <span class="material-symbols-outlined text-[18px]">login</span>
-                    Entrar
-                </button>
-            </form>
-        </div>
-
-        <div class="mt-md text-center">
-            <a asp-action="EsqueciSenha" class="font-label-md text-label-md text-secondary font-bold hover:underline">
-                Esqueci minha senha
-            </a>
-        </div>
-    </main>
+        @await Html.PartialAsync("_PainelIlustracao")
+    </div>
 
 </body>
 </html>

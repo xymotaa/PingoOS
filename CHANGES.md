@@ -1,5 +1,44 @@
 # Registro de Alterações
 
+## [2026-08-07] Telas de entrada em duas colunas e alinhamento da tela de Usuários
+
+### Problema
+Login e recuperação de senha eram cards estreitos centralizados numa tela vazia — não pareciam
+parte do ERP. A tela de Usuários usava `max-w-[1000px]`, enquanto todas as outras usam
+`max-w-[1440px]`: o conteúdo ficava encolhido no meio, quebrando o alinhamento do sistema.
+
+### Solução
+Login e recuperação passaram a dividir a tela: **card à esquerda, painel de ilustração à direita**
+(`grid lg:grid-cols-[1fr_1.05fr]`), com o painel extraído para o partial compartilhado
+`_PainelIlustracao.cshtml` — as duas telas são a mesma moldura, muda só o card. Abaixo de `lg` o
+painel some e o card ocupa a largura toda.
+
+O painel usa o verde institucional (`primary #003527`), a ilustração, uma frase do que o sistema
+faz e o nome da loja. Como assinatura, o ícone de chave inglesa em escala grande, cortado pela
+borda inferior direita a 5% de opacidade.
+
+### Arquivos Alterados
+
+| Arquivo | Alteração |
+|---|---|
+| `Views/Shared/_PainelIlustracao.cshtml` | **novo** — painel direito compartilhado |
+| `Views/Conta/Login.cshtml` | reescrita em duas colunas; identidade da loja acima do formulário |
+| `Views/Conta/EsqueciSenha.cshtml` | reescrita na mesma moldura do login |
+| `Views/Conta/Usuarios.cshtml` | `max-w-[1000px]` → `max-w-[1440px]` |
+| `wwwroot/img/code-typing.png` | **novo** — ilustração Storyset recolorida |
+| `docs/screenshots/` | login, recuperar e usuarios atualizados |
+
+### Sobre a ilustração
+O Storyset não serve o SVG do estilo *cuate* publicamente — só o PNG 600×400, no amarelo padrão
+(`#FFC727`). Baixei o PNG e remapeei a família do amarelo para o verde `#357A49` pedido,
+preservando as variações de tom (10.566 pixels). Como é PNG, é exibido em no máximo 420px de
+largura para não perder nitidez.
+
+> **Atribuição:** ilustração da [Storyset](https://storyset.com) (Freepik). O uso gratuito exige
+> crédito visível no projeto — ainda **não** adicionado. Ver ROADMAP.
+
+---
+
 ## [2026-08-07] Recuperação de senha: código de recuperação e comando de terminal
 
 ### Problema

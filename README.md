@@ -50,9 +50,13 @@ mas ainda não gravam.
 |---|---|
 | ![Orçamento](docs/screenshots/orcamento.png) | ![Estoque](docs/screenshots/estoque.png) |
 
-| Lista de compras |
+| Lista de compras | Usuários |
+|---|---|
+| ![Lista de compras](docs/screenshots/lista-compras.png) | ![Usuários](docs/screenshots/usuarios.png) |
+
+| Entrar |
 |---|
-| ![Lista de compras](docs/screenshots/lista-compras.png) |
+| ![Login](docs/screenshots/login.png) |
 
 ### Orçamento com impressão em duas vias
 
