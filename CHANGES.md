@@ -1,5 +1,62 @@
 # Registro de Alterações
 
+## [2026-08-07] Ordem de Serviço no banco (item 1 do roadmap)
+
+### Problema
+O Orçamento montava a OS na tela e perdia tudo ao sair. O número da ordem vinha do relógio no
+JavaScript (`"OS-" + Date.now().slice(-6)`), então **cada impressão gerava um número diferente para
+a mesma ordem** — e nenhum deles existia em lugar nenhum depois.
+
+### Solução
+Entidades `OrdemServico` e `ItemOrdemServico`, referenciando `ClienteId` (não copiando os dados do
+cliente, conforme a ordem que o roadmap definiu). O módulo passou a seguir a convenção das outras
+telas: `Index` lista, `Add` é o formulário, `Ver` mostra e imprime.
+
+- **Numeração sequencial** de verdade: `OS-000001`, `OS-000002`, gerada no servidor.
+- **Situações** Aberta → Pronta → Entregue. Marcar como entregue grava `DataEntrega`, que é de onde
+  a garantia de 90 dias passa a contar.
+- **Autoria** (item 4 do roadmap antigo, feito junto): a OS grava quem a emitiu e o nome aparece na
+  linha "Responsável Técnico" do documento impresso. Custava um campo e re-migrar depois seria pior.
+- **Impressão só de OS salva.** O botão saiu do formulário e ficou na tela `Ver` — imprimir com
+  número falso era exatamente o problema.
+
+### Arquivos Alterados
+
+| Arquivo | Alteração |
+|---|---|
+| `Models/OrdemServico.cs` | **novo** — OS, itens e as constantes de situação |
+| `Controllers/OrcamentoController.cs` | reescrito — Index, Add, Ver, Salvar, AlterarSituacao, Excluir |
+| `Views/Orcamento/Index.cshtml` | **nova** — listagem com busca e filtro por situação |
+| `Views/Orcamento/Add.cshtml` | o antigo formulário, agora postando de verdade |
+| `Views/Orcamento/Ver.cshtml` | **nova** — documento preenchido pelo servidor + botão de imprimir |
+| `wwwroot/js/os-lista.js`, `os-impressao.js` | **novos** — filtro da lista e clonagem da 2ª via |
+| `wwwroot/js/orcamento.js` | impressão removida; `clienteId` no post; validação antes de enviar |
+| `Controllers/ClienteController.cs` | excluir cliente com OS agora explica em vez de estourar |
+| Migration `AddOrdensServico` | duas tabelas novas |
+
+Apagar um cliente com histórico é bloqueado no banco (`DeleteBehavior.Restrict`); apagar um usuário
+deixa a OS intacta (`SetNull`).
+
+### Bug sério encontrado nos testes: preços multiplicados por 100
+Salvar um item de **R$ 620,00 gravava R$ 62.000,00**. O binding do .NET converte números com a
+cultura do sistema, e a máquina está em pt-BR, onde o ponto é separador de milhar — então o
+`620.00` que o formulário mandava virava 62000. Corrigido recebendo o valor como texto e
+convertendo com `CultureInfo.InvariantCulture` explícita, o que independe do idioma da máquina onde
+a loja rodar.
+
+### Segundo bug: acentos corrompidos na tela Ver
+A view saiu com "ORDEM DE SERVIÃ‡O" por um erro de codificação na geração do arquivo. Regerada a
+partir do original em UTF-8.
+
+### Resultado
+Verificado numa instalação limpa: duas OS salvas com numeração sequencial, valores corretos no
+banco (R$ 620,00 e R$ 389,90), linha em branco do formulário ignorada, autoria gravada, transições
+de situação com `DataEntrega` preenchida só na entrega, salvar sem cliente recusado, e exclusão de
+cliente com histórico bloqueada com mensagem. O PDF de impressão sai em **uma folha A4** com as
+duas vias, o número real e o nome do técnico na assinatura.
+
+---
+
 ## [2026-08-07] Botões padronizados em 8px e cores unificadas
 
 ### Problema

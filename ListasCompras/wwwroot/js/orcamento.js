@@ -3,8 +3,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const itensVazio = document.getElementById("itensVazio");
     const totalGeral = document.getElementById("totalGeral");
     const adicionarItemBtn = document.getElementById("adicionarItemBtn");
-    const salvarOrcamentoBtn = document.getElementById("salvarOrcamentoBtn");
-    const imprimirBtn = document.getElementById("imprimirBtn");
     const toast = document.getElementById("toast");
     const toastMsg = document.getElementById("toastMsg");
     const toastIcon = document.getElementById("toastIcon");
@@ -33,13 +31,15 @@ document.addEventListener("DOMContentLoaded", function () {
         tr.className = "border-t border-outline-variant";
         tr.innerHTML =
             '<td class="px-md py-sm">' +
-                '<input type="text" class="item-desc w-full bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" placeholder="Ex: Tela Display Frontal Original" />' +
+                '<input type="text" name="itemDescricao" class="item-desc w-full bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" placeholder="Ex: Tela Display Frontal Original" />' +
             '</td>' +
             '<td class="px-md py-sm">' +
-                '<input type="text" inputmode="numeric" value="1" class="item-qtd w-full text-center bg-surface-container-low border-none rounded-lg px-2 py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />' +
+                '<input type="text" name="itemQuantidade" inputmode="numeric" value="1" class="item-qtd w-full text-center bg-surface-container-low border-none rounded-lg px-2 py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />' +
             '</td>' +
             '<td class="px-md py-sm">' +
                 '<input type="text" inputmode="decimal" placeholder="0,00" class="item-valor w-full text-right bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />' +
+                // O visível aceita vírgula; o que vai para o servidor usa ponto, senão o binding do .NET recusa
+                '<input type="hidden" name="itemValor" class="item-valor-post" value="0" />' +
             '</td>' +
             '<td class="px-md py-sm text-right">' +
                 '<span class="item-total font-body-md text-body-md font-semibold text-secondary">R$ 0,00</span>' +
@@ -64,6 +64,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const valor = parseDecimal(tr.querySelector(".item-valor").value);
             const subtotal = qtd * valor;
             tr.querySelector(".item-total").textContent = formatBRL(subtotal);
+            tr.querySelector(".item-valor-post").value = valor.toFixed(2);
             total += subtotal;
         });
         totalGeral.textContent = formatBRL(total);
@@ -90,34 +91,6 @@ document.addEventListener("DOMContentLoaded", function () {
         atualizarVazio();
         recalcular();
     });
-
-    function textoOuTraco(valor) {
-        valor = (valor || "").trim();
-        return valor || "—";
-    }
-
-    function definirTexto(id, valor) {
-        document.getElementById(id).textContent = valor;
-    }
-
-    function valor(id) {
-        return document.getElementById(id).value.trim();
-    }
-
-    function montarEndereco() {
-        const partes = [];
-        const rua = valor("clienteEndereco");
-        const num = valor("clienteNumero");
-        const linha = rua + (num ? ", " + num : "");
-        if (linha.trim()) partes.push(linha.trim());
-        if (valor("clienteBairro")) partes.push(valor("clienteBairro"));
-        const cidade = valor("clienteCidade");
-        const uf = valor("clienteUf");
-        const cidadeUf = cidade + (uf ? "/" + uf.toUpperCase() : "");
-        if (cidadeUf.trim()) partes.push(cidadeUf.trim());
-        if (valor("clienteCep")) partes.push("CEP " + valor("clienteCep"));
-        return partes.length ? partes.join(" - ") : "—";
-    }
 
     // ===== Cliente: os dados vêm do cadastro, não são digitados aqui =====
 
@@ -181,6 +154,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function selecionarCliente(c) {
+        document.getElementById("clienteId").value = c.id;
         document.getElementById("clienteNome").value = c.nome;
         document.getElementById("clienteTelefone").value = c.telefone;
         document.getElementById("clienteDocumento").value = c.documento;
@@ -197,6 +171,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function limparCliente() {
+        document.getElementById("clienteId").value = "";
         camposCliente.forEach(function (id) { document.getElementById(id).value = ""; });
         limparClienteBtn.classList.add("hidden");
         buscarClienteBtn.classList.remove("hidden");
@@ -228,91 +203,20 @@ document.addEventListener("DOMContentLoaded", function () {
         if (dispositivoSemSerie.checked) dispositivoSerie.value = "";
     });
 
-    function prepararImpressao() {
-        definirTexto("osNumero", "OS-" + Date.now().toString().slice(-6));
-        definirTexto("osData", new Date().toLocaleDateString("pt-BR"));
-        definirTexto("osClienteNome", textoOuTraco(document.getElementById("clienteNome").value));
-        definirTexto("osClienteTelefone", textoOuTraco(document.getElementById("clienteTelefone").value));
-        definirTexto("osClienteDoc", textoOuTraco(document.getElementById("clienteDocumento").value));
-        definirTexto("osClienteEndereco", montarEndereco());
-        definirTexto("osDispTipo", textoOuTraco(document.getElementById("dispositivoTipo").value));
-        definirTexto("osDispMarca", textoOuTraco(document.getElementById("dispositivoMarca").value));
-        definirTexto("osDispModelo", textoOuTraco(document.getElementById("dispositivoModelo").value));
-        definirTexto("osDispSerie", dispositivoSemSerie.checked ? "Não possui" : textoOuTraco(document.getElementById("dispositivoSerie").value));
-        definirTexto("osDiagnostico", textoOuTraco(document.getElementById("diagnostico").value));
-
-        const osItens = document.getElementById("osItens");
-        osItens.innerHTML = "";
-        itensBody.querySelectorAll("tr").forEach(function (tr) {
-            const desc = tr.querySelector(".item-desc").value.trim();
-            const qtd = parseInt(tr.querySelector(".item-qtd").value, 10) || 0;
-            const valor = parseDecimal(tr.querySelector(".item-valor").value);
-            if (!desc && valor === 0) return; // ignora linhas vazias
-            const linha = document.createElement("tr");
-            const tdDesc = document.createElement("td");
-            tdDesc.textContent = desc || "—";
-            const tdQtd = document.createElement("td");
-            tdQtd.style.textAlign = "center";
-            tdQtd.textContent = qtd;
-            const tdValor = document.createElement("td");
-            tdValor.style.textAlign = "right";
-            tdValor.textContent = formatBRL(valor);
-            const tdTotal = document.createElement("td");
-            tdTotal.style.textAlign = "right";
-            tdTotal.textContent = formatBRL(qtd * valor);
-            linha.append(tdDesc, tdQtd, tdValor, tdTotal);
-            osItens.appendChild(linha);
-        });
-        definirTexto("osTotal", totalGeral.textContent);
-        gerarSegundaVia();
-        ajustarEscala();
-    }
-
-    // Área útil da A4 com as margens de 8mm definidas em @page, convertida para px (96dpi)
-    const A4_LARGURA_UTIL = 194 * 96 / 25.4;
-    const A4_ALTURA_UTIL = 281 * 96 / 25.4;
-    const ESCALA_MINIMA = 0.75;
-
-    // Com muitos itens as duas vias estouram a folha; reduz a escala o suficiente para caberem
-    function ajustarEscala() {
-        const doc = document.getElementById("osImpressao");
-        doc.style.zoom = "";
-        // o documento fica oculto na tela: exibe fora da área visível só para medir
-        const estiloOriginal = doc.getAttribute("style") || "";
-        doc.style.cssText = estiloOriginal + ";display:block;position:absolute;visibility:hidden;left:-10000px;top:0;width:" + A4_LARGURA_UTIL + "px;";
-        const altura = doc.getBoundingClientRect().height;
-        doc.setAttribute("style", estiloOriginal);
-        if (altura > A4_ALTURA_UTIL) {
-            doc.style.zoom = Math.max(ESCALA_MINIMA, A4_ALTURA_UTIL / altura).toFixed(3);
-        }
-    }
-
-    // Duplica a 1ª via na mesma folha para que cliente e técnico assinem cada uma a sua
-    function gerarSegundaVia() {
-        const via1 = document.getElementById("osVia1");
-        const via2 = document.getElementById("osVia2");
-        const copia = via1.cloneNode(true);
-        copia.removeAttribute("id");
-        copia.querySelectorAll("[id]").forEach(function (el) { el.removeAttribute("id"); });
-        const rotulo = copia.querySelector(".os-via-label");
-        if (rotulo) rotulo.textContent = "2ª via — Técnico";
-        via2.innerHTML = "";
-        via2.appendChild(copia);
-    }
-
-    imprimirBtn.addEventListener("click", function () {
-        prepararImpressao();
-        window.print();
-    });
-
-    salvarOrcamentoBtn.addEventListener("click", function () {
-        const nome = document.getElementById("clienteNome").value.trim();
-        if (!nome) {
-            document.getElementById("clienteNome").focus();
-            mostrarToast("Informe o nome do cliente para salvar o orçamento.", true);
+    document.getElementById("formOs").addEventListener("submit", function (e) {
+        if (!document.getElementById("clienteId").value) {
+            e.preventDefault();
+            mostrarToast("Selecione o cliente antes de salvar.", true);
+            buscarClienteBtn.focus();
             return;
         }
-        mostrarToast("Orçamento salvo (exemplo, ainda não gravado no banco de dados).");
+        const temItem = Array.prototype.some.call(itensBody.querySelectorAll("tr"), function (tr) {
+            return tr.querySelector(".item-desc").value.trim() || parseDecimal(tr.querySelector(".item-valor").value) > 0;
+        });
+        if (!temItem) {
+            e.preventDefault();
+            mostrarToast("Adicione ao menos um item ao orçamento.", true);
+        }
     });
 
     // Começa com uma linha em branco pronta para preencher

@@ -1,415 +1,167 @@
+@model List<ListasCompras.Models.OrdemServico>
 @{
     Layout = null;
-    ViewData["Title"] = "Orçamento";
-
+    ViewData["Title"] = "Ordens de serviço";
     var nomeLoja = ViewData["NomeLoja"] as string ?? "Minha Loja";
-    var logo = ViewData["LogoLoja"] as string;
-    var lojaCnpj = ViewData["LojaCnpj"] as string;
-    var lojaEndereco = ViewData["LojaEndereco"] as string;
-    var lojaTelefone = ViewData["LojaTelefone"] as string;
-    var lojaEmail = ViewData["LojaEmail"] as string;
-    var lojaContato = string.Join(" · ", new[] { lojaTelefone, lojaEmail }.Where(s => !string.IsNullOrWhiteSpace(s)));
+
+    string Moeda(decimal v) => v.ToString("C2", new System.Globalization.CultureInfo("pt-BR"));
+
+    (string fundo, string texto) Cor(string situacao) => situacao switch
+    {
+        "Entregue" => ("bg-surface-container-high", "text-on-surface-variant"),
+        "Pronta" => ("bg-secondary-container", "text-on-secondary-container"),
+        _ => ("bg-warning-container", "text-on-surface"),
+    };
 }
 <!DOCTYPE html>
 <html class="light" lang="pt-BR">
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>@nomeLoja — @ViewData["Title"]</title>
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <script>
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        "on-tertiary-container": "#93baa7", "outline-variant": "#bfc9c3",
-                        "on-tertiary-fixed-variant": "#294e3f", "surface": "#f8f9ff",
-                        "inverse-on-surface": "#eaf1ff", "outline": "#707974", "on-primary": "#ffffff",
-                        "secondary": "#006c49", "error-container": "#ffdad6", "primary-fixed-dim": "#95d3ba",
-                        "on-secondary": "#ffffff", "inverse-primary": "#95d3ba", "primary": "#003527",
-                        "on-error-container": "#93000a", "on-tertiary-fixed": "#002115", "primary-fixed": "#b0f0d6",
-                        "on-surface": "#0b1c30", "tertiary-fixed": "#c3ecd7", "on-primary-container": "#80bea6",
-                        "surface-container-highest": "#d3e4fe", "on-primary-fixed-variant": "#0b513d",
-                        "on-error": "#ffffff", "surface-container-lowest": "#ffffff", "surface-container": "#e5eeff",
-                        "secondary-fixed": "#6ffbbe", "surface-container-low": "#eff4ff", "surface-tint": "#2b6954",
-                        "background": "#f8f9ff", "on-primary-fixed": "#002117", "primary-container": "#064e3b",
-                        "on-background": "#0b1c30", "tertiary-container": "#274b3c", "error": "#ba1a1a",
-                        "surface-bright": "#f8f9ff", "inverse-surface": "#213145", "tertiary": "#0e3427",
-                        "surface-dim": "#cbdbf5", "on-secondary-fixed-variant": "#005236", "tertiary-fixed-dim": "#a8cfbc",
-                        "secondary-fixed-dim": "#4edea3", "surface-container-high": "#dce9ff",
-                        "on-secondary-container": "#00714d", "secondary-container": "#6cf8bb",
-                        "surface-variant": "#d3e4fe", "on-surface-variant": "#404944", "on-tertiary": "#ffffff",
-                        "on-secondary-fixed": "#002113",
-                        "warning": "#8a5300", "warning-container": "#ffddb1"
-                    },
-                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
-                    spacing: { "container-margin": "24px", "lg": "24px", "base": "4px", "gutter": "16px", "sm": "8px", "xs": "4px", "md": "16px", "xl": "32px" },
-                    fontFamily: {
-                        "body-md": ["Hanken Grotesk"], "headline-md": ["Hanken Grotesk"], "title-lg": ["Hanken Grotesk"],
-                        "body-lg": ["Hanken Grotesk"], "label-sm": ["Hanken Grotesk"], "headline-lg": ["Hanken Grotesk"],
-                        "display-lg": ["Hanken Grotesk"], "label-md": ["Hanken Grotesk"]
-                    },
-                    fontSize: {
-                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
-                        "headline-md": ["22px", { "lineHeight": "30px", "fontWeight": "600" }],
-                        "title-lg": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
-                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
-                        "label-sm": ["11px", { "lineHeight": "14px", "fontWeight": "600" }],
-                        "headline-lg": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
-                        "display-lg": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
-                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500" }]
-                    }
-                },
-            },
-        }
-    </script>
-    <style>
-        body { font-family: 'Hanken Grotesk', sans-serif; background-color: #f8f9ff; color: #0b1c30; }
-        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
-        input[type=number] { -moz-appearance: textfield; appearance: textfield; }
-        input[type=number]::-webkit-outer-spin-button,
-        input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-
-        /* Impressão: Ordem de Serviço */
-        .print-only { display: none; }
-        @@media print {
-            .no-print { display: none !important; }
-            .print-only { display: block !important; }
-            html, body { background: #fff !important; }
-            @@page { size: A4; margin: 8mm; }
-        }
-        #osImpressao { color: #000; font-family: 'Hanken Grotesk', Arial, sans-serif; font-size: 10px; line-height: 1.3; }
-        /* Cada "via" é um bloco idêntico; as duas cabem na mesma folha A4 */
-        #osImpressao .os-via { page-break-inside: avoid; break-inside: avoid; }
-        #osImpressao .os-corte { border-top: 1px dashed #999; text-align: center; margin: 8px 0 10px; }
-        #osImpressao .os-corte span { position: relative; top: -8px; background: #fff; padding: 0 8px; font-size: 10px; color: #777; letter-spacing: .04em; }
-        #osImpressao .os-topo { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #000; padding-bottom: 4px; margin-bottom: 6px; }
-        #osImpressao .os-loja { display: flex; align-items: center; gap: 8px; }
-        #osImpressao .os-logo { width: 36px; height: 36px; object-fit: contain; }
-        #osImpressao .os-loja-nome { font-size: 14px; font-weight: 700; }
-        #osImpressao .os-loja-sub { font-size: 9px; color: #444; }
-        #osImpressao .os-doc-meta { text-align: right; font-size: 9px; }
-        #osImpressao .os-doc-titulo { font-size: 13px; font-weight: 700; margin-bottom: 2px; }
-        #osImpressao .os-via-label { display: inline-block; border: 1px solid #000; padding: 0 5px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 2px; }
-        #osImpressao .os-bloco { margin-bottom: 5px; }
-        #osImpressao .os-bloco-titulo { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; background: #f0f0f0; border: 1px solid #ccc; padding: 1px 8px; margin-bottom: 3px; }
-        #osImpressao .os-linhas { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 16px; padding: 0 4px; }
-        #osImpressao .os-linhas-3 { grid-template-columns: 2fr 1fr 1fr; }
-        #osImpressao .os-linhas-4 { grid-template-columns: repeat(4, 1fr); }
-        #osImpressao .os-rot { font-weight: 600; }
-        #osImpressao .os-diag { padding: 1px 4px; white-space: pre-wrap; min-height: 22px; }
-        #osImpressao .os-tabela { width: 100%; border-collapse: collapse; }
-        #osImpressao .os-tabela th, #osImpressao .os-tabela td { border: 1px solid #ccc; padding: 2px 8px; font-size: 10px; }
-        #osImpressao .os-tabela th { background: #f0f0f0; }
-        /* Termos em texto corrido e justificado, em 2 colunas: ocupa bem menos altura que uma lista */
-        #osImpressao .os-termos-texto { column-count: 2; column-gap: 14px; margin: 0; padding: 0 4px; font-size: 7px; line-height: 1.32; text-align: justify; }
-        #osImpressao .os-aceite { font-size: 8px; font-weight: 600; margin-top: 3px; padding: 0 4px; }
-        #osImpressao .os-assinaturas { display: flex; justify-content: space-between; gap: 40px; margin-top: 16px; }
-        #osImpressao .os-assinatura { flex: 1; text-align: center; font-size: 9px; }
-        #osImpressao .os-linha-assinatura { border-top: 1px solid #000; margin-bottom: 3px; height: 0; }
-    </style>
+    <title>@nomeLoja — Ordens de serviço</title>
+    @await Html.PartialAsync("_HeadTailwind")
 </head>
 <body class="bg-surface">
     @await Html.PartialAsync("_Navbar")
 
-    <main class="no-print pt-24 px-lg pb-xl max-w-[1440px] mx-auto">
+    <main class="pt-24 px-lg pb-xl max-w-[1440px] mx-auto">
 
-        <div id="toast" class="hidden mb-md bg-secondary-container text-on-secondary-container px-md py-sm rounded-lg font-label-md text-label-md flex items-center gap-xs w-fit">
-            <span id="toastIcon" class="material-symbols-outlined text-[18px]">check_circle</span>
-            <span id="toastMsg"></span>
-        </div>
+        @if (TempData["Sucesso"] != null)
+        {
+            <div class="mb-md bg-secondary-container text-on-secondary-container px-md py-sm rounded-lg font-label-md text-label-md flex items-center gap-xs w-fit">
+                <span class="material-symbols-outlined text-[18px]">check_circle</span>
+                <span>@TempData["Sucesso"]</span>
+            </div>
+        }
+        @if (TempData["Erro"] != null)
+        {
+            <div class="mb-md bg-error-container text-error px-md py-sm rounded-lg font-label-md text-label-md flex items-center gap-xs w-fit">
+                <span class="material-symbols-outlined text-[18px]">error</span>
+                <span>@TempData["Erro"]</span>
+            </div>
+        }
 
         <!-- Cabeçalho da página -->
-        <section class="mb-md flex flex-wrap items-end justify-between gap-md">
-            <div>
-                <h1 class="font-headline-lg text-headline-lg text-primary">Novo Orçamento</h1>
-                <p class="font-body-md text-body-md text-on-surface-variant">Registre os dados do cliente, do aparelho e os itens do serviço.</p>
-            </div>
+        <section class="mb-md">
+            <h1 class="font-headline-lg text-headline-lg text-primary">Ordens de serviço</h1>
+            <p class="font-body-md text-body-md text-on-surface-variant">Orçamentos abertos, prontos para retirada e já entregues.</p>
         </section>
 
-        <div class="flex flex-col gap-md">
-
-            <!-- Cliente -->
-            <section class="bg-white rounded-xl border border-outline-variant shadow-sm p-lg">
-                <div class="flex items-center gap-sm mb-md">
-                    <span class="material-symbols-outlined text-[20px] text-secondary">person</span>
-                    <h2 class="font-title-lg text-title-lg text-primary">Cliente</h2>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-12 gap-md">
-                    <div class="md:col-span-6">
-                        <label class="font-label-md text-label-md text-on-surface-variant" for="clienteNome">Nome</label>
-                        <div class="relative mt-xs">
-                            <input id="clienteNome" type="text" readonly placeholder="Pesquise o cliente cadastrado"
-                                   class="w-full bg-surface-container-low border-none rounded-lg pl-md pr-10 py-2 font-body-md text-body-md cursor-pointer focus:ring-2 focus:ring-secondary/30" />
-                            <button id="buscarClienteBtn" type="button" title="Pesquisar cliente"
-                                    class="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg hover:bg-surface-container-high flex items-center justify-center text-outline transition-colors">
-                                <span class="material-symbols-outlined text-[20px]">search</span>
-                            </button>
-                            <button id="limparClienteBtn" type="button" title="Trocar de cliente"
-                                    class="hidden absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg hover:bg-error-container flex items-center justify-center text-outline transition-colors">
-                                <span class="material-symbols-outlined text-[20px]">close</span>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="md:col-span-3">
-                        <label class="font-label-md text-label-md text-on-surface-variant" for="clienteTelefone">Telefone</label>
-                        <input id="clienteTelefone" type="tel" readonly class="campo-cliente w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md text-on-surface-variant" />
-                    </div>
-                    <div class="md:col-span-3">
-                        <label class="font-label-md text-label-md text-on-surface-variant" for="clienteDocumento">CPF ou RG</label>
-                        <input id="clienteDocumento" type="text" readonly class="campo-cliente w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md text-on-surface-variant" />
-                    </div>
-
-                    <div class="md:col-span-3">
-                        <label class="font-label-md text-label-md text-on-surface-variant" for="clienteCep">CEP</label>
-                        <input id="clienteCep" type="text" readonly class="campo-cliente w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md text-on-surface-variant" />
-                    </div>
-                    <div class="md:col-span-6">
-                        <label class="font-label-md text-label-md text-on-surface-variant" for="clienteEndereco">Endereço (Rua / Av.)</label>
-                        <input id="clienteEndereco" type="text" readonly class="campo-cliente w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md text-on-surface-variant" />
-                    </div>
-                    <div class="md:col-span-3">
-                        <label class="font-label-md text-label-md text-on-surface-variant" for="clienteNumero">Número</label>
-                        <input id="clienteNumero" type="text" readonly class="campo-cliente w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md text-on-surface-variant" />
-                    </div>
-                    <div class="md:col-span-4">
-                        <label class="font-label-md text-label-md text-on-surface-variant" for="clienteBairro">Bairro</label>
-                        <input id="clienteBairro" type="text" readonly class="campo-cliente w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md text-on-surface-variant" />
-                    </div>
-                    <div class="md:col-span-5">
-                        <label class="font-label-md text-label-md text-on-surface-variant" for="clienteCidade">Cidade</label>
-                        <input id="clienteCidade" type="text" readonly class="campo-cliente w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md text-on-surface-variant" />
-                    </div>
-                    <div class="md:col-span-3">
-                        <label class="font-label-md text-label-md text-on-surface-variant" for="clienteUf">UF</label>
-                        <input id="clienteUf" type="text" readonly class="campo-cliente w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md text-on-surface-variant uppercase" />
-                    </div>
-                </div>
-            </section>
-
-            <!-- Dados do dispositivo -->
-            <section class="bg-white rounded-xl border border-outline-variant shadow-sm p-lg">
-                <div class="flex items-center gap-sm mb-md">
-                    <span class="material-symbols-outlined text-[20px] text-secondary">smartphone</span>
-                    <h2 class="font-title-lg text-title-lg text-primary">Dados do dispositivo</h2>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-12 gap-md">
-                    <div class="md:col-span-3">
-                        <label class="font-label-md text-label-md text-on-surface-variant" for="dispositivoTipo">Tipo de aparelho</label>
-                        <input id="dispositivoTipo" type="text" placeholder="Ex: Celular, Tablet, Notebook" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
-                    </div>
-                    <div class="md:col-span-3">
-                        <label class="font-label-md text-label-md text-on-surface-variant" for="dispositivoMarca">Marca</label>
-                        <input id="dispositivoMarca" type="text" placeholder="Ex: Samsung, Apple, Xiaomi" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
-                    </div>
-                    <div class="md:col-span-3">
-                        <label class="font-label-md text-label-md text-on-surface-variant" for="dispositivoModelo">Modelo</label>
-                        <input id="dispositivoModelo" type="text" placeholder="Ex: Galaxy A54" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
-                    </div>
-                    <div class="md:col-span-3">
-                        <div class="flex items-center justify-between gap-sm">
-                            <label class="font-label-md text-label-md text-on-surface-variant" for="dispositivoSerie">Número de série / IMEI</label>
-                            <label class="flex items-center gap-xs cursor-pointer shrink-0">
-                                <input id="dispositivoSemSerie" type="checkbox" class="w-4 h-4 accent-secondary" />
-                                <span class="font-label-sm text-label-sm text-outline">Sem número</span>
-                            </label>
-                        </div>
-                        <input id="dispositivoSerie" type="text" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30 disabled:opacity-50 disabled:cursor-not-allowed" />
-                    </div>
-                </div>
-            </section>
-
-            <!-- Diagnóstico -->
-            <section class="bg-white rounded-xl border border-outline-variant shadow-sm p-lg">
-                <div class="flex items-center gap-sm mb-md">
-                    <span class="material-symbols-outlined text-[20px] text-secondary">clinical_notes</span>
-                    <h2 class="font-title-lg text-title-lg text-primary">Diagnóstico</h2>
-                </div>
-                <label class="font-label-md text-label-md text-on-surface-variant" for="diagnostico">Diagnóstico Técnico Preliminar</label>
-                <textarea id="diagnostico" rows="4" placeholder="Descreva o problema relatado, os testes realizados e o serviço a ser executado..."
-                          class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30"></textarea>
-            </section>
-
-            <!-- Peças e Serviços -->
-            <section class="bg-white rounded-xl border border-outline-variant shadow-sm overflow-hidden">
-                <div class="p-lg flex flex-wrap items-center justify-between gap-sm">
-                    <div class="flex items-center gap-sm">
-                        <span class="material-symbols-outlined text-[20px] text-secondary">build</span>
-                        <h2 class="font-title-lg text-title-lg text-primary">Peças e Serviços</h2>
-                    </div>
-                    <button id="adicionarItemBtn" type="button"
-                            class="h-9 px-md rounded-lg bg-secondary text-white flex items-center justify-center gap-xs hover:bg-opacity-90 transition-colors">
-                        <span class="material-symbols-outlined text-[20px]">add</span>
-                        <span class="font-label-md text-label-md font-bold">Adicionar Item</span>
-                    </button>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead class="bg-surface-container-low border-y border-outline-variant">
-                            <tr>
-                                <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider">Descrição (Peça / Mão de Obra)</th>
-                                <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider text-center w-24">Qtd</th>
-                                <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider text-right w-36">Valor Unit. (R$)</th>
-                                <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider text-right w-36">Total (R$)</th>
-                                <th class="w-10"></th>
-                            </tr>
-                        </thead>
-                        <tbody id="itensBody"></tbody>
-                    </table>
-                </div>
-                <div id="itensVazio" class="hidden px-lg py-lg text-center font-body-md text-body-md text-on-surface-variant">
-                    Nenhum item adicionado. Clique em "Adicionar Item" para incluir peças ou mão de obra.
-                </div>
-                <div class="px-lg py-md border-t border-outline-variant flex items-center justify-end gap-md">
-                    <span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Total do orçamento</span>
-                    <span id="totalGeral" class="font-title-lg text-title-lg font-bold text-primary">R$ 0,00</span>
-                </div>
-            </section>
-
-            <!-- Ações -->
-            <div class="flex items-center justify-end gap-sm">
-                <a asp-controller="Home" asp-action="Index"
-                   class="border border-outline text-on-surface-variant rounded-lg px-lg py-sm font-label-md text-label-md font-bold hover:bg-surface-container-low transition-colors">
-                    Cancelar
-                </a>
-                <button id="imprimirBtn" type="button"
-                        class="border border-outline text-on-surface-variant rounded-lg px-lg py-sm font-label-md text-label-md font-bold hover:bg-surface-container-low transition-colors flex items-center gap-xs">
-                    <span class="material-symbols-outlined text-[18px]">print</span>
-                    Imprimir
-                </button>
-                <button id="salvarOrcamentoBtn" type="button"
-                        class="bg-secondary text-white rounded-lg px-lg py-sm font-label-md text-label-md font-bold hover:bg-opacity-90 transition-colors flex items-center gap-xs">
-                    <span class="material-symbols-outlined text-[18px]">save</span>
-                    Salvar orçamento
-                </button>
+        <!-- Barra de ferramentas -->
+        <section class="bg-white rounded-t-xl border border-b-0 border-outline-variant p-sm flex flex-wrap items-center gap-sm">
+            <div class="relative flex-1 min-w-[200px]">
+                <input id="filtroBusca" type="text" placeholder="Pesquisar por número, cliente ou aparelho..."
+                       class="w-full bg-surface-container-low border-none rounded-full pl-md pr-10 py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline text-[20px]">search</span>
             </div>
-        </div>
+
+            <select id="filtroSituacao" class="bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30">
+                <option value="">Todas as situações</option>
+                <option value="Aberta">Aberta</option>
+                <option value="Pronta">Pronta</option>
+                <option value="Entregue">Entregue</option>
+            </select>
+
+            <a asp-action="Add" title="Nova ordem de serviço"
+               class="h-9 px-md rounded-lg bg-secondary text-white flex items-center justify-center gap-xs hover:bg-opacity-90 transition-colors shrink-0 ml-auto">
+                <span class="material-symbols-outlined text-[20px]">add</span>
+                <span class="font-label-md text-label-md font-bold hidden sm:inline">Nova OS</span>
+            </a>
+        </section>
+
+        <!-- Tabela -->
+        <section class="bg-white rounded-b-xl border border-outline-variant shadow-sm overflow-hidden">
+            <div class="px-lg py-xs border-b border-outline-variant">
+                <span id="contagemInfo" class="font-label-sm text-label-sm text-outline"></span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-surface-container-low">
+                        <tr>
+                            <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider">Nº</th>
+                            <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider">Cliente</th>
+                            <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider">Aparelho</th>
+                            <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider">Aberta em</th>
+                            <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider text-right">Total</th>
+                            <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider text-center">Situação</th>
+                            <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider text-center w-32">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var os in Model)
+                        {
+                            var cor = Cor(os.Situacao);
+                            <tr class="linha-os border-t border-outline-variant hover:bg-surface-container-low transition-colors"
+                                data-busca="@($"{os.Numero} {os.Cliente.Nome} {os.DispositivoResumo}".ToLower())"
+                                data-situacao="@os.Situacao">
+                                <td class="px-md py-sm font-body-md text-body-md font-semibold text-primary">@os.Numero</td>
+                                <td class="px-md py-sm font-body-md text-body-md text-on-surface">@os.Cliente.Nome</td>
+                                <td class="px-md py-sm font-body-md text-body-md text-on-surface-variant">@os.DispositivoResumo</td>
+                                <td class="px-md py-sm font-body-md text-body-md text-on-surface-variant">@os.DataAbertura.ToString("dd/MM/yyyy")</td>
+                                <td class="px-md py-sm font-body-md text-body-md text-right font-semibold text-secondary">@Moeda(os.Total)</td>
+                                <td class="px-md py-sm text-center">
+                                    <span class="px-sm py-xs rounded-full font-label-sm text-label-sm @cor.fundo @cor.texto">@os.Situacao</span>
+                                </td>
+                                <td class="px-md py-sm">
+                                    <div class="flex items-center justify-center gap-xs">
+                                        <a asp-action="Ver" asp-route-id="@os.Id" title="Ver e imprimir"
+                                           class="w-8 h-8 rounded-lg hover:bg-surface-container-high inline-flex items-center justify-center text-on-surface-variant transition-colors">
+                                            <span class="material-symbols-outlined text-[18px]">visibility</span>
+                                        </a>
+                                        @if (os.Situacao == "Aberta")
+                                        {
+                                            <form asp-action="AlterarSituacao" method="post" class="inline">
+                                                <input type="hidden" name="id" value="@os.Id" />
+                                                <input type="hidden" name="situacao" value="Pronta" />
+                                                <button type="submit" title="Marcar como pronta"
+                                                        class="w-8 h-8 rounded-lg hover:bg-secondary-container inline-flex items-center justify-center text-on-surface-variant transition-colors">
+                                                    <span class="material-symbols-outlined text-[18px]">build_circle</span>
+                                                </button>
+                                            </form>
+                                        }
+                                        @if (os.Situacao != "Entregue")
+                                        {
+                                            <form asp-action="AlterarSituacao" method="post" class="inline">
+                                                <input type="hidden" name="id" value="@os.Id" />
+                                                <input type="hidden" name="situacao" value="Entregue" />
+                                                <button type="submit" title="Marcar como entregue — é daqui que a garantia começa a contar"
+                                                        class="w-8 h-8 rounded-lg hover:bg-secondary-container inline-flex items-center justify-center text-on-surface-variant transition-colors">
+                                                    <span class="material-symbols-outlined text-[18px]">task_alt</span>
+                                                </button>
+                                            </form>
+                                        }
+                                        <form asp-action="Excluir" method="post" class="inline"
+                                              onsubmit="return confirm('Excluir a ordem @os.Numero?');">
+                                            <input type="hidden" name="id" value="@os.Id" />
+                                            <button type="submit" title="Excluir"
+                                                    class="w-8 h-8 rounded-lg hover:bg-error-container inline-flex items-center justify-center text-outline transition-colors">
+                                                <span class="material-symbols-outlined text-[18px]">delete</span>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="vazioState" class="@(Model.Count == 0 ? "" : "hidden") p-xl text-center">
+                <span class="material-symbols-outlined text-[40px] text-outline">request_quote</span>
+                <p class="font-body-md text-body-md text-on-surface-variant">
+                    @(Model.Count == 0 ? "Nenhuma ordem de serviço registrada ainda." : "Nenhuma ordem encontrada para esse filtro.")
+                </p>
+                @if (Model.Count == 0)
+                {
+                    <a asp-action="Add" class="mt-md inline-flex items-center gap-xs bg-secondary text-white rounded-lg px-lg py-sm font-label-md text-label-md font-bold hover:bg-opacity-90 transition-colors">
+                        <span class="material-symbols-outlined text-[18px]">add</span>
+                        Abrir a primeira
+                    </a>
+                }
+            </div>
+        </section>
     </main>
 
-    <!-- Documento de impressão: Ordem de Serviço (1ª via impressa aqui; a 2ª é clonada por JS) -->
-    <div id="osImpressao" class="print-only">
-      <div class="os-via" id="osVia1">
-        <div class="os-topo">
-            <div class="os-loja">
-                @if (!string.IsNullOrEmpty(logo))
-                {
-                    <img src="@logo" alt="@nomeLoja" class="os-logo" />
-                }
-                <div>
-                    <div class="os-loja-nome">@nomeLoja</div>
-                    @if (!string.IsNullOrWhiteSpace(lojaCnpj)) { <div class="os-loja-sub">CNPJ: @lojaCnpj</div> }
-                    @if (!string.IsNullOrWhiteSpace(lojaEndereco)) { <div class="os-loja-sub">@lojaEndereco</div> }
-                    @if (!string.IsNullOrWhiteSpace(lojaContato)) { <div class="os-loja-sub">@lojaContato</div> }
-                </div>
-            </div>
-            <div class="os-doc-meta">
-                <div class="os-doc-titulo">ORDEM DE SERVIÇO</div>
-                <div class="os-via-label">1ª via — Cliente</div>
-                <div>Nº <span id="osNumero"></span></div>
-                <div>Data: <span id="osData"></span></div>
-            </div>
-        </div>
-
-        <div class="os-bloco">
-            <div class="os-bloco-titulo">Cliente</div>
-            <div class="os-linhas os-linhas-3">
-                <div><span class="os-rot">Nome:</span> <span id="osClienteNome"></span></div>
-                <div><span class="os-rot">Telefone:</span> <span id="osClienteTelefone"></span></div>
-                <div><span class="os-rot">CPF/RG:</span> <span id="osClienteDoc"></span></div>
-                <div style="grid-column: 1 / -1"><span class="os-rot">Endereço:</span> <span id="osClienteEndereco"></span></div>
-            </div>
-        </div>
-
-        <div class="os-bloco">
-            <div class="os-bloco-titulo">Aparelho</div>
-            <div class="os-linhas os-linhas-4">
-                <div><span class="os-rot">Tipo:</span> <span id="osDispTipo"></span></div>
-                <div><span class="os-rot">Marca:</span> <span id="osDispMarca"></span></div>
-                <div><span class="os-rot">Modelo:</span> <span id="osDispModelo"></span></div>
-                <div><span class="os-rot">Nº de série:</span> <span id="osDispSerie"></span></div>
-            </div>
-        </div>
-
-        <div class="os-bloco">
-            <div class="os-bloco-titulo">Diagnóstico</div>
-            <div id="osDiagnostico" class="os-diag"></div>
-        </div>
-
-        <div class="os-bloco">
-            <div class="os-bloco-titulo">Peças e Serviços</div>
-            <table class="os-tabela">
-                <thead>
-                    <tr>
-                        <th style="text-align:left">Descrição (Peça / Mão de Obra)</th>
-                        <th style="width:56px;text-align:center">Qtd</th>
-                        <th style="width:110px;text-align:right">Valor Unit.</th>
-                        <th style="width:110px;text-align:right">Total</th>
-                    </tr>
-                </thead>
-                <tbody id="osItens"></tbody>
-                <tfoot>
-                    <tr>
-                        <td colspan="3" style="text-align:right;font-weight:700">Total do orçamento</td>
-                        <td id="osTotal" style="text-align:right;font-weight:700"></td>
-                    </tr>
-                </tfoot>
-            </table>
-        </div>
-
-        <div class="os-bloco os-termos">
-            <div class="os-bloco-titulo">Termos e condições do serviço</div>
-            <p class="os-termos-texto"><b>1. Aprovação prévia.</b> O serviço só é executado após aprovação expressa deste orçamento, válido por 10 dias. Uma vez aprovado, obriga ambas as partes: o cliente que desistir responde pelas peças já aplicadas e pela mão de obra executada (CDC, art. 40, §2º). <b>2. Dados e backup.</b> O backup é de responsabilidade do cliente; o reparo pode exigir formatação ou troca de componentes, não respondendo a empresa por perda de dados. <b>3. Privacidade e sigilo.</b> É vedado ao técnico acessar, copiar, compartilhar ou divulgar arquivos pessoais do aparelho, limitando-se o acesso ao estritamente necessário ao diagnóstico e ao teste do reparo, sob sigilo (Lei 13.709/2018 – LGPD; Código Penal, art. 154-A). <b>4. Garantia.</b> 90 dias sobre o serviço executado e as peças substituídas, contados da retirada, mediante apresentação desta Ordem de Serviço (CDC, art. 26, II). <b>5. Exclusões.</b> A garantia não cobre mau uso, quedas e impactos, contato com líquidos, umidade ou oxidação, sobrecarga da rede elétrica, acessórios não originais, software instalado pelo cliente, desgaste natural, nem defeito em componente diverso do reparado (CDC, art. 14, §3º, II). <b>6. Violação.</b> Abertura, reparo ou tentativa de conserto por terceiro não autorizado, durante o serviço ou no prazo de garantia, cancela a garantia integralmente. <b>7. Riscos.</b> Aparelhos com oxidação, queda ou intervenção anterior podem apresentar falhas ocultas, não detectáveis no diagnóstico inicial, inclusive deixar de ligar durante o reparo; o cliente declara ciência ao autorizar. <b>8. Retirada e abandono.</b> O aparelho deve ser retirado em até 90 dias da comunicação da conclusão ou da recusa do orçamento, sob taxa de armazenagem. Notificado o cliente e decorridos mais 90 dias sem manifestação, o bem será considerado abandonado (Código Civil, art. 1.275, III), autorizada sua destinação para cobrir os custos. <b>9. Identificação.</b> A entrega se dá mediante esta via e documento com foto, ou autorização escrita do cliente.</p>
-            <div class="os-aceite">O cliente declara ter lido, compreendido e aceito integralmente os termos acima e autoriza a execução dos serviços descritos nesta Ordem de Serviço.</div>
-        </div>
-
-        <div class="os-assinaturas">
-            <div class="os-assinatura"><div class="os-linha-assinatura"></div>Assinatura do Cliente</div>
-            <div class="os-assinatura"><div class="os-linha-assinatura"></div>Responsável Técnico</div>
-        </div>
-      </div>
-
-      <div class="os-corte" aria-hidden="true"><span>✂ - - - - - - - - - -  corte aqui  - - - - - - - - - -</span></div>
-
-      <!-- 2ª via: preenchida com um clone da 1ª via em prepararImpressao() -->
-      <div id="osVia2"></div>
-    </div>
-
-    <!-- Busca de cliente -->
-    <div id="modalCliente" class="no-print hidden fixed inset-0 z-50 bg-black/40 flex items-start justify-center px-md pt-24">
-        <div class="bg-white rounded-xl border border-outline-variant shadow-lg w-full max-w-[520px] overflow-hidden">
-
-            <div class="p-md border-b border-outline-variant">
-                <div class="flex items-center justify-between gap-sm mb-sm">
-                    <h2 class="font-title-lg text-title-lg text-primary">Selecionar cliente</h2>
-                    <button id="fecharModalCliente" type="button" title="Fechar"
-                            class="w-8 h-8 rounded-lg hover:bg-surface-container-low flex items-center justify-center text-on-surface-variant transition-colors">
-                        <span class="material-symbols-outlined text-[20px]">close</span>
-                    </button>
-                </div>
-                <div class="relative">
-                    <input id="buscaClienteInput" type="text" placeholder="Nome, telefone ou CPF/RG..." autocomplete="off"
-                           class="w-full bg-surface-container-low border-none rounded-full pl-md pr-10 py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
-                    <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline text-[20px]">search</span>
-                </div>
-            </div>
-
-            <div id="resultadosCliente" class="max-h-[320px] overflow-y-auto"></div>
-
-            <div class="p-md border-t border-outline-variant flex items-center justify-between gap-sm">
-                <span class="font-label-sm text-label-sm text-outline">Cliente ainda não cadastrado?</span>
-                <a asp-controller="Cliente" asp-action="Add" target="_blank"
-                   class="font-label-md text-label-md text-secondary font-bold hover:underline flex items-center gap-xs">
-                    <span class="material-symbols-outlined text-[18px]">person_add</span>
-                    Cadastrar
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <script src="~/js/orcamento.js" asp-append-version="true"></script>
+    <script src="~/js/os-lista.js" asp-append-version="true"></script>
 </body>
 </html>

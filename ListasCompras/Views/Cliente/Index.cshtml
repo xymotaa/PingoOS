@@ -24,6 +24,13 @@
                 <span>@TempData["Sucesso"]</span>
             </div>
         }
+        @if (TempData["Erro"] != null)
+        {
+            <div class="mb-md bg-error-container text-error px-md py-sm rounded-lg font-label-md text-label-md flex items-center gap-xs w-fit">
+                <span class="material-symbols-outlined text-[18px]">error</span>
+                <span>@TempData["Erro"]</span>
+            </div>
+        }
 
         <!-- Cabeçalho da página -->
         <section class="mb-md">

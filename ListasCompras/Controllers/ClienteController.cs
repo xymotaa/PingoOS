@@ -63,12 +63,20 @@ public class ClienteController : LojaControllerBase
     public IActionResult Excluir(int id)
     {
         var cliente = Context.Clientes.Find(id);
-        if (cliente != null)
+        if (cliente == null) return RedirectToAction(nameof(Index));
+
+        // O histórico de ordens tem que sobreviver ao cadastro do cliente
+        var ordens = Context.OrdensServico.Count(o => o.ClienteId == id);
+        if (ordens > 0)
         {
-            Context.Clientes.Remove(cliente);
-            Context.SaveChanges();
-            TempData["Sucesso"] = $"Cliente {cliente.Nome} excluído.";
+            TempData["Erro"] = $"{cliente.Nome} não pode ser excluído: tem " +
+                (ordens == 1 ? "1 ordem de serviço" : $"{ordens} ordens de serviço") + " no histórico.";
+            return RedirectToAction(nameof(Index));
         }
+
+        Context.Clientes.Remove(cliente);
+        Context.SaveChanges();
+        TempData["Sucesso"] = $"Cliente {cliente.Nome} excluído.";
         return RedirectToAction(nameof(Index));
     }
 

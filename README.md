@@ -35,7 +35,7 @@ lista de compras e está virando um ERP, módulo por módulo.
 | Lista de compras | `ListaCompraController` | `/ListaCompra` | ✅ Completo — telas + banco + PDF |
 | Configuração (perfil da loja) | `ConfiguracaoController` | `/Configuracao` | ✅ Completo — telas + banco |
 | Clientes | `ClienteController` | `/Cliente` | ✅ Completo — telas + banco |
-| Orçamento / Ordem de Serviço | `OrcamentoController` | `/Orcamento` | 🟡 Telas prontas e cliente vindo do cadastro, mas a OS ainda não grava |
+| Ordem de Serviço / Orçamento | `OrcamentoController` | `/Orcamento` | ✅ Completo — telas + banco + impressão em duas vias |
 | Estoque | `EstoqueController` | `/Estoque` | 🟡 Telas prontas, dados em `localStorage` |
 | Caixa | `CaixaController` | `/Caixa` | 🟡 Telas prontas, ainda sem banco |
 | Dashboards | `DashboardsController` | `/Dashboards` | 🚧 Placeholder "Em breve" |
@@ -43,8 +43,8 @@ lista de compras e está virando um ERP, módulo por módulo.
 Cada módulo é construído **por partes**: primeiro as telas, o **banco de cada módulo fica para
 depois** — modelado com EF Core seguindo o mesmo esquema da Lista de Compras.
 
-Hoje **Lista de compras**, **Configuração** e **Clientes** persistem em banco. Os demais funcionam
-na tela mas ainda não gravam.
+Hoje **Lista de compras**, **Configuração**, **Clientes** e **Ordens de serviço** persistem em
+banco. Estoque e Caixa funcionam na tela mas ainda não gravam.
 
 ## Telas
 

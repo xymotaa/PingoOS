@@ -18,12 +18,13 @@ retrabalho garantido:
 
 ```
 ✅ Clientes                          (feito em 2026-08-07)
+✅ Ordem de Serviço no banco         (feito em 2026-08-07, já com autoria)
         ↓
-1. Ordem de Serviço no banco         (referenciando ClienteId)
+1. Estoque e Caixa no banco
         ↓
-2. Garantia, autoria da OS, anexos   (tudo pendura na OS gravada)
+2. Garantia e anexos                 (penduram na OS, que já está gravada)
         ↓
-3. Financeiro e relatórios           (precisam de venda e OS gravadas)
+3. Financeiro e relatórios           (precisam de venda gravada)
 ```
 
 O erro que essa ordem evita: modelar a Ordem de Serviço com os dados do cliente embutidos e criar o
@@ -33,25 +34,16 @@ cadastro de Clientes depois — o que obrigaria a migrar dados na marra. Por iss
 
 ## Alta prioridade
 
-### 1. Ordem de Serviço no banco
-**Metade já feita.** O cadastro de **Clientes** existe e o Orçamento já puxa os dados de lá em vez
-de pedir para digitar (2026-08-07, ver [CHANGES.md](CHANGES.md)). Falta a outra metade: a Ordem de
-Serviço em si não é gravada — ao fechar a tela, o orçamento se perde.
-
-**O que envolve:** entidade `OrdemServico` com itens, referenciando `ClienteId` (não copiando os
-dados do cliente), número sequencial de OS, situação (aberta/pronta/entregue) e listagem com
-histórico por cliente. Hoje o número da OS é gerado do relógio no JavaScript e não sobrevive à
-impressão.
-
-### 2. Estoque e Caixa no banco
+### 1. Estoque e Caixa no banco
 **Falta porque** as telas existem mas não gravam. O Estoque usa `localStorage` (chave
 `xyEstoqueProdutos`) como ponte temporária: os dados somem se o usuário limpar o navegador e não
-existem em outra máquina.
+existem em outra máquina. O Caixa monta a venda na tela e a perde ao sair.
 
-**O que envolve:** modelar produto de estoque (saldo, mínimo, custo, preço) e a venda do Caixa.
-No MapOS são os módulos `Produtos` e `Vendas`.
+**O que envolve:** modelar produto de estoque (saldo, mínimo, custo, preço) e a venda do Caixa com
+seus itens, e trocar o `localStorage` por consultas ao servidor — o `estoque.js` tem 517 linhas
+construídas em torno dele. No MapOS são os módulos `Produtos` e `Vendas`.
 
-### 3. Garantias
+### 2. Garantias
 **Falta porque** nós **imprimimos** 90 dias de garantia em toda Ordem de Serviço e não guardamos
 nada. O cliente volta dizendo "está na garantia" e não há como conferir a data, o que foi trocado,
 nem se já houve retorno pelo mesmo defeito. É um laço que abrimos e não fechamos.
@@ -59,14 +51,7 @@ nem se já houve retorno pelo mesmo defeito. É um laço que abrimos e não fech
 **O que envolve:** data de início (a retirada), prazo, vínculo com a OS e com as peças trocadas, e
 uma tela de consulta rápida por aparelho ou cliente. Barato depois que a OS estiver no banco.
 
-### 4. Registrar quem emitiu cada Ordem de Serviço
-**Falta porque** a OS impressa tem a linha "Responsável Técnico" e o sistema não sabe quem foi.
-Com o login já existente, dá para preencher com o nome de quem está logado.
-
-**O que envolve:** um campo na OS. É o motivo pelo qual usuários são desativados em vez de
-excluídos — apagar um técnico deixaria ordens órfãs.
-
-### 5. Backup do banco pela tela de Configuração
+### 3. Backup do banco pela tela de Configuração
 **Falta porque** hoje o backup depende de a pessoa saber copiar `loja.db` pelo terminal — ou seja,
 na prática não acontece. Um dono de loja não vai fazer isso, e o banco guarda cadastro de clientes,
 ordens de serviço e histórico.
@@ -79,7 +64,7 @@ de sobrescrever o arquivo, ou o SQLite recusa.
 
 ## Média prioridade
 
-### 6. Catálogo de serviços com preço
+### 4. Catálogo de serviços com preço
 **Falta porque** os itens do orçamento são texto livre. Cada técnico escreve de um jeito e cobra o
 que lembra. Um catálogo ("troca de tela", "limpeza de placa") dá preço consistente e preenchimento
 rápido. É o módulo `Servicos` do MapOS.
@@ -87,7 +72,7 @@ rápido. É o módulo `Servicos` do MapOS.
 **O que envolve:** entidade simples (nome, valor padrão) e um seletor no formulário do Orçamento,
 mantendo a possibilidade de digitar item livre.
 
-### 7. Anexar fotos do aparelho
+### 5. Anexar fotos do aparelho
 **Falta porque** é proteção jurídica direta: fotografar o aparelho na entrada é a defesa contra
 "esse arranhão não estava aí". Reforça exatamente as cláusulas de risco que já estão impressas nos
 termos da OS. O MapOS chama de `Arquivos`.
@@ -95,7 +80,7 @@ termos da OS. O MapOS chama de `Arquivos`.
 **O que envolve:** upload vinculado à OS. Decidir onde guardar — arquivo em pasta é melhor que
 base64 no banco, que é como a logo da loja é armazenada hoje e não escalaria para fotos.
 
-### 8. Relatório de receita bruta MEI
+### 6. Relatório de receita bruta MEI
 **Falta porque** MEI tem teto anual de faturamento, e quem passa sem perceber é desenquadrado e cai
 numa carga tributária maior. O MapOS tem um relatório dedicado a isso
 (`rel_receitas_brutas_mei`) — é o item mais específico do Brasil na lista deles e vale mais para o
@@ -104,7 +89,7 @@ dono da loja do que qualquer gráfico bonito.
 **O que envolve:** somar as vendas e ordens do ano contra o teto vigente, com aviso ao se aproximar.
 Depende de Caixa e OS gravando.
 
-### 9. Impressão térmica da OS
+### 7. Impressão térmica da OS
 **Falta porque** o balcão usa impressora térmica de 58/80mm no dia a dia. Nosso documento A4 de duas
 vias está bem resolvido para a assinatura, mas o comprovante de entrada entregue na hora é térmico.
 O MapOS mantém os dois (`imprimirOs` e `imprimirOsTermica`).
@@ -112,7 +97,7 @@ O MapOS mantém os dois (`imprimirOs` e `imprimirOsTermica`).
 **O que envolve:** uma segunda folha de estilo de impressão, em coluna estreita, sem tabela larga.
 Convivem: térmica na entrada, A4 na assinatura.
 
-### 10. Notificação ao cliente (e-mail ou WhatsApp)
+### 8. Notificação ao cliente (e-mail ou WhatsApp)
 **Falta porque** os termos da OS dizem que, para considerar um aparelho abandonado, o cliente
 precisa ter sido **notificado por escrito**. Hoje o sistema não produz essa prova. Isso deixa de ser
 conveniência e passa a ser o que sustenta juridicamente a cláusula 8 — além de resolver o "seu
@@ -124,13 +109,13 @@ que é a prova) e um `BackgroundService` para reenviar as que falharem.
 > Nota de stack: **não precisamos de cron.** O `BackgroundService` do .NET roda dentro da própria
 > aplicação. O MapOS precisa de duas linhas no crontab do servidor para a mesma coisa.
 
-### 11. Financeiro (lançamentos e contas a pagar)
+### 9. Financeiro (lançamentos e contas a pagar)
 **Falta porque** Caixa sem persistência não é caixa. Entradas, saídas e contas a pagar dão a visão
 do mês, que hoje não existe em lugar nenhum. É o módulo `Financeiro` do MapOS.
 
 **O que envolve:** maior esforço da lista; depende de Caixa e OS gravando.
 
-### 12. Script de instalação para o usuário final
+### 10. Script de instalação para o usuário final
 **Falta porque** o público do sistema é dono de loja, não desenvolvedor. Hoje instalar exige clonar
 o repositório, ter o SDK do .NET e rodar comandos. Essa é a lição que o MapOS acerta: sem instalação
 simples, o sistema não chega em quem precisa dele.
@@ -143,14 +128,14 @@ mais simples que no MapOS: não há PHP, MySQL nem webserver para configurar.
 
 ## Baixa prioridade
 
-### 13. Recuperação de senha por e-mail
+### 11. Recuperação de senha por e-mail
 **Já existe** recuperação por código anotado no papel e por comando de terminal (2026-08-07, ver
 [CHANGES.md](CHANGES.md)). Falta a via por e-mail, que dispensa guardar código: link de uso único
 com validade curta.
 
-**Depende de** o envio de e-mail (item 10). Prioridade baixa agora que o caso de tranca está coberto.
+**Depende de** o envio de e-mail (item 8). Prioridade baixa agora que o caso de tranca está coberto.
 
-### 14. Ilustração própria para a tela de login
+### 12. Ilustração própria para a tela de login
 **Situação atual:** a atribuição da [Storyset](https://storyset.com) está no arquivo `NOTICE`, então
 a obrigação de crédito está cumprida.
 
@@ -158,7 +143,7 @@ a obrigação de crédito está cumprida.
 técnica de celular. Uma ilustração do mundo da loja — bancada, aparelho aberto, ferramenta — diria
 mais e dispensaria a dependência de terceiro.
 
-### 15. Unificar os dois visuais
+### 13. Unificar os dois visuais
 **Situação atual:** convivem dois sistemas de design. As telas novas (Painel, Orçamento, Estoque,
 Caixa, Configuração, Login) usam Tailwind com paleta Material-3. As antigas (Lista de compras,
 "Em breve") usam `wwwroot/css/site.css`, verde institucional com fonte Inter.
@@ -166,13 +151,13 @@ Caixa, Configuração, Login) usam Tailwind com paleta Material-3. As antigas (L
 **O que envolve:** migrar `Views/ListaCompra/` e `Views/Shared/EmBreve.cshtml` para Tailwind,
 aproveitando o partial `_HeadTailwind.cshtml`. Depois o `site.css` encolhe bastante. Cosmético.
 
-### 16. Dashboards de verdade
+### 14. Dashboards de verdade
 **Situação atual:** `DashboardsController` retorna a tela "Em breve" e os KPIs do Painel mostram
 estado vazio.
 
 **O que envolve:** depende de Caixa, Estoque e OS no banco — sem dado gravado não há o que somar.
 
-### 17. Autoria detalhada (auditoria mínima)
+### 15. Autoria detalhada (auditoria mínima)
 **Situação atual:** o item 4 resolve o essencial (quem emitiu a OS). Uma auditoria completa, como o
 módulo `Auditoria` do MapOS, registraria toda alteração em todo registro.
 

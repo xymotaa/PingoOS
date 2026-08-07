@@ -16,6 +16,8 @@ public class AppDbContext : DbContext
     public DbSet<ConfiguracaoLoja> ConfiguracoesLoja { get; set; }
     public DbSet<Usuario> Usuarios { get; set; }
     public DbSet<Cliente> Clientes { get; set; }
+    public DbSet<OrdemServico> OrdensServico { get; set; }
+    public DbSet<ItemOrdemServico> ItensOrdemServico { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -30,5 +32,37 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<Cliente>()
             .HasIndex(c => c.Nome);
+
+        // Totais são somados em memória, não são colunas
+        modelBuilder.Entity<OrdemServico>().Ignore(o => o.Total).Ignore(o => o.DispositivoResumo);
+        modelBuilder.Entity<ItemOrdemServico>().Ignore(i => i.Total);
+
+        modelBuilder.Entity<OrdemServico>()
+            .HasIndex(o => o.Numero)
+            .IsUnique();
+
+        modelBuilder.Entity<OrdemServico>()
+            .Property(o => o.Situacao)
+            .HasMaxLength(20);
+
+        // Apagar um cliente não pode apagar o histórico de ordens dele
+        modelBuilder.Entity<OrdemServico>()
+            .HasOne(o => o.Cliente)
+            .WithMany()
+            .HasForeignKey(o => o.ClienteId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Usuário é desativado, nunca excluído — mas se sumir, a OS continua existindo
+        modelBuilder.Entity<OrdemServico>()
+            .HasOne(o => o.Usuario)
+            .WithMany()
+            .HasForeignKey(o => o.UsuarioId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<ItemOrdemServico>()
+            .HasOne(i => i.OrdemServico)
+            .WithMany(o => o.Itens)
+            .HasForeignKey(i => i.OrdemServicoId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
