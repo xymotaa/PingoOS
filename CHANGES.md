@@ -1,5 +1,24 @@
 # Registro de Alterações
 
+## [2026-08-07] Caixa vira grupo na lateral, com Frente de caixa e Vendas
+
+### Problema
+A tela de Vendas só era alcançável por um botão dentro da própria Frente de caixa, o que a fazia
+parecer um anexo do caixa em vez de uma tela própria. E "Caixa" na lateral levava direto para a
+frente de caixa, sem revelar que existia outra coisa ali dentro.
+
+### Arquivos Alterados
+
+| Arquivo | Alteração |
+|---|---|
+| `Views/Home/Index.cshtml` | "Caixa" deixou de ser link e virou botão de grupo: começa fechado e o clique revela **Frente de caixa** e **Vendas** indentados abaixo |
+| `Views/Caixa/Index.cshtml` | botão "Vendas" removido da barra de ferramentas |
+
+Sem seta de expandir, por escolha do autor — o próprio rótulo é o gatilho. O botão carrega
+`aria-expanded` para quem navega por leitor de tela saber que ali há conteúdo recolhido.
+
+---
+
 ## [2026-08-07] Estoque e Caixa no banco, com a venda baixando o estoque
 
 ### Problema

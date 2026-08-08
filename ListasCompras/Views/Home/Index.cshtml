@@ -78,10 +78,20 @@
 
     <!-- Menu lateral (módulos) -->
     <aside id="sidebar" class="hidden lg:flex fixed top-16 left-0 bottom-0 w-60 bg-surface border-r border-outline-variant flex-col py-md px-sm gap-xs z-40 overflow-y-auto custom-scrollbar">
-        <a asp-controller="Caixa" asp-action="Index" class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
+        @* Caixa é um grupo: clicar abre as duas telas, clicar de novo fecha *@
+        <button id="grupoCaixaBtn" type="button" aria-expanded="false" aria-controls="grupoCaixa"
+                class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors text-left">
             <span class="material-symbols-outlined text-[22px]">point_of_sale</span>
             <span class="font-body-lg text-body-lg">Caixa</span>
-        </a>
+        </button>
+        <div id="grupoCaixa" class="hidden flex-col gap-xs">
+            <a asp-controller="Caixa" asp-action="Index" class="flex items-center gap-md pl-[52px] pr-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
+                <span class="font-body-md text-body-md">Frente de caixa</span>
+            </a>
+            <a asp-controller="Caixa" asp-action="Vendas" class="flex items-center gap-md pl-[52px] pr-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
+                <span class="font-body-md text-body-md">Vendas</span>
+            </a>
+        </div>
         <a asp-controller="Orcamento" asp-action="Index" class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
             <span class="material-symbols-outlined text-[22px]">request_quote</span>
             <span class="font-body-lg text-body-lg">Orçamento</span>
@@ -208,5 +218,21 @@
             </div>
         </section>
     </main>
+
+    <script>
+        // Grupo Caixa: fechado por padrão, abre e fecha no clique
+        (function () {
+            const botao = document.getElementById("grupoCaixaBtn");
+            const grupo = document.getElementById("grupoCaixa");
+            if (!botao || !grupo) return;
+
+            botao.addEventListener("click", function () {
+                const aberto = !grupo.classList.contains("hidden");
+                grupo.classList.toggle("hidden", aberto);
+                grupo.classList.toggle("flex", !aberto);
+                botao.setAttribute("aria-expanded", String(!aberto));
+            });
+        })();
+    </script>
 </body>
 </html>
