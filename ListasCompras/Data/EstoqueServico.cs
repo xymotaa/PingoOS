@@ -1,0 +1,62 @@
+using ListasCompras.Models;
+
+namespace ListasCompras.Data;
+
+// Único lugar que altera saldo. Ajuste manual e venda passam por aqui, então o saldo
+// nunca muda sem deixar registro no histórico.
+public static class EstoqueServico
+{
+    public static MovimentacaoEstoque Movimentar(
+        ProdutoEstoque produto, string tipo, int quantidade,
+        string? motivo, int? usuarioId, Venda? venda = null)
+    {
+        if (quantidade <= 0) quantidade = 1;
+
+        // Saldo pode ficar negativo: numa loja pequena a prateleira e o sistema divergem,
+        // e travar a venda no balcão é pior que registrar o negativo como sinal disso.
+        produto.SaldoAtual += tipo == TiposMovimentacao.Saida ? -quantidade : quantidade;
+
+        var movimento = new MovimentacaoEstoque
+        {
+            ProdutoEstoque = produto,
+            Tipo = tipo,
+            Quantidade = quantidade,
+            Motivo = string.IsNullOrWhiteSpace(motivo) ? null : motivo.Trim(),
+            SaldoResultante = produto.SaldoAtual,
+            UsuarioId = usuarioId,
+            Venda = venda,
+        };
+
+        produto.Movimentacoes.Add(movimento);
+        return movimento;
+    }
+
+    // P-000001, P-000002... o anterior vinha do relógio no navegador
+    public static string ProximoCodigo(AppDbContext context)
+    {
+        var ultimo = context.ProdutosEstoque
+            .Where(p => p.Codigo.StartsWith("P-"))
+            .OrderByDescending(p => p.Id)
+            .Select(p => p.Codigo)
+            .FirstOrDefault();
+
+        var sequencia = 0;
+        if (ultimo != null && int.TryParse(ultimo[2..], out var n)) sequencia = n;
+
+        return $"P-{sequencia + 1:D6}";
+    }
+
+    public static string ProximoNumeroVenda(AppDbContext context)
+    {
+        var ultimo = context.Vendas
+            .OrderByDescending(v => v.Id)
+            .Select(v => v.Numero)
+            .FirstOrDefault();
+
+        var sequencia = 0;
+        if (ultimo != null && ultimo.StartsWith("V-") && int.TryParse(ultimo[2..], out var n))
+            sequencia = n;
+
+        return $"V-{sequencia + 1:D6}";
+    }
+}

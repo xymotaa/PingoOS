@@ -36,15 +36,15 @@ lista de compras e está virando um ERP, módulo por módulo.
 | Configuração (perfil da loja) | `ConfiguracaoController` | `/Configuracao` | ✅ Completo — telas + banco |
 | Clientes | `ClienteController` | `/Cliente` | ✅ Completo — telas + banco |
 | Ordem de Serviço / Orçamento | `OrcamentoController` | `/Orcamento` | ✅ Completo — telas + banco + impressão em duas vias |
-| Estoque | `EstoqueController` | `/Estoque` | 🟡 Telas prontas, dados em `localStorage` |
-| Caixa | `CaixaController` | `/Caixa` | 🟡 Telas prontas, ainda sem banco |
+| Estoque | `EstoqueController` | `/Estoque` | ✅ Completo — telas + banco + histórico de movimentações |
+| Caixa | `CaixaController` | `/Caixa` | ✅ Completo — venda gravada e baixa automática do estoque |
 | Dashboards | `DashboardsController` | `/Dashboards` | 🚧 Placeholder "Em breve" |
 
 Cada módulo é construído **por partes**: primeiro as telas, o **banco de cada módulo fica para
 depois** — modelado com EF Core seguindo o mesmo esquema da Lista de Compras.
 
-Hoje **Lista de compras**, **Configuração**, **Clientes** e **Ordens de serviço** persistem em
-banco. Estoque e Caixa funcionam na tela mas ainda não gravam.
+Todos os módulos com tela pronta persistem em banco. Só **Dashboards** segue como placeholder,
+esperando dados acumularem.
 
 ## Telas
 
@@ -56,13 +56,13 @@ banco. Estoque e Caixa funcionam na tela mas ainda não gravam.
 |---|---|
 | ![Lista de compras](docs/screenshots/lista-compras.png) | ![Clientes](docs/screenshots/clientes.png) |
 
+| Vendas | Login |
+|---|---|
+| ![Vendas](docs/screenshots/vendas.png) | ![Login](docs/screenshots/login.png) |
+
 | Usuários |
 |---|
 | ![Usuários](docs/screenshots/usuarios.png) |
-
-| Entrar |
-|---|
-| ![Login](docs/screenshots/login.png) |
 
 ### Orçamento com impressão em duas vias
 

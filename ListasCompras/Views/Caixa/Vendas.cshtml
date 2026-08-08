@@ -1,0 +1,82 @@
+@model List<ListasCompras.Models.Venda>
+@{
+    Layout = null;
+    ViewData["Title"] = "Vendas";
+    var nomeLoja = ViewData["NomeLoja"] as string ?? "Minha Loja";
+    string Moeda(decimal v) => v.ToString("C2", new System.Globalization.CultureInfo("pt-BR"));
+}
+<!DOCTYPE html>
+<html class="light" lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>@nomeLoja — Vendas</title>
+    @await Html.PartialAsync("_HeadTailwind")
+</head>
+<body class="bg-surface">
+    @await Html.PartialAsync("_Navbar")
+
+    <main class="pt-24 px-lg pb-xl max-w-[1440px] mx-auto">
+
+        <section class="mb-md flex flex-wrap items-end justify-between gap-md">
+            <div>
+                <a asp-action="Index" class="font-label-md text-label-md text-on-surface-variant hover:text-primary flex items-center gap-xs w-fit mb-sm">
+                    <span class="material-symbols-outlined text-[18px]">arrow_back</span> Caixa
+                </a>
+                <h1 class="font-headline-lg text-headline-lg text-primary">Vendas</h1>
+                <p class="font-body-md text-body-md text-on-surface-variant">Tudo que passou pelo caixa, da mais recente para a mais antiga.</p>
+            </div>
+            @if (Model.Count > 0)
+            {
+                <div class="bg-white px-lg py-sm rounded-lg border border-outline-variant shadow-sm text-right">
+                    <span class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Total vendido</span>
+                    <p class="font-title-lg text-title-lg text-secondary font-bold">@Moeda(Model.Sum(v => v.Total))</p>
+                </div>
+            }
+        </section>
+
+        <section class="bg-white rounded-xl border border-outline-variant shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-surface-container-low">
+                        <tr>
+                            <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider">Nº</th>
+                            <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider">Data</th>
+                            <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider">Itens</th>
+                            <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider">Pagamento</th>
+                            <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider">Quem vendeu</th>
+                            <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider text-right">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var v in Model)
+                        {
+                            <tr class="border-t border-outline-variant hover:bg-surface-container-low transition-colors">
+                                <td class="px-md py-sm font-body-md text-body-md font-semibold text-primary">@v.Numero</td>
+                                <td class="px-md py-sm font-body-md text-body-md text-on-surface-variant">@v.Data.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td class="px-md py-sm font-body-md text-body-md text-on-surface-variant">
+                                    @v.QuantidadeItens @(v.QuantidadeItens == 1 ? "item" : "itens")
+                                    <span class="block font-label-sm text-label-sm text-outline">
+                                        @string.Join(", ", v.Itens.Take(3).Select(i => i.Descricao))@(v.Itens.Count > 3 ? "..." : "")
+                                    </span>
+                                </td>
+                                <td class="px-md py-sm font-body-md text-body-md text-on-surface-variant">@ListasCompras.Models.FormasPagamento.Rotulo(v.FormaPagamento)</td>
+                                <td class="px-md py-sm font-body-md text-body-md text-on-surface-variant">@(v.Usuario?.Nome ?? "—")</td>
+                                <td class="px-md py-sm font-body-md text-body-md text-right font-semibold text-secondary">@Moeda(v.Total)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @if (Model.Count == 0)
+            {
+                <div class="p-xl text-center">
+                    <span class="material-symbols-outlined text-[40px] text-outline">point_of_sale</span>
+                    <p class="font-body-md text-body-md text-on-surface-variant">Nenhuma venda registrada ainda.</p>
+                </div>
+            }
+        </section>
+    </main>
+</body>
+</html>

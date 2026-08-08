@@ -1,5 +1,66 @@
 # Registro de Alterações
 
+## [2026-08-07] Estoque e Caixa no banco, com a venda baixando o estoque
+
+### Problema
+Os dois módulos eram **duas telas que não se falavam**. O Estoque guardava os produtos no
+`localStorage` do navegador — sumiam ao limpar os dados, não existiam em outra máquina e o `loja.db`
+não tinha produto nenhum. O Caixa vendia uma lista de **8 produtos escritos à mão no controller**, e
+o botão "Finalizar Venda" não gravava nada: a venda evaporava. Vender não mexia no estoque.
+
+### Solução
+Quatro entidades novas e um serviço que centraliza o saldo:
+
+- **`ProdutoEstoque`** — separado do `Produto` da Lista de compras, que é genérico ("Capinha
+  Silicone") e se combina com um modelo. Este é item de prateleira, com código e preço.
+- **`MovimentacaoEstoque`** — entrada/saída com motivo, data e autor. **O saldo deixou de ser um
+  número que alguém digita e passou a ser a soma do histórico**, inclusive o saldo inicial do
+  cadastro, que entra como movimentação.
+- **`Venda` + `ItemVenda`** — número sequencial, forma de pagamento, desconto por item e autor.
+- **`EstoqueServico`** — único lugar que altera saldo. Ajuste manual e venda passam por ele, então
+  nenhuma mudança escapa do histórico.
+
+**A ligação que faltava:** finalizar a venda gera automaticamente as saídas de estoque, com o
+número da venda no motivo. Sem saldo, o sistema avisa mas deixa concluir e o saldo fica negativo —
+travar a venda com o cliente no balcão é pior, e o negativo é o sinal de que a prateleira e o
+sistema divergiram.
+
+### Arquivos Alterados
+
+| Arquivo | Alteração |
+|---|---|
+| `Models/ProdutoEstoque.cs`, `Models/Venda.cs` | **novos** — produto, movimentação, venda e itens |
+| `Data/EstoqueServico.cs` | **novo** — movimentação e numeração sequencial |
+| `Controllers/EstoqueController.cs` | reescrito — Index, Add, Salvar, Movimentar, Historico, Excluir, Buscar |
+| `Controllers/CaixaController.cs` | reescrito — produtos do banco, Finalizar, Vendas |
+| `Views/Estoque/Index.cshtml` | tabela e resumo renderizados pelo servidor; modal virou formulário |
+| `Views/Estoque/Historico.cshtml`, `Views/Caixa/Vendas.cshtml` | **novas** telas |
+| `wwwroot/js/estoque.js` | de 517 para 95 linhas — sobrou filtro e modal |
+| `wwwroot/js/estoque-add.js`, `caixa.js` | postam para o servidor com decimais em ponto |
+| `Models/EstoqueIndexViewModel.cs`, `CaixaIndexViewModel.cs` | removidos — viraram entidades |
+| Migration `AddEstoqueEVendas` | quatro tabelas novas |
+
+Excluir um produto **não apaga o histórico de vendas**: o item guarda código, descrição e preço
+praticado, então a venda antiga continua legível (`DeleteBehavior.SetNull`).
+
+Dois códigos que vinham do relógio do navegador viraram sequência do servidor: produto
+(`P-000001`) e venda (`V-000001`).
+
+### Bug encontrado nos testes
+As mensagens de sucesso e aviso não apareciam no Caixa: o bloco de `TempData` não tinha sido
+inserido, porque a tela do Caixa não tem `<main>` e meu ponto de ancoragem não casou. Inserido no
+lugar certo e verificado.
+
+### Resultado
+Testado de ponta a ponta: 3 produtos cadastrados com preços corretos (R$ 39,90 / 24,90 / 49,90 —
+sem o erro de multiplicar por 100), código sequencial e manual convivendo, saldo inicial virando
+movimentação, entrada e saída manuais, e uma venda de 2 capinhas com 10% de desconto mais 1
+carregador fechando em **R$ 121,72** — exatamente a conta certa. O estoque baixou de 7 para 5 e de
+6 para 5, com as saídas ligadas à venda `V-000001`. Venda acima do saldo deixou o produto em −5 com
+o aviso na tela. Excluir um produto vendido manteve os itens da venda no histórico.
+
+---
+
 ## [2026-08-07] Seta dos selects sobre o texto, ordem da sidebar e voltar da nova OS
 
 ### Problema

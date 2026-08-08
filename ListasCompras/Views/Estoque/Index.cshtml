@@ -1,7 +1,8 @@
-@model ListasCompras.Models.EstoqueIndexViewModel
+@model List<ListasCompras.Models.ProdutoEstoque>
 @{
     Layout = null;
     ViewData["Title"] = "Estoque";
+    string Moeda(decimal v) => v.ToString("C2", new System.Globalization.CultureInfo("pt-BR"));
 
     var nomeLoja = ViewData["NomeLoja"] as string ?? "Minha Loja";
     var logo = ViewData["LogoLoja"] as string;
@@ -82,6 +83,21 @@
 
     <main class="pt-24 pl-lg pr-16 pb-xl max-w-[1440px] mx-auto">
 
+        @if (TempData["Sucesso"] != null)
+        {
+            <div class="mb-md bg-secondary-container text-on-secondary-container px-md py-sm rounded-lg font-label-md text-label-md flex items-center gap-xs w-fit">
+                <span class="material-symbols-outlined text-[18px]">check_circle</span>
+                <span>@TempData["Sucesso"]</span>
+            </div>
+        }
+        @if (TempData["Erro"] != null)
+        {
+            <div class="mb-md bg-error-container text-error px-md py-sm rounded-lg font-label-md text-label-md flex items-center gap-xs w-fit">
+                <span class="material-symbols-outlined text-[18px]">error</span>
+                <span>@TempData["Erro"]</span>
+            </div>
+        }
+
         <div id="toast" class="hidden mb-md bg-secondary-container text-on-secondary-container px-md py-sm rounded-lg font-label-md text-label-md flex items-center gap-xs w-fit">
             <span id="toastIcon" class="material-symbols-outlined text-[18px]">check_circle</span>
             <span id="toastMsg"></span>
@@ -97,19 +113,19 @@
         <section class="grid grid-cols-2 md:grid-cols-4 gap-sm mb-md">
             <div class="bg-white px-md py-sm rounded-lg border border-outline-variant shadow-sm">
                 <span class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Produtos</span>
-                <p id="resumoTotalProdutos" class="font-title-lg text-title-lg text-primary">0</p>
+                <p class="font-title-lg text-title-lg text-primary">@Model.Count</p>
             </div>
             <div class="bg-white px-md py-sm rounded-lg border border-outline-variant shadow-sm">
                 <span class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Valor em Estoque</span>
-                <p id="resumoValorEstoque" class="font-title-lg text-title-lg text-primary">R$ 0,00</p>
+                <p class="font-title-lg text-title-lg text-primary">@Moeda(Model.Sum(p => p.ValorEmEstoque))</p>
             </div>
             <div class="bg-white px-md py-sm rounded-lg border border-outline-variant shadow-sm">
                 <span class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Abaixo do Mínimo</span>
-                <p id="resumoBaixo" class="font-title-lg text-title-lg text-primary">0</p>
+                <p class="font-title-lg text-title-lg text-primary">@Model.Count(p => p.Situacao == "baixo")</p>
             </div>
             <div class="bg-white px-md py-sm rounded-lg border border-outline-variant shadow-sm">
                 <span class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Esgotados</span>
-                <p id="resumoEsgotado" class="font-title-lg text-title-lg text-primary">0</p>
+                <p class="font-title-lg text-title-lg text-primary">@Model.Count(p => p.Situacao == "esgotado")</p>
             </div>
         </section>
 
@@ -179,7 +195,58 @@
                             <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider text-center">Ações</th>
                         </tr>
                     </thead>
-                    <tbody id="estoqueBody"></tbody>
+                    <tbody id="estoqueBody">
+                        @foreach (var p in Model)
+                        {
+                            var cor = p.Situacao == "esgotado" ? "text-error"
+                                    : p.Situacao == "baixo" ? "text-warning" : "text-on-surface";
+                            <tr class="linha-produto border-t border-outline-variant hover:bg-surface-container-low transition-colors"
+                                data-busca="@($"{p.Codigo} {p.Nome} {p.Categoria}".ToLower())" data-situacao="@p.Situacao">
+                                <td class="w-10"></td>
+                                <td class="px-md py-sm font-body-md text-body-md text-on-surface">
+                                    @p.Nome
+                                    @if (!string.IsNullOrWhiteSpace(p.Categoria))
+                                    {
+                                        <span class="block font-label-sm text-label-sm text-outline">@p.Categoria</span>
+                                    }
+                                </td>
+                                <td class="px-md py-sm font-body-md text-body-md text-on-surface-variant">@p.Codigo</td>
+                                <td class="px-md py-sm font-body-md text-body-md text-right">@Moeda(p.PrecoVenda)</td>
+                                <td class="px-md py-sm text-center font-body-md text-body-md font-semibold @cor">
+                                    @p.SaldoAtual
+                                    @if (p.EstoqueMinimo > 0)
+                                    {
+                                        <span class="block font-label-sm text-label-sm text-outline">mín. @p.EstoqueMinimo</span>
+                                    }
+                                </td>
+                                <td class="px-md py-sm">
+                                    <div class="flex items-center justify-center gap-xs">
+                                        <button type="button" title="Registrar entrada ou saída"
+                                                onclick="abrirMovimentacao(@p.Id, '@p.Nome.Replace("'", "\\'")', @p.SaldoAtual)"
+                                                class="w-8 h-8 rounded-lg hover:bg-secondary-container inline-flex items-center justify-center text-on-surface-variant transition-colors">
+                                            <span class="material-symbols-outlined text-[18px]">swap_vert</span>
+                                        </button>
+                                        <a asp-action="Historico" asp-route-id="@p.Id" title="Histórico de movimentações"
+                                           class="w-8 h-8 rounded-lg hover:bg-surface-container-high inline-flex items-center justify-center text-on-surface-variant transition-colors">
+                                            <span class="material-symbols-outlined text-[18px]">history</span>
+                                        </a>
+                                        <a asp-action="Add" asp-route-id="@p.Id" title="Editar produto"
+                                           class="w-8 h-8 rounded-lg hover:bg-surface-container-high inline-flex items-center justify-center text-on-surface-variant transition-colors">
+                                            <span class="material-symbols-outlined text-[18px]">edit</span>
+                                        </a>
+                                        <form asp-action="Excluir" method="post" class="inline"
+                                              onsubmit="return confirm('Excluir @p.Nome do estoque?');">
+                                            <input type="hidden" name="id" value="@p.Id" />
+                                            <button type="submit" title="Excluir"
+                                                    class="w-8 h-8 rounded-lg hover:bg-error-container inline-flex items-center justify-center text-outline transition-colors">
+                                                <span class="material-symbols-outlined text-[18px]">delete</span>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
                 </table>
             </div>
             <div id="vazioState" class="hidden p-xl text-center font-body-md text-body-md text-on-surface-variant">
@@ -276,10 +343,11 @@
                 </button>
             </div>
 
-            <div class="flex flex-col gap-md">
+            <form asp-action="Movimentar" method="post" class="flex flex-col gap-md">
                 <div>
-                    <label class="font-label-md text-label-md text-on-surface-variant" for="movProdutoSelect">Produto</label>
-                    <select id="movProdutoSelect" class="w-full mt-xs bg-surface-container-low border-none rounded-lg pl-md pr-10 py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30"></select>
+                    <label class="font-label-md text-label-md text-on-surface-variant">Produto</label>
+                    <p id="movProdutoNome" class="mt-xs font-body-md text-body-md font-semibold text-on-surface"></p>
+                    <input type="hidden" name="produtoId" id="movProdutoId" />
                 </div>
 
                 <div>
@@ -309,22 +377,22 @@
 
                 <div>
                     <label class="font-label-md text-label-md text-on-surface-variant" for="movMotivo">Motivo (opcional)</label>
-                    <input id="movMotivo" type="text" placeholder="Ex: compra de fornecedor, avaria, ajuste de contagem..."
+                    <input id="movMotivo" name="motivo" type="text" placeholder="Ex: compra de fornecedor, avaria, ajuste de contagem..."
                            class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
                 </div>
 
                 <p id="movSaldoInfo" class="font-body-md text-body-md text-on-surface-variant"></p>
 
-                <button id="confirmarMovimentacaoBtn" type="button" class="w-full py-md rounded-lg font-title-lg text-title-lg bg-secondary text-white hover:bg-opacity-90 transition-all flex items-center justify-center gap-xs">
+                <input type="hidden" name="quantidade" id="movQuantidade" value="1" />
+                <button type="submit" class="w-full py-md rounded-lg font-title-lg text-title-lg bg-secondary text-white hover:bg-opacity-90 transition-all flex items-center justify-center gap-xs">
                     Confirmar
                     <span class="material-symbols-outlined">check_circle</span>
                 </button>
-            </div>
+            </form>
         </div>
     </div>
 
     <script>
-        const PRODUTOS_ESTOQUE = @Html.Raw(Json.Serialize(Model.Produtos));
         const ESTOQUE_EDIT_URL = "@Url.Action("Edit", "Estoque")";
     </script>
     <script src="~/js/estoque.js" asp-append-version="true"></script>

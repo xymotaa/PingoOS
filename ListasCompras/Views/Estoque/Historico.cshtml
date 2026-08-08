@@ -1,0 +1,81 @@
+@model ListasCompras.Models.ProdutoEstoque
+@{
+    Layout = null;
+    ViewData["Title"] = "Histórico — " + Model.Nome;
+    var nomeLoja = ViewData["NomeLoja"] as string ?? "Minha Loja";
+    string Moeda(decimal v) => v.ToString("C2", new System.Globalization.CultureInfo("pt-BR"));
+}
+<!DOCTYPE html>
+<html class="light" lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>@nomeLoja — @ViewData["Title"]</title>
+    @await Html.PartialAsync("_HeadTailwind")
+</head>
+<body class="bg-surface">
+    @await Html.PartialAsync("_Navbar")
+
+    <main class="pt-24 px-lg pb-xl max-w-[1440px] mx-auto">
+
+        <section class="mb-md">
+            <a asp-action="Index" class="font-label-md text-label-md text-on-surface-variant hover:text-primary flex items-center gap-xs w-fit mb-sm">
+                <span class="material-symbols-outlined text-[18px]">arrow_back</span> Estoque
+            </a>
+            <h1 class="font-headline-lg text-headline-lg text-primary">@Model.Nome</h1>
+            <p class="font-body-md text-body-md text-on-surface-variant">
+                @Model.Codigo · saldo atual <strong>@Model.SaldoAtual</strong> · preço @Moeda(Model.PrecoVenda)
+            </p>
+        </section>
+
+        <section class="bg-white rounded-xl border border-outline-variant shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-surface-container-low">
+                        <tr>
+                            <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider">Data</th>
+                            <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider">Tipo</th>
+                            <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider text-center">Qtd</th>
+                            <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider text-center">Saldo depois</th>
+                            <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider">Motivo</th>
+                            <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider">Quem</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var m in Model.Movimentacoes)
+                        {
+                            var entrada = m.Tipo == "entrada";
+                            <tr class="border-t border-outline-variant">
+                                <td class="px-md py-sm font-body-md text-body-md text-on-surface-variant">@m.Data.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td class="px-md py-sm">
+                                    <span class="inline-flex items-center gap-xs font-label-md text-label-md @(entrada ? "text-secondary" : "text-error")">
+                                        <span class="material-symbols-outlined text-[16px]">@(entrada ? "arrow_downward" : "arrow_upward")</span>
+                                        @(entrada ? "Entrada" : "Saída")
+                                    </span>
+                                </td>
+                                <td class="px-md py-sm text-center font-body-md text-body-md font-semibold">@(entrada ? "+" : "−")@m.Quantidade</td>
+                                <td class="px-md py-sm text-center font-body-md text-body-md @(m.SaldoResultante < 0 ? "text-error font-semibold" : "text-on-surface")">@m.SaldoResultante</td>
+                                <td class="px-md py-sm font-body-md text-body-md text-on-surface-variant">@(string.IsNullOrWhiteSpace(m.Motivo) ? "—" : m.Motivo)</td>
+                                <td class="px-md py-sm font-body-md text-body-md text-on-surface-variant">@(m.Usuario?.Nome ?? "—")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @if (Model.Movimentacoes.Count == 0)
+            {
+                <div class="p-xl text-center">
+                    <span class="material-symbols-outlined text-[40px] text-outline">history</span>
+                    <p class="font-body-md text-body-md text-on-surface-variant">Nenhuma movimentação registrada.</p>
+                </div>
+            }
+        </section>
+
+        <p class="mt-md font-label-sm text-label-sm text-outline">
+            O saldo é a soma deste histórico — inclusive as saídas geradas automaticamente pelas
+            vendas do Caixa. Saldo negativo significa que a prateleira e o sistema divergiram.
+        </p>
+    </main>
+</body>
+</html>

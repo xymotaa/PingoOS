@@ -18,6 +18,10 @@ public class AppDbContext : DbContext
     public DbSet<Cliente> Clientes { get; set; }
     public DbSet<OrdemServico> OrdensServico { get; set; }
     public DbSet<ItemOrdemServico> ItensOrdemServico { get; set; }
+    public DbSet<ProdutoEstoque> ProdutosEstoque { get; set; }
+    public DbSet<MovimentacaoEstoque> MovimentacoesEstoque { get; set; }
+    public DbSet<Venda> Vendas { get; set; }
+    public DbSet<ItemVenda> ItensVenda { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -64,5 +68,50 @@ public class AppDbContext : DbContext
             .WithMany(o => o.Itens)
             .HasForeignKey(i => i.OrdemServicoId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // ===== Estoque e Caixa =====
+
+        modelBuilder.Entity<ProdutoEstoque>().Ignore(p => p.ValorEmEstoque).Ignore(p => p.Situacao);
+        modelBuilder.Entity<Venda>()
+            .Ignore(v => v.Subtotal).Ignore(v => v.Desconto).Ignore(v => v.Total)
+            .Ignore(v => v.Troco).Ignore(v => v.QuantidadeItens);
+        modelBuilder.Entity<ItemVenda>().Ignore(i => i.DescontoTotal).Ignore(i => i.Total);
+
+        modelBuilder.Entity<ProdutoEstoque>().HasIndex(p => p.Codigo).IsUnique();
+        modelBuilder.Entity<Venda>().HasIndex(v => v.Numero).IsUnique();
+
+        // Excluir um produto não pode apagar o histórico de vendas: o item guarda
+        // código, descrição e preço praticado, então a venda continua legível
+        modelBuilder.Entity<ItemVenda>()
+            .HasOne(i => i.ProdutoEstoque)
+            .WithMany()
+            .HasForeignKey(i => i.ProdutoEstoqueId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<ItemVenda>()
+            .HasOne(i => i.Venda)
+            .WithMany(v => v.Itens)
+            .HasForeignKey(i => i.VendaId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<MovimentacaoEstoque>()
+            .HasOne(m => m.ProdutoEstoque)
+            .WithMany(p => p.Movimentacoes)
+            .HasForeignKey(m => m.ProdutoEstoqueId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<MovimentacaoEstoque>()
+            .HasOne(m => m.Venda)
+            .WithMany()
+            .HasForeignKey(m => m.VendaId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<MovimentacaoEstoque>()
+            .HasOne(m => m.Usuario).WithMany().HasForeignKey(m => m.UsuarioId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Venda>()
+            .HasOne(v => v.Usuario).WithMany().HasForeignKey(v => v.UsuarioId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

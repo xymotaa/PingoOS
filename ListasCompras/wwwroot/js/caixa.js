@@ -80,7 +80,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (existente) {
             existente.qtd += 1;
         } else {
-            cart.push({ codigo: produto.codigo, nome: produto.nome, precoUnitario: produto.precoUnitario, qtd: 1, desconto: 0, descontoTipo: "percentual" });
+            cart.push({ id: produto.id, codigo: produto.codigo, nome: produto.nome, precoUnitario: produto.precoUnitario, qtd: 1, desconto: 0, descontoTipo: "percentual" });
         }
         renderTabela();
     }
@@ -270,4 +270,39 @@ document.addEventListener("DOMContentLoaded", function () {
 
     atualizarSelecaoPagamento();
     renderTabela();
+
+    // ===== Envio da venda =====
+
+    const itensPost = document.getElementById("itensPost");
+    const formaPagamentoPost = document.getElementById("formaPagamentoPost");
+    const valorRecebidoPost = document.getElementById("valorRecebidoPost");
+
+    if (finalizarBtn && finalizarBtn.form) {
+        finalizarBtn.form.addEventListener("submit", function (e) {
+            if (cart.length === 0) { e.preventDefault(); return; }
+
+            // Decimais sempre com ponto: a cultura do sistema converteria "620,00" errado
+            itensPost.innerHTML = "";
+            cart.forEach(function (item) {
+                function oculto(nome, valor) {
+                    const i = document.createElement("input");
+                    i.type = "hidden"; i.name = nome; i.value = valor;
+                    itensPost.appendChild(i);
+                }
+                // O desconto pode ter sido digitado em reais; o servidor guarda sempre percentual
+                let percentual = item.desconto || 0;
+                if (item.descontoTipo === "valor" && item.precoUnitario > 0) {
+                    percentual = Math.min(item.desconto / item.precoUnitario * 100, 100);
+                }
+                oculto("itemProdutoId", item.id);
+                oculto("itemQuantidade", item.qtd);
+                oculto("itemPreco", Number(item.precoUnitario).toFixed(2));
+                oculto("itemDesconto", Number(percentual).toFixed(2));
+            });
+
+            formaPagamentoPost.value = metodoSelecionado();
+            const recebido = parseFloat(valorRecebido.value) || 0;
+            valorRecebidoPost.value = Number(recebido).toFixed(2);
+        });
+    }
 });
