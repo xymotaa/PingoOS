@@ -1,6 +1,9 @@
+@model ListasCompras.Models.OrdemServico
 @{
     Layout = null;
-    ViewData["Title"] = "Nova ordem de serviço";
+    var editando = Model.Id > 0;
+    ViewData["Title"] = editando ? "Editar " + Model.Numero : "Nova ordem de serviço";
+    string Decimal(decimal v) => v.ToString("0.00", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"));
     var nomeLoja = ViewData["NomeLoja"] as string ?? "Minha Loja";
     var erro = TempData["Erro"] as string;
 }
@@ -18,7 +21,8 @@
     <main class="pt-24 px-lg pb-xl max-w-[1440px] mx-auto">
 
     <form asp-action="Salvar" method="post" id="formOs">
-    <input type="hidden" id="clienteId" name="clienteId" value="" />
+    <input type="hidden" id="clienteId" name="clienteId" value="@(editando ? Model.ClienteId.ToString() : "")" />
+    <input type="hidden" name="id" value="@Model.Id" />
         @if (!string.IsNullOrEmpty(erro))
         {
             <div class="mb-md bg-error-container text-error px-md py-sm rounded-lg font-label-md text-label-md flex items-center gap-xs w-fit">
@@ -36,7 +40,7 @@
         <!-- Cabeçalho da página -->
         <section class="mb-md flex flex-wrap items-end justify-between gap-md">
             <div>
-                                <h1 class="font-headline-lg text-headline-lg text-primary">Nova ordem de serviço</h1>
+                                <h1 class="font-headline-lg text-headline-lg text-primary">@ViewData["Title"]</h1>
                 <p class="font-body-md text-body-md text-on-surface-variant">Registre os dados do cliente, do aparelho e os itens do serviço.</p>
             </div>
         </section>
@@ -54,7 +58,7 @@
                         <label class="font-label-md text-label-md text-on-surface-variant" for="clienteNome">Nome</label>
                         <div class="relative mt-xs">
                             <input id="clienteNome" type="text" readonly placeholder="Pesquise o cliente cadastrado"
-                                   class="w-full bg-surface-container-low border-none rounded-lg pl-md pr-10 py-2 font-body-md text-body-md cursor-pointer focus:ring-2 focus:ring-secondary/30" />
+                                   class="w-full bg-surface-container-low border-none rounded-lg pl-md pr-10 py-2 font-body-md text-body-md cursor-pointer focus:ring-2 focus:ring-secondary/30" value="@(editando ? Model.Cliente.Nome : "")" />
                             <button id="buscarClienteBtn" type="button" title="Pesquisar cliente"
                                     class="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg hover:bg-surface-container-high flex items-center justify-center text-outline transition-colors">
                                 <span class="material-symbols-outlined text-[20px]">search</span>
@@ -67,36 +71,36 @@
                     </div>
                     <div class="md:col-span-3">
                         <label class="font-label-md text-label-md text-on-surface-variant" for="clienteTelefone">Telefone</label>
-                        <input id="clienteTelefone" type="tel" readonly class="campo-cliente w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md text-on-surface-variant" />
+                        <input id="clienteTelefone" type="tel" readonly class="campo-cliente w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md text-on-surface-variant" value="@(editando ? Model.Cliente.Telefone : "")" />
                     </div>
                     <div class="md:col-span-3">
                         <label class="font-label-md text-label-md text-on-surface-variant" for="clienteDocumento">CPF ou RG</label>
-                        <input id="clienteDocumento" type="text" readonly class="campo-cliente w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md text-on-surface-variant" />
+                        <input id="clienteDocumento" type="text" readonly class="campo-cliente w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md text-on-surface-variant" value="@(editando ? Model.Cliente.Documento : "")" />
                     </div>
 
                     <div class="md:col-span-3">
                         <label class="font-label-md text-label-md text-on-surface-variant" for="clienteCep">CEP</label>
-                        <input id="clienteCep" type="text" readonly class="campo-cliente w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md text-on-surface-variant" />
+                        <input id="clienteCep" type="text" readonly class="campo-cliente w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md text-on-surface-variant" value="@(editando ? Model.Cliente.Cep : "")" />
                     </div>
                     <div class="md:col-span-6">
                         <label class="font-label-md text-label-md text-on-surface-variant" for="clienteEndereco">Endereço (Rua / Av.)</label>
-                        <input id="clienteEndereco" type="text" readonly class="campo-cliente w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md text-on-surface-variant" />
+                        <input id="clienteEndereco" type="text" readonly class="campo-cliente w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md text-on-surface-variant" value="@(editando ? Model.Cliente.Endereco : "")" />
                     </div>
                     <div class="md:col-span-3">
                         <label class="font-label-md text-label-md text-on-surface-variant" for="clienteNumero">Número</label>
-                        <input id="clienteNumero" type="text" readonly class="campo-cliente w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md text-on-surface-variant" />
+                        <input id="clienteNumero" type="text" readonly class="campo-cliente w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md text-on-surface-variant" value="@(editando ? Model.Cliente.Numero : "")" />
                     </div>
                     <div class="md:col-span-4">
                         <label class="font-label-md text-label-md text-on-surface-variant" for="clienteBairro">Bairro</label>
-                        <input id="clienteBairro" type="text" readonly class="campo-cliente w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md text-on-surface-variant" />
+                        <input id="clienteBairro" type="text" readonly class="campo-cliente w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md text-on-surface-variant" value="@(editando ? Model.Cliente.Bairro : "")" />
                     </div>
                     <div class="md:col-span-5">
                         <label class="font-label-md text-label-md text-on-surface-variant" for="clienteCidade">Cidade</label>
-                        <input id="clienteCidade" type="text" readonly class="campo-cliente w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md text-on-surface-variant" />
+                        <input id="clienteCidade" type="text" readonly class="campo-cliente w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md text-on-surface-variant" value="@(editando ? Model.Cliente.Cidade : "")" />
                     </div>
                     <div class="md:col-span-3">
                         <label class="font-label-md text-label-md text-on-surface-variant" for="clienteUf">UF</label>
-                        <input id="clienteUf" type="text" readonly class="campo-cliente w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md text-on-surface-variant uppercase" />
+                        <input id="clienteUf" type="text" readonly class="campo-cliente w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md text-on-surface-variant uppercase" value="@(editando ? Model.Cliente.Uf : "")" />
                     </div>
                 </div>
             </section>
@@ -110,25 +114,25 @@
                 <div class="grid grid-cols-1 md:grid-cols-12 gap-md">
                     <div class="md:col-span-3">
                         <label class="font-label-md text-label-md text-on-surface-variant" for="dispositivoTipo">Tipo de aparelho</label>
-                        <input id="dispositivoTipo" name="dispositivoTipo" type="text" placeholder="Ex: Celular, Tablet, Notebook" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                        <input id="dispositivoTipo" name="dispositivoTipo" type="text" placeholder="Ex: Celular, Tablet, Notebook" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" value="@Model.DispositivoTipo" />
                     </div>
                     <div class="md:col-span-3">
                         <label class="font-label-md text-label-md text-on-surface-variant" for="dispositivoMarca">Marca</label>
-                        <input id="dispositivoMarca" name="dispositivoMarca" type="text" placeholder="Ex: Samsung, Apple, Xiaomi" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                        <input id="dispositivoMarca" name="dispositivoMarca" type="text" placeholder="Ex: Samsung, Apple, Xiaomi" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" value="@Model.DispositivoMarca" />
                     </div>
                     <div class="md:col-span-3">
                         <label class="font-label-md text-label-md text-on-surface-variant" for="dispositivoModelo">Modelo</label>
-                        <input id="dispositivoModelo" name="dispositivoModelo" type="text" placeholder="Ex: Galaxy A54" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                        <input id="dispositivoModelo" name="dispositivoModelo" type="text" placeholder="Ex: Galaxy A54" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" value="@Model.DispositivoModelo" />
                     </div>
                     <div class="md:col-span-3">
                         <div class="flex items-center justify-between gap-sm">
                             <label class="font-label-md text-label-md text-on-surface-variant" for="dispositivoSerie">Número de série / IMEI</label>
                             <label class="flex items-center gap-xs cursor-pointer shrink-0">
-                                <input id="dispositivoSemSerie" name="semNumeroSerie" type="checkbox" class="w-4 h-4 accent-secondary" />
+                                <input id="dispositivoSemSerie" name="semNumeroSerie" type="checkbox" checked="@Model.SemNumeroSerie" class="w-4 h-4 accent-secondary" />
                                 <span class="font-label-sm text-label-sm text-outline">Sem número</span>
                             </label>
                         </div>
-                        <input id="dispositivoSerie" name="dispositivoSerie" type="text" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30 disabled:opacity-50 disabled:cursor-not-allowed" />
+                        <input id="dispositivoSerie" name="dispositivoSerie" type="text" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30 disabled:opacity-50 disabled:cursor-not-allowed" value="@Model.DispositivoSerie" />
                     </div>
                 </div>
             </section>
@@ -141,7 +145,7 @@
                 </div>
                 <label class="font-label-md text-label-md text-on-surface-variant" for="diagnostico">Diagnóstico Técnico Preliminar</label>
                 <textarea id="diagnostico" name="diagnostico" rows="4" placeholder="Descreva o problema relatado, os testes realizados e o serviço a ser executado..."
-                          class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30"></textarea>
+                          class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30">@Model.Diagnostico</textarea>
             </section>
 
             <!-- Peças e Serviços -->
@@ -168,7 +172,31 @@
                                 <th class="w-10"></th>
                             </tr>
                         </thead>
-                        <tbody id="itensBody"></tbody>
+                        <tbody id="itensBody">
+                            @foreach (var item in Model.Itens)
+                            {
+                                <tr class="border-t border-outline-variant">
+                                    <td class="px-md py-sm">
+                                        <input type="text" name="itemDescricao" value="@item.Descricao" class="item-desc w-full bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" placeholder="Ex: Tela Display Frontal Original" />
+                                    </td>
+                                    <td class="px-md py-sm">
+                                        <input type="text" name="itemQuantidade" inputmode="numeric" value="@item.Quantidade" class="item-qtd w-full text-center bg-surface-container-low border-none rounded-lg px-2 py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                                    </td>
+                                    <td class="px-md py-sm">
+                                        <input type="text" inputmode="decimal" value="@Decimal(item.ValorUnitario)" placeholder="0,00" class="item-valor w-full text-right bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                                        <input type="hidden" name="itemValor" class="item-valor-post" value="0" />
+                                    </td>
+                                    <td class="px-md py-sm text-right">
+                                        <span class="item-total font-body-md text-body-md font-semibold text-secondary">R$ 0,00</span>
+                                    </td>
+                                    <td class="pr-md">
+                                        <button type="button" class="remover-item w-8 h-8 rounded-lg hover:bg-error-container inline-flex items-center justify-center text-outline transition-colors" title="Remover item">
+                                            <span class="material-symbols-outlined text-[18px]">delete</span>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
                     </table>
                 </div>
                 <div id="itensVazio" class="hidden px-lg py-lg text-center font-body-md text-body-md text-on-surface-variant">
@@ -189,7 +217,7 @@
                 <button id="salvarOrcamentoBtn" type="submit"
                         class="bg-secondary text-white rounded-lg px-lg py-sm font-label-md text-label-md font-bold hover:bg-opacity-90 transition-colors flex items-center gap-xs">
                     <span class="material-symbols-outlined text-[18px]">save</span>
-                    Salvar ordem de serviço
+                    @(editando ? "Salvar alterações" : "Salvar ordem de serviço")
                 </button>
             </div>
         </div>

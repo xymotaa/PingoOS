@@ -1,5 +1,70 @@
 # Registro de Alterações
 
+## [2026-08-10] Ordem de serviço editável
+
+### Problema
+Depois de salva, a OS era imutável: um dado faltando ou digitado errado só se resolvia excluindo e
+refazendo — o que queimaria o número sequencial e apagaria o histórico.
+
+### Solução
+`Add` passou a aceitar um `id` e servir para criar **e** editar, como já fazem Cliente e Estoque.
+A tela reabre com tudo preenchido: cliente selecionado, dados do aparelho, diagnóstico e a lista de
+itens com seus valores. `Salvar` distingue os dois casos pelo `id`.
+
+Ao editar, **os itens são substituídos** pelos que vierem do formulário — remover uma peça é apagar
+a linha, e o que sai do formulário é o que fica gravado.
+
+### Arquivos Alterados
+
+| Arquivo | Alteração |
+|---|---|
+| `Controllers/OrcamentoController.cs` | `Add(int? id)` carrega a OS; `Salvar` atualiza quando `id > 0` |
+| `Views/Orcamento/Add.cshtml` | vira criar/editar: campos preenchidos, itens vindos do servidor, título e botão mudam |
+| `Views/Orcamento/Index.cshtml`, `Ver.cshtml` | botão de editar |
+| `wwwroot/js/orcamento.js` | não cria linha em branco quando já há itens; o cliente já vem escolhido |
+
+**O que a edição preserva:** número sequencial, situação, data de abertura e autoria. Só os dados
+do serviço mudam.
+
+### Ressalva
+A OS impressa é assinada pelo cliente. Editar depois da assinatura faz o sistema divergir do papel
+que está com ele — útil para corrigir erro de digitação, arriscado para mudar valor ou peça de uma
+ordem já entregue. Não há trava para isso; fica ao critério de quem usa.
+
+### Resultado
+Testado: a tela de edição abre com cliente, aparelho, diagnóstico e itens preenchidos; a alteração
+gravou modelo, número de série, diagnóstico e dois itens novos; número, situação e data de abertura
+seguiram intactos e nenhum item ficou órfão.
+
+---
+
+## [2026-08-10] Situação da OS editável em qualquer direção
+
+### Problema
+Marcar uma ordem como **Entregue** era irreversível. A lista só mostrava "marcar como pronta"
+enquanto estava Aberta e "marcar como entregue" enquanto não estivesse entregue — depois disso não
+havia botão nenhum. Quem clicasse por engano ficava sem saída pela interface.
+
+### Arquivos Alterados
+
+| Arquivo | Alteração |
+|---|---|
+| `Views/Orcamento/Index.cshtml` | a coluna Situação virou um seletor que grava ao mudar; a linha inteira abre a OS ao ser clicada |
+| `Views/Orcamento/Ver.cshtml` | mesmo seletor no cabeçalho; link "voltar" removido |
+| `Controllers/OrcamentoController.cs` | `AlterarSituacao` aceita qualquer transição e um `retorno` para voltar à tela de origem |
+| `wwwroot/js/os-lista.js` | `abrirOs()` — o clique na linha ignora cliques em controles (seletor, botões, links) |
+
+**Sobre a data de entrega:** sair de Entregue **limpa** a `DataEntrega`. Se foi marcada por engano,
+não faz sentido a garantia de 90 dias seguir contando daquele dia. Voltar para Entregue grava a
+data do momento, e alterações que mantêm a situação preservam a data original (`??=`).
+
+### Resultado
+Testado o caminho que estava travado: Entregue → Aberta funciona e a data de entrega é zerada.
+Ida e volta completa (Aberta → Entregue → Pronta → Entregue) mantém a coerência, e alterar pela
+tela Ver retorna para a Ver em vez da listagem.
+
+---
+
 ## [2026-08-07] Caixa vira grupo na lateral, com Frente de caixa e Vendas
 
 ### Problema

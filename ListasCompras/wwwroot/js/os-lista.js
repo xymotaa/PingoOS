@@ -32,3 +32,10 @@ document.addEventListener("DOMContentLoaded", function () {
     filtroSituacao.addEventListener("change", filtrar);
     atualizarContagem(linhas.length);
 });
+
+// Clicar na linha abre a ordem — menos quando o clique foi num controle dela
+// (o seletor de situação, o botão de excluir, o ícone de ver)
+function abrirOs(evento, url) {
+    if (evento.target.closest("select, button, a, form, input")) return;
+    window.location.href = url;
+}

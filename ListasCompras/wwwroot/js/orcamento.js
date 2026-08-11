@@ -219,6 +219,14 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    // Começa com uma linha em branco pronta para preencher
-    adicionarItem(false);
+    // Ao editar, o cliente já vem escolhido: o botão vira o de trocar
+    if (document.getElementById("clienteId").value) {
+        buscarClienteBtn.classList.add("hidden");
+        limparClienteBtn.classList.remove("hidden");
+    }
+
+    // Ao editar, os itens já vieram do servidor; só a OS nova começa com linha em branco
+    if (itensBody.children.length === 0) adicionarItem(false);
+    atualizarVazio();
+    recalcular();
 });

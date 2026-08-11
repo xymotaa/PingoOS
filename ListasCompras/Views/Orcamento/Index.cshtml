@@ -91,7 +91,8 @@
                         @foreach (var os in Model)
                         {
                             var cor = Cor(os.Situacao);
-                            <tr class="linha-os border-t border-outline-variant hover:bg-surface-container-low transition-colors"
+                            <tr class="linha-os border-t border-outline-variant hover:bg-surface-container-low transition-colors cursor-pointer"
+                                onclick="abrirOs(event, '@Url.Action("Ver", new { id = os.Id })')"
                                 data-busca="@($"{os.Numero} {os.Cliente.Nome} {os.DispositivoResumo}".ToLower())"
                                 data-situacao="@os.Situacao">
                                 <td class="px-md py-sm font-body-md text-body-md font-semibold text-primary">@os.Numero</td>
@@ -100,7 +101,15 @@
                                 <td class="px-md py-sm font-body-md text-body-md text-on-surface-variant">@os.DataAbertura.ToString("dd/MM/yyyy")</td>
                                 <td class="px-md py-sm font-body-md text-body-md text-right font-semibold text-secondary">@Moeda(os.Total)</td>
                                 <td class="px-md py-sm text-center">
-                                    <span class="px-sm py-xs rounded-full font-label-sm text-label-sm @cor.fundo @cor.texto">@os.Situacao</span>
+                                    <form asp-action="AlterarSituacao" method="post" class="inline">
+                                        <input type="hidden" name="id" value="@os.Id" />
+                                        <select name="situacao" onchange="this.form.submit()" title="Alterar a situação"
+                                                class="cursor-pointer border-none rounded-lg pl-sm pr-8 py-xs font-label-sm text-label-sm @cor.fundo @cor.texto focus:ring-2 focus:ring-secondary/30">
+                                            <option value="Aberta" selected="@(os.Situacao == "Aberta")">Aberta</option>
+                                            <option value="Pronta" selected="@(os.Situacao == "Pronta")">Pronta</option>
+                                            <option value="Entregue" selected="@(os.Situacao == "Entregue")">Entregue</option>
+                                        </select>
+                                    </form>
                                 </td>
                                 <td class="px-md py-sm">
                                     <div class="flex items-center justify-center gap-xs">
@@ -108,28 +117,10 @@
                                            class="w-8 h-8 rounded-lg hover:bg-surface-container-high inline-flex items-center justify-center text-on-surface-variant transition-colors">
                                             <span class="material-symbols-outlined text-[18px]">visibility</span>
                                         </a>
-                                        @if (os.Situacao == "Aberta")
-                                        {
-                                            <form asp-action="AlterarSituacao" method="post" class="inline">
-                                                <input type="hidden" name="id" value="@os.Id" />
-                                                <input type="hidden" name="situacao" value="Pronta" />
-                                                <button type="submit" title="Marcar como pronta"
-                                                        class="w-8 h-8 rounded-lg hover:bg-secondary-container inline-flex items-center justify-center text-on-surface-variant transition-colors">
-                                                    <span class="material-symbols-outlined text-[18px]">build_circle</span>
-                                                </button>
-                                            </form>
-                                        }
-                                        @if (os.Situacao != "Entregue")
-                                        {
-                                            <form asp-action="AlterarSituacao" method="post" class="inline">
-                                                <input type="hidden" name="id" value="@os.Id" />
-                                                <input type="hidden" name="situacao" value="Entregue" />
-                                                <button type="submit" title="Marcar como entregue — é daqui que a garantia começa a contar"
-                                                        class="w-8 h-8 rounded-lg hover:bg-secondary-container inline-flex items-center justify-center text-on-surface-variant transition-colors">
-                                                    <span class="material-symbols-outlined text-[18px]">task_alt</span>
-                                                </button>
-                                            </form>
-                                        }
+                                        <a asp-action="Add" asp-route-id="@os.Id" title="Editar a ordem"
+                                           class="w-8 h-8 rounded-lg hover:bg-surface-container-high inline-flex items-center justify-center text-on-surface-variant transition-colors">
+                                            <span class="material-symbols-outlined text-[18px]">edit</span>
+                                        </a>
                                         <form asp-action="Excluir" method="post" class="inline"
                                               onsubmit="return confirm('Excluir a ordem @os.Numero?');">
                                             <input type="hidden" name="id" value="@os.Id" />

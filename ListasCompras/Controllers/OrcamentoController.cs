@@ -22,9 +22,19 @@ public class OrcamentoController : LojaControllerBase
         return View(ordens);
     }
 
-    public IActionResult Add()
+    // Mesma tela cria e edita: faltar um dado ou digitar errado é comum, e reabrir a OS
+    // é melhor que excluir e refazer, que perderia o número e o histórico
+    public IActionResult Add(int? id)
     {
-        return View();
+        if (!id.HasValue) return View(new OrdemServico());
+
+        var ordem = Context.OrdensServico
+            .Include(o => o.Cliente)
+            .Include(o => o.Itens)
+            .FirstOrDefault(o => o.Id == id.Value);
+
+        if (ordem == null) return NotFound();
+        return View(ordem);
     }
 
     public IActionResult Ver(int id)
@@ -42,7 +52,7 @@ public class OrcamentoController : LojaControllerBase
     [HttpPost]
     [ValidateAntiForgeryToken]
     public IActionResult Salvar(
-        int clienteId,
+        int id, int clienteId,
         string? dispositivoTipo, string? dispositivoMarca, string? dispositivoModelo,
         string? dispositivoSerie, bool semNumeroSerie, string? diagnostico,
         // Valor chega como texto e é convertido com cultura invariante de propósito: o binding
@@ -52,21 +62,37 @@ public class OrcamentoController : LojaControllerBase
         if (clienteId <= 0 || !Context.Clientes.Any(c => c.Id == clienteId))
         {
             TempData["Erro"] = "Selecione o cliente antes de salvar a ordem de serviço.";
-            return RedirectToAction(nameof(Add));
+            return RedirectToAction(nameof(Add), id > 0 ? new { id } : null);
         }
 
-        var ordem = new OrdemServico
+        var ordem = id > 0
+            ? Context.OrdensServico.Include(o => o.Itens).FirstOrDefault(o => o.Id == id)
+            : null;
+        if (id > 0 && ordem == null) return NotFound();
+
+        var novo = ordem == null;
+        if (novo)
         {
-            Numero = ProximoNumero(),
-            ClienteId = clienteId,
-            UsuarioId = IdDoUsuarioLogado(),
-            DispositivoTipo = Limpar(dispositivoTipo),
-            DispositivoMarca = Limpar(dispositivoMarca),
-            DispositivoModelo = Limpar(dispositivoModelo),
-            DispositivoSerie = semNumeroSerie ? null : Limpar(dispositivoSerie),
-            SemNumeroSerie = semNumeroSerie,
-            Diagnostico = Limpar(diagnostico),
-        };
+            ordem = new OrdemServico
+            {
+                Numero = ProximoNumero(),
+                UsuarioId = IdDoUsuarioLogado(),
+            };
+        }
+        else
+        {
+            // Os itens são substituídos pelos que vieram do formulário
+            Context.ItensOrdemServico.RemoveRange(ordem!.Itens);
+            ordem.Itens.Clear();
+        }
+
+        ordem!.ClienteId = clienteId;
+        ordem.DispositivoTipo = Limpar(dispositivoTipo);
+        ordem.DispositivoMarca = Limpar(dispositivoMarca);
+        ordem.DispositivoModelo = Limpar(dispositivoModelo);
+        ordem.DispositivoSerie = semNumeroSerie ? null : Limpar(dispositivoSerie);
+        ordem.SemNumeroSerie = semNumeroSerie;
+        ordem.Diagnostico = Limpar(diagnostico);
 
         if (itemDescricao != null)
         {
@@ -88,27 +114,37 @@ public class OrcamentoController : LojaControllerBase
             }
         }
 
-        Context.OrdensServico.Add(ordem);
+        if (novo) Context.OrdensServico.Add(ordem);
         Context.SaveChanges();
 
-        TempData["Sucesso"] = $"Ordem de serviço {ordem.Numero} salva.";
+        TempData["Sucesso"] = novo
+            ? $"Ordem de serviço {ordem.Numero} salva."
+            : $"Ordem de serviço {ordem.Numero} atualizada.";
         return RedirectToAction(nameof(Ver), new { id = ordem.Id });
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult AlterarSituacao(int id, string situacao)
+    public IActionResult AlterarSituacao(int id, string situacao, string? retorno)
     {
         var ordem = Context.OrdensServico.Find(id);
         if (ordem == null || !Situacoes.Todas.Contains(situacao)) return RedirectToAction(nameof(Index));
 
         ordem.Situacao = situacao;
-        // A garantia conta da retirada, então a data de entrega precisa ficar registrada
-        ordem.DataEntrega = situacao == Situacoes.Entregue ? DateTime.Now : null;
+
+        // A garantia conta da retirada. Voltar atrás limpa a data — foi marcada por engano,
+        // então não faz sentido a garantia seguir contando daquele dia.
+        if (situacao == Situacoes.Entregue)
+            ordem.DataEntrega ??= DateTime.Now;
+        else
+            ordem.DataEntrega = null;
+
         Context.SaveChanges();
 
-        TempData["Sucesso"] = $"Ordem {ordem.Numero} marcada como {situacao.ToLower()}.";
-        return RedirectToAction(nameof(Index));
+        TempData["Sucesso"] = $"Ordem {ordem.Numero} agora está como {situacao.ToLower()}.";
+        return retorno == "Ver"
+            ? RedirectToAction(nameof(Ver), new { id })
+            : RedirectToAction(nameof(Index));
     }
 
     [HttpPost]

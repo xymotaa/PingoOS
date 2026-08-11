@@ -87,19 +87,38 @@
 
         <section class="flex flex-wrap items-end justify-between gap-md">
             <div>
-                <a asp-action="Index" class="font-label-md text-label-md text-on-surface-variant hover:text-primary flex items-center gap-xs w-fit mb-sm">
-                    <span class="material-symbols-outlined text-[18px]">arrow_back</span> Ordens de serviço
-                </a>
-                <h1 class="font-headline-lg text-headline-lg text-primary">@Model.Numero</h1>
+                                <h1 class="font-headline-lg text-headline-lg text-primary">@Model.Numero</h1>
                 <p class="font-body-md text-body-md text-on-surface-variant">
-                    @Model.Cliente.Nome · aberta em @Model.DataAbertura.ToString("dd/MM/yyyy") · @Model.Situacao
+                    @Model.Cliente.Nome · aberta em @Model.DataAbertura.ToString("dd/MM/yyyy")
+                    @if (Model.DataEntrega.HasValue)
+                    {
+                        <text>· entregue em @Model.DataEntrega.Value.ToString("dd/MM/yyyy")</text>
+                    }
                 </p>
+                <form asp-action="AlterarSituacao" method="post" class="mt-sm flex items-center gap-sm">
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <input type="hidden" name="retorno" value="Ver" />
+                    <label class="font-label-md text-label-md text-on-surface-variant" for="situacao">Situação</label>
+                    <select id="situacao" name="situacao" onchange="this.form.submit()"
+                            class="bg-surface-container-low border-none rounded-lg pl-md pr-10 py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30">
+                        <option value="Aberta" selected="@(Model.Situacao == "Aberta")">Aberta</option>
+                        <option value="Pronta" selected="@(Model.Situacao == "Pronta")">Pronta</option>
+                        <option value="Entregue" selected="@(Model.Situacao == "Entregue")">Entregue</option>
+                    </select>
+                </form>
             </div>
+            <div class="flex items-center gap-sm">
+            <a asp-action="Add" asp-route-id="@Model.Id"
+               class="border border-outline text-on-surface-variant rounded-lg px-lg py-sm font-label-md text-label-md font-bold hover:bg-surface-container-low transition-colors flex items-center gap-xs">
+                <span class="material-symbols-outlined text-[18px]">edit</span>
+                Editar
+            </a>
             <button id="imprimirBtn" type="button"
                     class="bg-secondary text-white rounded-lg px-lg py-sm font-label-md text-label-md font-bold hover:bg-opacity-90 transition-colors flex items-center gap-xs">
                 <span class="material-symbols-outlined text-[18px]">print</span>
                 Imprimir as duas vias
             </button>
+            </div>
         </section>
 
         <p class="mt-md font-body-md text-body-md text-on-surface-variant">
