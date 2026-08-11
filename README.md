@@ -35,7 +35,7 @@ lista de compras e está virando um ERP, módulo por módulo.
 | Lista de compras | `ListaCompraController` | `/ListaCompra` | ✅ Completo — telas + banco + PDF |
 | Configuração (perfil da loja) | `ConfiguracaoController` | `/Configuracao` | ✅ Completo — telas + banco |
 | Clientes | `ClienteController` | `/Cliente` | ✅ Completo — telas + banco |
-| Ordem de Serviço / Orçamento | `OrcamentoController` | `/Orcamento` | ✅ Completo — telas + banco + impressão em duas vias |
+| Ordem de Serviço / Orçamento | `OrcamentoController` | `/Orcamento` | ✅ Completo — banco, até 5 aparelhos, pagamento e impressão em duas vias |
 | Estoque | `EstoqueController` | `/Estoque` | ✅ Completo — telas + banco + histórico de movimentações |
 | Caixa | `CaixaController` | `/Caixa` | ✅ Completo — venda gravada e baixa automática do estoque |
 | Dashboards | `DashboardsController` | `/Dashboards` | 🚧 Placeholder "Em breve" |
@@ -64,16 +64,42 @@ esperando dados acumularem.
 |---|
 | ![Usuários](docs/screenshots/usuarios.png) |
 
-### Orçamento com impressão em duas vias
+### Ordem de Serviço
 
-O módulo de Orçamento gera uma **Ordem de Serviço** pronta para impressão, com as duas vias na
-mesma folha A4 (1ª via do cliente, 2ª via do técnico) separadas por uma linha de corte. O
-documento inclui os termos e condições do serviço com as bases legais (CDC, LGPD, Código Civil):
-garantia de 90 dias, exclusão de mau uso, sigilo sobre os arquivos pessoais do aparelho e prazo
-de retirada.
+O módulo é o centro do sistema. Uma OS tem:
 
-Se o orçamento tiver muitos itens, o documento se ajusta sozinho para caber em uma folha
-(`ajustarEscala()` em `wwwroot/js/orcamento.js`).
+- **Cliente vindo do cadastro** — o campo Nome tem uma lupa que busca por nome, telefone ou CPF; os
+  demais campos são preenchidos e ficam somente-leitura, garantindo que o papel bate com o cadastro.
+- **Até 5 aparelhos na mesma ordem** — o cliente que deixa dois celulares na mesma visita é um
+  atendimento só. O limite é o que cabe nas duas vias impressas.
+- **Pagamento explícito** — haver (adiantamento) deixado pelo cliente, desconto em % ou R$, forma de
+  pagamento e parcelamento, com as contas calculadas na tela enquanto se digita:
+
+  ```
+  Subtotal dos itens          R$ 800,00
+  Desconto (10%)            − R$  80,00
+  Haver deixado pelo cliente− R$ 200,00
+  Falta pagar                 R$ 520,00     3x de R$ 173,33
+  ```
+
+- **Situação** Aberta → Pronta → Entregue, alterável em qualquer direção pela listagem ou pela
+  própria OS. A data de entrega é a que conta para a garantia.
+- **Numeração sequencial** (`OS-000001`) gerada no servidor e **autoria**: o nome de quem emitiu
+  aparece na linha de assinatura do técnico.
+
+#### A impressão
+
+Sai com as **duas vias na mesma folha A4** (1ª do cliente, 2ª do técnico), separadas por linha de
+corte, com o nome de cada parte sobre a respectiva linha de assinatura. Inclui os termos e
+condições com as bases legais (CDC, LGPD, Código Civil): garantia de 90 dias, exclusão de mau uso,
+sigilo sobre os arquivos pessoais do aparelho e prazo de retirada.
+
+Se a ordem tiver muitos itens ou aparelhos, o documento se ajusta sozinho para caber em uma folha
+(`ajustarEscala()` em `wwwroot/js/os-impressao.js`).
+
+> O documento de impressão é montado a partir de `#osImpressao`, e **todo o CSS de impressão é
+> escopado nesse id**. A 2ª via é um clone da 1ª feito por JavaScript — se ela sair sem formatação,
+> procure por tag mal fechada que esteja encerrando o `#osImpressao` antes da hora.
 
 ## Requisitos
 
@@ -164,12 +190,17 @@ ListasCompras/
 ├── Migrations/        migrations do EF Core
 ├── Models/            entidades e view models
 ├── Views/
-│   ├── Home/          o Painel (tela inicial)
-│   ├── <Modulo>/      telas de cada módulo
-│   └── Shared/        _Navbar (topbar+sidebar), EmBreve, _Layout, Error
+│   ├── Home/          o Painel (tela inicial, com o menu lateral)
+│   ├── <Modulo>/      Index lista · Add cria e edita · Ver mostra/imprime
+│   └── Shared/        _Navbar, _HeadTailwind, _PainelIlustracao, EmBreve, _Layout, Error
 └── wwwroot/
     ├── css/           site.css (telas antigas) e print.css (PDF da lista)
-    └── js/            um arquivo por módulo
+    ├── img/           ilustração da tela de login
+    └── js/            um arquivo por tela (orcamento, os-lista, os-impressao, estoque...)
+
+**Convenção das telas:** cada módulo segue `Index` (listagem com busca) → `Add` (formulário que
+cria e edita, pelo `id`) → `Ver` quando há algo a exibir/imprimir. Cliente, Estoque e Orçamento
+seguem esse padrão.
 ```
 
 **Tela inicial (Painel)** — `Views/Home/Index.cshtml`, estilo dashboard Material-3: sidebar fixa
