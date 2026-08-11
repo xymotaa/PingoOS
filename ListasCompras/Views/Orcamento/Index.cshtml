@@ -93,11 +93,11 @@
                             var cor = Cor(os.Situacao);
                             <tr class="linha-os border-t border-outline-variant hover:bg-surface-container-low transition-colors cursor-pointer"
                                 onclick="abrirOs(event, '@Url.Action("Ver", new { id = os.Id })')"
-                                data-busca="@($"{os.Numero} {os.Cliente.Nome} {os.DispositivoResumo}".ToLower())"
+                                data-busca="@($"{os.Numero} {os.Cliente.Nome} {os.AparelhosResumo}".ToLower())"
                                 data-situacao="@os.Situacao">
                                 <td class="px-md py-sm font-body-md text-body-md font-semibold text-primary">@os.Numero</td>
                                 <td class="px-md py-sm font-body-md text-body-md text-on-surface">@os.Cliente.Nome</td>
-                                <td class="px-md py-sm font-body-md text-body-md text-on-surface-variant">@os.DispositivoResumo</td>
+                                <td class="px-md py-sm font-body-md text-body-md text-on-surface-variant">@os.AparelhosResumo</td>
                                 <td class="px-md py-sm font-body-md text-body-md text-on-surface-variant">@os.DataAbertura.ToString("dd/MM/yyyy")</td>
                                 <td class="px-md py-sm font-body-md text-body-md text-right font-semibold text-secondary">@Moeda(os.Total)</td>
                                 <td class="px-md py-sm text-center">

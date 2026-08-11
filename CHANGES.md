@@ -1,5 +1,87 @@
 # Registro de Alterações
 
+## [2026-08-11] Correção: 2ª via da OS saía sem formatação
+
+### Problema
+Depois da mudança para vários aparelhos, a impressão quebrou: a **1ª via saía normal e a 2ª saía
+como texto corrido**, sem tabelas nem colunas.
+
+### Causa
+Ao trocar o bloco de aparelho único pelo laço de vários aparelhos, sobrou um `</div>` da marcação
+antiga. Esse fechamento a mais encerrava o `#osVia1` cedo demais e, em cascata, o próprio
+`#osImpressao`. Como **todo o CSS de impressão é escopado em `#osImpressao ...`**, a 2ª via — que o
+JavaScript insere em `#osVia2` — passava a ficar fora desse escopo e não recebia estilo nenhum.
+
+### Arquivos Alterados
+
+| Arquivo | Alteração |
+|---|---|
+| `Views/Orcamento/Ver.cshtml` | `</div>` sobrando removido do bloco de aparelhos |
+
+### Resultado
+Balanço de `<div>`/`</div>` conferido (52 para 52 a partir da moldura) e PDF regerado: **uma folha
+A4, duas vias formatadas**, com a linha de corte entre elas e o bloco de pagamento em ambas.
+
+---
+
+## [2026-08-11] Vários aparelhos por OS e bloco de pagamento
+
+### Problema
+Dois casos reais que a tela não cobria: o cliente que deixa **mais de um aparelho** na mesma visita
+(abrir uma OS por aparelho separaria o que é um atendimento só) e o cliente que deixa um **haver**
+— adiantamento — que só cabia como texto solto no diagnóstico. Desconto, forma de pagamento e
+parcelamento também não existiam em lugar nenhum.
+
+### Solução
+
+**Aparelhos** viraram uma tabela própria (`AparelhoOs`), com botão **+** no cabeçalho da seção.
+Limite de **5 por ordem**: não é técnico, é o que cabe nas duas vias impressas na mesma A4 sem a
+escala automática deixar o texto ilegível.
+
+**Pagamento** ganhou seção própria, com as contas explícitas na tela e no papel:
+
+```
+Subtotal dos itens          R$ 800,00
+Desconto (10%)            − R$  80,00
+Haver deixado pelo cliente− R$ 200,00
+Falta pagar                 R$ 520,00     →  3x de R$ 173,33
+```
+
+Desconto aceita **% ou R$** (seletor ao lado do campo), forma de pagamento cobre dinheiro, PIX,
+débito, crédito e "a combinar", e o parcelamento mostra o valor da parcela enquanto se digita.
+
+### Arquivos Alterados
+
+| Arquivo | Alteração |
+|---|---|
+| `Models/AparelhoOs.cs` | **novo** |
+| `Models/OrdemServico.cs` | aparelhos em coleção; campos de pagamento; contas (`Subtotal`, `DescontoEmReais`, `Total`, `SaldoAPagar`, `ValorParcela`) |
+| `Controllers/OrcamentoController.cs` | recebe aparelhos em array e os dados de pagamento |
+| `Views/Orcamento/Add.cshtml` | botão **+**, blocos de aparelho dinâmicos, seção Pagamento com resumo ao vivo |
+| `Views/Orcamento/Ver.cshtml` | uma linha por aparelho; subtotal, desconto, haver e falta pagar; bloco Pagamento |
+| `Views/Orcamento/Index.cshtml` | coluna Aparelho mostra "Galaxy A54 +1" quando há mais de um |
+| `wwwroot/js/orcamento.js` | blocos de aparelho e cálculo do pagamento |
+| Migration `AparelhosEPagamentoOs` | tabela nova + colunas de pagamento |
+
+### A migração preserva dados
+O scaffold do EF gerou os `DropColumn` **antes** do `CreateTable`, o que apagaria os aparelhos já
+cadastrados. Reordenei: cria a tabela, copia os dados com `INSERT ... SELECT`, e só então remove as
+colunas antigas. Testado numa cópia do banco real: as duas ordens existentes tiveram seus aparelhos
+migrados intactos.
+
+### Detalhe que evitou um bug
+O campo de número de série usa `readonly`, não `disabled`, quando "Sem número" está marcado. Campo
+desabilitado não é enviado no formulário, e isso desalinharia os arrays de aparelhos no servidor —
+o aparelho 2 receberia a série do 3.
+
+### Resultado
+Testado numa cópia do banco real: OS com 2 aparelhos (um sem número de série), 2 itens somando
+R$ 800,00, 10% de desconto e R$ 200,00 de haver resultou em **R$ 520,00 a pagar em 3x de R$ 173,33**
+— conta conferida na tela, no banco e no PDF, que continua saindo em **uma folha A4** com as duas
+vias.
+
+---
+
 ## [2026-08-10] Ordem de serviço editável
 
 ### Problema

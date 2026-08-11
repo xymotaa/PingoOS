@@ -164,13 +164,20 @@
         </div>
 
         <div class="os-bloco">
-            <div class="os-bloco-titulo">Aparelho</div>
-            <div class="os-linhas os-linhas-4">
-                <div><span class="os-rot">Tipo:</span> <span id="osDispTipo">@Traco(Model.DispositivoTipo)</span></div>
-                <div><span class="os-rot">Marca:</span> <span id="osDispMarca">@Traco(Model.DispositivoMarca)</span></div>
-                <div><span class="os-rot">Modelo:</span> <span id="osDispModelo">@Traco(Model.DispositivoModelo)</span></div>
-                <div><span class="os-rot">Nº de série:</span> <span id="osDispSerie">@(Model.SemNumeroSerie ? "Não possui" : Traco(Model.DispositivoSerie))</span></div>
-            </div>
+            <div class="os-bloco-titulo">@(Model.Aparelhos.Count > 1 ? "Aparelhos" : "Aparelho")</div>
+            @foreach (var ap in Model.Aparelhos)
+            {
+                <div class="os-linhas os-linhas-4">
+                    <div><span class="os-rot">Tipo:</span> @Traco(ap.Tipo)</div>
+                    <div><span class="os-rot">Marca:</span> @Traco(ap.Marca)</div>
+                    <div><span class="os-rot">Modelo:</span> @Traco(ap.Modelo)</div>
+                    <div><span class="os-rot">Nº de série:</span> @(ap.SemNumeroSerie ? "Não possui" : Traco(ap.NumeroSerie))</div>
+                </div>
+            }
+            @if (Model.Aparelhos.Count == 0)
+            {
+                <div class="os-linhas"><div>—</div></div>
+            }
         </div>
 
         <div class="os-bloco">
@@ -202,12 +209,58 @@
                 </tbody>
                 <tfoot>
                     <tr>
+                        <td colspan="3" style="text-align:right">Subtotal</td>
+                        <td style="text-align:right">@Moeda(Model.Subtotal)</td>
+                    </tr>
+                    @if (Model.DescontoEmReais > 0)
+                    {
+                        <tr>
+                            <td colspan="3" style="text-align:right">
+                                Desconto@(Model.DescontoTipo == "percentual" ? $" ({Model.Desconto:0.##}%)" : "")
+                            </td>
+                            <td style="text-align:right">− @Moeda(Model.DescontoEmReais)</td>
+                        </tr>
+                    }
+                    <tr>
                         <td colspan="3" style="text-align:right;font-weight:700">Total do orçamento</td>
                         <td id="osTotal" style="text-align:right;font-weight:700">@Moeda(Model.Total)</td>
                     </tr>
+                    @if (Model.Sinal > 0)
+                    {
+                        <tr>
+                            <td colspan="3" style="text-align:right">Haver deixado pelo cliente</td>
+                            <td style="text-align:right">− @Moeda(Model.Sinal)</td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" style="text-align:right;font-weight:700">Falta pagar</td>
+                            <td style="text-align:right;font-weight:700">@Moeda(Model.SaldoAPagar)</td>
+                        </tr>
+                    }
                 </tfoot>
             </table>
         </div>
+
+        @if (!string.IsNullOrEmpty(Model.FormaPagamento) || Model.Parcelado)
+        {
+            <div class="os-bloco">
+                <div class="os-bloco-titulo">Pagamento</div>
+                <div class="os-linhas">
+                    <div>
+                        <span class="os-rot">Forma:</span>
+                        @(Model.FormaPagamento switch {
+                            "dinheiro" => "Dinheiro", "pix" => "PIX",
+                            "debito" => "Cartão de débito", "credito" => "Cartão de crédito",
+                            _ => "A combinar" })
+                    </div>
+                    <div>
+                        <span class="os-rot">Parcelamento:</span>
+                        @(Model.Parcelado && Model.QuantidadeParcelas > 1
+                            ? $"{Model.QuantidadeParcelas}x de {Moeda(Model.ValorParcela)}"
+                            : "À vista")
+                    </div>
+                </div>
+            </div>
+        }
 
         <div class="os-bloco os-termos">
             <div class="os-bloco-titulo">Termos e condições do serviço</div>

@@ -2,6 +2,10 @@ namespace ListasCompras.Models;
 
 public class OrdemServico
 {
+    // Um cliente com muitos aparelhos é raro; o limite existe porque cada aparelho
+    // ocupa uma linha nas duas vias impressas na mesma folha A4.
+    public const int MaximoAparelhos = 5;
+
     public int Id { get; set; }
 
     // Número sequencial da loja (OS-000001). Antes vinha do relógio no JavaScript
@@ -19,26 +23,49 @@ public class OrdemServico
     public int? UsuarioId { get; set; }
     public Usuario? Usuario { get; set; }
 
-    public string? DispositivoTipo { get; set; }
-    public string? DispositivoMarca { get; set; }
-    public string? DispositivoModelo { get; set; }
-    public string? DispositivoSerie { get; set; }
-    public bool SemNumeroSerie { get; set; }
-
     public string? Diagnostico { get; set; }
 
+    public ICollection<AparelhoOs> Aparelhos { get; set; } = new List<AparelhoOs>();
     public ICollection<ItemOrdemServico> Itens { get; set; } = new List<ItemOrdemServico>();
 
-    public decimal Total => Itens.Sum(i => i.Total);
+    // ===== Pagamento =====
 
-    public string DispositivoResumo
+    /// <summary>Adiantamento que o cliente deixou na entrada (o "haver").</summary>
+    public decimal Sinal { get; set; }
+
+    public decimal Desconto { get; set; }
+    public string DescontoTipo { get; set; } = TiposDesconto.Percentual;
+
+    public string? FormaPagamento { get; set; }
+    public bool Parcelado { get; set; }
+    public int Parcelas { get; set; } = 1;
+
+    // ===== Contas =====
+
+    public decimal Subtotal => Itens.Sum(i => i.Total);
+
+    public decimal DescontoEmReais => DescontoTipo == TiposDesconto.Valor
+        ? Math.Min(Desconto, Subtotal)
+        : Subtotal * (Math.Min(Desconto, 100m) / 100m);
+
+    public decimal Total => Subtotal - DescontoEmReais;
+
+    /// <summary>O que falta receber depois de abater o sinal.</summary>
+    public decimal SaldoAPagar => Math.Max(Total - Sinal, 0m);
+
+    public int QuantidadeParcelas => Parcelado && Parcelas > 1 ? Parcelas : 1;
+
+    public decimal ValorParcela => QuantidadeParcelas > 0
+        ? Math.Round(SaldoAPagar / QuantidadeParcelas, 2, MidpointRounding.AwayFromZero)
+        : SaldoAPagar;
+
+    public string AparelhosResumo
     {
         get
         {
-            var partes = new[] { DispositivoMarca, DispositivoModelo }
-                .Where(s => !string.IsNullOrWhiteSpace(s));
-            var resumo = string.Join(" ", partes);
-            return string.IsNullOrWhiteSpace(resumo) ? (DispositivoTipo ?? "—") : resumo;
+            if (Aparelhos.Count == 0) return "—";
+            var primeiro = Aparelhos.First().Resumo;
+            return Aparelhos.Count == 1 ? primeiro : $"{primeiro} +{Aparelhos.Count - 1}";
         }
     }
 }
@@ -63,4 +90,10 @@ public static class Situacoes
     public const string Entregue = "Entregue";
 
     public static readonly string[] Todas = { Aberta, Pronta, Entregue };
+}
+
+public static class TiposDesconto
+{
+    public const string Percentual = "percentual";
+    public const string Valor = "valor";
 }

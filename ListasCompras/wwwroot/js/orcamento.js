@@ -92,6 +92,106 @@ document.addEventListener("DOMContentLoaded", function () {
         recalcular();
     });
 
+
+    // ===== Aparelhos: o cliente pode deixar mais de um na mesma visita =====
+
+    const aparelhosBody = document.getElementById("aparelhosBody");
+    const adicionarAparelhoBtn = document.getElementById("adicionarAparelhoBtn");
+    const aparelhosLimite = document.getElementById("aparelhosLimite");
+    const maxAparelhos = (typeof MAX_APARELHOS === "number") ? MAX_APARELHOS : 5;
+
+    function blocoAparelho(dados, indice) {
+        const d = dados || { tipo: "", marca: "", modelo: "", serie: "", semSerie: false };
+        const div = document.createElement("div");
+        div.className = "bloco-aparelho";
+        div.innerHTML =
+            '<div class="flex items-center justify-between gap-sm mb-xs">' +
+                '<span class="font-label-md text-label-md text-outline uppercase tracking-wider">Aparelho ' + (indice + 1) + '</span>' +
+                '<button type="button" class="remover-aparelho w-7 h-7 rounded-lg hover:bg-error-container inline-flex items-center justify-center text-outline transition-colors" title="Remover este aparelho">' +
+                    '<span class="material-symbols-outlined text-[18px]">delete</span>' +
+                '</button>' +
+            '</div>' +
+            '<div class="grid grid-cols-1 md:grid-cols-12 gap-md">' +
+                campo(3, "Tipo de aparelho", "aparelhoTipo", d.tipo, "Ex: Celular, Tablet, Notebook") +
+                campo(3, "Marca", "aparelhoMarca", d.marca, "Ex: Samsung, Apple, Xiaomi") +
+                campo(3, "Modelo", "aparelhoModelo", d.modelo, "Ex: Galaxy A54") +
+                '<div class="md:col-span-3">' +
+                    '<div class="flex items-center justify-between gap-sm">' +
+                        '<label class="font-label-md text-label-md text-on-surface-variant">Número de série / IMEI</label>' +
+                        '<label class="flex items-center gap-xs cursor-pointer shrink-0">' +
+                            '<input type="checkbox" class="sem-serie w-4 h-4 accent-secondary"' + (d.semSerie ? " checked" : "") + ' />' +
+                            '<span class="font-label-sm text-label-sm text-outline">Sem número</span>' +
+                        '</label>' +
+                    '</div>' +
+                    '<input type="text" name="aparelhoSerie" value="' + escapar(d.serie) + '" class="serie w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30 disabled:opacity-50" />' +
+                    '<input type="hidden" name="aparelhoSemSerie" class="sem-serie-post" value="' + (d.semSerie ? "1" : "0") + '" />' +
+                '</div>' +
+            '</div>';
+        return div;
+    }
+
+    function campo(cols, rotulo, nome, valor, dica) {
+        return '<div class="md:col-span-' + cols + '">' +
+            '<label class="font-label-md text-label-md text-on-surface-variant">' + rotulo + '</label>' +
+            '<input type="text" name="' + nome + '" value="' + escapar(valor) + '" placeholder="' + dica + '" ' +
+            'class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />' +
+        '</div>';
+    }
+
+    function escapar(v) {
+        return String(v || "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+    }
+
+    function renumerarAparelhos() {
+        const blocos = aparelhosBody.querySelectorAll(".bloco-aparelho");
+        blocos.forEach(function (b, i) {
+            b.querySelector("span").textContent = "Aparelho " + (i + 1);
+            // Com um aparelho só não faz sentido oferecer remover
+            b.querySelector(".remover-aparelho").classList.toggle("hidden", blocos.length === 1);
+            b.classList.toggle("pt-md", i > 0);
+            b.classList.toggle("border-t", i > 0);
+            b.classList.toggle("border-outline-variant", i > 0);
+        });
+        adicionarAparelhoBtn.classList.toggle("hidden", blocos.length >= maxAparelhos);
+        aparelhosLimite.classList.toggle("hidden", blocos.length < maxAparelhos);
+    }
+
+    function adicionarAparelho(dados) {
+        const blocos = aparelhosBody.querySelectorAll(".bloco-aparelho").length;
+        if (blocos >= maxAparelhos) return;
+        aparelhosBody.appendChild(blocoAparelho(dados, blocos));
+        renumerarAparelhos();
+    }
+
+    adicionarAparelhoBtn.addEventListener("click", function () { adicionarAparelho(null); });
+
+    aparelhosBody.addEventListener("click", function (e) {
+        const remover = e.target.closest(".remover-aparelho");
+        if (!remover) return;
+        remover.closest(".bloco-aparelho").remove();
+        renumerarAparelhos();
+    });
+
+    // "Sem número de série": desabilita o campo e marca o que vai para o servidor
+    aparelhosBody.addEventListener("change", function (e) {
+        if (!e.target.matches(".sem-serie")) return;
+        const bloco = e.target.closest(".bloco-aparelho");
+        const serie = bloco.querySelector(".serie");
+        // readonly em vez de disabled: campo desabilitado não é enviado e desalinharia
+        // os arrays de aparelhos no servidor
+        serie.readOnly = e.target.checked;
+        serie.classList.toggle("opacity-50", e.target.checked);
+        if (e.target.checked) serie.value = "";
+        bloco.querySelector(".sem-serie-post").value = e.target.checked ? "1" : "0";
+    });
+
+    (typeof APARELHOS !== "undefined" && APARELHOS.length ? APARELHOS : [null]).forEach(adicionarAparelho);
+    aparelhosBody.querySelectorAll(".sem-serie:checked").forEach(function (c) {
+        const serie = c.closest(".bloco-aparelho").querySelector(".serie");
+        serie.readOnly = true;
+        serie.classList.add("opacity-50");
+    });
+
     // ===== Cliente: os dados vêm do cadastro, não são digitados aqui =====
 
     const modalCliente = document.getElementById("modalCliente");
@@ -195,14 +295,6 @@ document.addEventListener("DOMContentLoaded", function () {
         buscaTimer = window.setTimeout(function () { procurarClientes(buscaClienteInput.value); }, 250);
     });
 
-    // "Sem número de série / IMEI": desabilita o campo
-    const dispositivoSemSerie = document.getElementById("dispositivoSemSerie");
-    const dispositivoSerie = document.getElementById("dispositivoSerie");
-    dispositivoSemSerie.addEventListener("change", function () {
-        dispositivoSerie.disabled = dispositivoSemSerie.checked;
-        if (dispositivoSemSerie.checked) dispositivoSerie.value = "";
-    });
-
     document.getElementById("formOs").addEventListener("submit", function (e) {
         if (!document.getElementById("clienteId").value) {
             e.preventDefault();
@@ -218,6 +310,64 @@ document.addEventListener("DOMContentLoaded", function () {
             mostrarToast("Adicione ao menos um item ao orçamento.", true);
         }
     });
+
+
+    // ===== Pagamento: haver, desconto e parcelamento =====
+
+    const temSinal = document.getElementById("temSinal");
+    const sinalVisivel = document.getElementById("sinalVisivel");
+    const sinalPost = document.getElementById("sinal");
+    const descontoVisivel = document.getElementById("descontoVisivel");
+    const descontoPost = document.getElementById("desconto");
+    const descontoTipo = document.getElementById("descontoTipo");
+    const parcelado = document.getElementById("parcelado");
+    const parcelas = document.getElementById("parcelas");
+    const valorParcela = document.getElementById("valorParcela");
+
+    function recalcularPagamento() {
+        const subtotal = somaItens();
+        const descontoBruto = parseDecimal(descontoVisivel.value);
+        const descontoReais = descontoTipo.value === "valor"
+            ? Math.min(descontoBruto, subtotal)
+            : subtotal * (Math.min(descontoBruto, 100) / 100);
+
+        const total = subtotal - descontoReais;
+        const sinal = temSinal.checked ? parseDecimal(sinalVisivel.value) : 0;
+        const saldo = Math.max(total - sinal, 0);
+
+        document.getElementById("resumoSubtotal").textContent = formatBRL(subtotal);
+        document.getElementById("resumoDesconto").textContent = "− " + formatBRL(descontoReais);
+        document.getElementById("resumoSinal").textContent = "− " + formatBRL(sinal);
+        document.getElementById("resumoSaldo").textContent = formatBRL(saldo);
+
+        sinalVisivel.readOnly = !temSinal.checked;
+        sinalVisivel.classList.toggle("opacity-50", !temSinal.checked);
+        parcelas.disabled = !parcelado.checked;
+
+        const n = parcelado.checked ? parseInt(parcelas.value, 10) || 1 : 1;
+        valorParcela.textContent = n > 1 ? n + "x de " + formatBRL(saldo / n) : "À vista";
+
+        // Sempre com ponto decimal para o servidor
+        sinalPost.value = sinal.toFixed(2);
+        descontoPost.value = descontoBruto.toFixed(2);
+    }
+
+    function somaItens() {
+        let total = 0;
+        itensBody.querySelectorAll("tr").forEach(function (tr) {
+            const qtd = parseInt(tr.querySelector(".item-qtd").value, 10) || 0;
+            total += qtd * parseDecimal(tr.querySelector(".item-valor").value);
+        });
+        return total;
+    }
+
+    [temSinal, sinalVisivel, descontoVisivel, descontoTipo, parcelado, parcelas].forEach(function (el) {
+        el.addEventListener("input", recalcularPagamento);
+        el.addEventListener("change", recalcularPagamento);
+    });
+    itensBody.addEventListener("input", recalcularPagamento);
+    itensBody.addEventListener("click", recalcularPagamento);
+    recalcularPagamento();
 
     // Ao editar, o cliente já vem escolhido: o botão vira o de trocar
     if (document.getElementById("clienteId").value) {

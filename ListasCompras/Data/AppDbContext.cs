@@ -18,6 +18,7 @@ public class AppDbContext : DbContext
     public DbSet<Cliente> Clientes { get; set; }
     public DbSet<OrdemServico> OrdensServico { get; set; }
     public DbSet<ItemOrdemServico> ItensOrdemServico { get; set; }
+    public DbSet<AparelhoOs> AparelhosOs { get; set; }
     public DbSet<ProdutoEstoque> ProdutosEstoque { get; set; }
     public DbSet<MovimentacaoEstoque> MovimentacoesEstoque { get; set; }
     public DbSet<Venda> Vendas { get; set; }
@@ -38,7 +39,17 @@ public class AppDbContext : DbContext
             .HasIndex(c => c.Nome);
 
         // Totais são somados em memória, não são colunas
-        modelBuilder.Entity<OrdemServico>().Ignore(o => o.Total).Ignore(o => o.DispositivoResumo);
+        modelBuilder.Entity<OrdemServico>()
+            .Ignore(o => o.Subtotal).Ignore(o => o.DescontoEmReais).Ignore(o => o.Total)
+            .Ignore(o => o.SaldoAPagar).Ignore(o => o.QuantidadeParcelas).Ignore(o => o.ValorParcela)
+            .Ignore(o => o.AparelhosResumo);
+        modelBuilder.Entity<AparelhoOs>().Ignore(a => a.Resumo);
+
+        modelBuilder.Entity<AparelhoOs>()
+            .HasOne(a => a.OrdemServico)
+            .WithMany(o => o.Aparelhos)
+            .HasForeignKey(a => a.OrdemServicoId)
+            .OnDelete(DeleteBehavior.Cascade);
         modelBuilder.Entity<ItemOrdemServico>().Ignore(i => i.Total);
 
         modelBuilder.Entity<OrdemServico>()

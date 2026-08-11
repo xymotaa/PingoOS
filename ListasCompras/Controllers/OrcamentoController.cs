@@ -16,6 +16,7 @@ public class OrcamentoController : LojaControllerBase
         var ordens = Context.OrdensServico
             .Include(o => o.Cliente)
             .Include(o => o.Itens)
+            .Include(o => o.Aparelhos)
             .OrderByDescending(o => o.Id)
             .ToList();
 
@@ -31,6 +32,7 @@ public class OrcamentoController : LojaControllerBase
         var ordem = Context.OrdensServico
             .Include(o => o.Cliente)
             .Include(o => o.Itens)
+            .Include(o => o.Aparelhos)
             .FirstOrDefault(o => o.Id == id.Value);
 
         if (ordem == null) return NotFound();
@@ -43,6 +45,7 @@ public class OrcamentoController : LojaControllerBase
             .Include(o => o.Cliente)
             .Include(o => o.Usuario)
             .Include(o => o.Itens)
+            .Include(o => o.Aparelhos)
             .FirstOrDefault(o => o.Id == id);
 
         if (ordem == null) return NotFound();
@@ -52,9 +55,11 @@ public class OrcamentoController : LojaControllerBase
     [HttpPost]
     [ValidateAntiForgeryToken]
     public IActionResult Salvar(
-        int id, int clienteId,
-        string? dispositivoTipo, string? dispositivoMarca, string? dispositivoModelo,
-        string? dispositivoSerie, bool semNumeroSerie, string? diagnostico,
+        int id, int clienteId, string? diagnostico,
+        string[]? aparelhoTipo, string[]? aparelhoMarca, string[]? aparelhoModelo,
+        string[]? aparelhoSerie, string[]? aparelhoSemSerie,
+        string? sinal, string? desconto, string? descontoTipo,
+        string? formaPagamento, bool parcelado, int parcelas,
         // Valor chega como texto e é convertido com cultura invariante de propósito: o binding
         // do .NET usa a cultura do sistema, e num Windows/Linux em pt-BR "620.00" viraria 62000.
         string[]? itemDescricao, int[]? itemQuantidade, string[]? itemValor)
@@ -66,7 +71,7 @@ public class OrcamentoController : LojaControllerBase
         }
 
         var ordem = id > 0
-            ? Context.OrdensServico.Include(o => o.Itens).FirstOrDefault(o => o.Id == id)
+            ? Context.OrdensServico.Include(o => o.Itens).Include(o => o.Aparelhos).FirstOrDefault(o => o.Id == id)
             : null;
         if (id > 0 && ordem == null) return NotFound();
 
@@ -81,18 +86,46 @@ public class OrcamentoController : LojaControllerBase
         }
         else
         {
-            // Os itens são substituídos pelos que vieram do formulário
+            // Itens e aparelhos são substituídos pelos que vieram do formulário
             Context.ItensOrdemServico.RemoveRange(ordem!.Itens);
             ordem.Itens.Clear();
+            Context.AparelhosOs.RemoveRange(ordem.Aparelhos);
+            ordem.Aparelhos.Clear();
         }
 
         ordem!.ClienteId = clienteId;
-        ordem.DispositivoTipo = Limpar(dispositivoTipo);
-        ordem.DispositivoMarca = Limpar(dispositivoMarca);
-        ordem.DispositivoModelo = Limpar(dispositivoModelo);
-        ordem.DispositivoSerie = semNumeroSerie ? null : Limpar(dispositivoSerie);
-        ordem.SemNumeroSerie = semNumeroSerie;
         ordem.Diagnostico = Limpar(diagnostico);
+
+        ordem.Sinal = ParaDecimal(sinal);
+        ordem.Desconto = ParaDecimal(desconto);
+        ordem.DescontoTipo = descontoTipo == TiposDesconto.Valor ? TiposDesconto.Valor : TiposDesconto.Percentual;
+        ordem.FormaPagamento = Limpar(formaPagamento);
+        ordem.Parcelado = parcelado;
+        ordem.Parcelas = parcelado ? Math.Clamp(parcelas, 1, 24) : 1;
+
+        // Aparelhos: um cliente pode deixar mais de um na mesma visita
+        if (aparelhoModelo != null)
+        {
+            for (var i = 0; i < aparelhoModelo.Length && ordem.Aparelhos.Count < OrdemServico.MaximoAparelhos; i++)
+            {
+                var tipo = Limpar(Em(aparelhoTipo, i));
+                var marca = Limpar(Em(aparelhoMarca, i));
+                var modelo = Limpar(aparelhoModelo[i]);
+                var semSerie = Em(aparelhoSemSerie, i) == "1";
+
+                // Bloco vazio do formulário não vira aparelho
+                if (tipo == null && marca == null && modelo == null) continue;
+
+                ordem.Aparelhos.Add(new AparelhoOs
+                {
+                    Tipo = tipo,
+                    Marca = marca,
+                    Modelo = modelo,
+                    NumeroSerie = semSerie ? null : Limpar(Em(aparelhoSerie, i)),
+                    SemNumeroSerie = semSerie,
+                });
+            }
+        }
 
         if (itemDescricao != null)
         {
@@ -186,6 +219,9 @@ public class OrcamentoController : LojaControllerBase
     {
         return decimal.TryParse(valor, NumberStyles.Number, CultureInfo.InvariantCulture, out var d) ? d : 0m;
     }
+
+    private static string? Em(string[]? lista, int i)
+        => lista != null && i < lista.Length ? lista[i] : null;
 
     private static string? Limpar(string? valor)
     {

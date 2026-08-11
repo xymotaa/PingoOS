@@ -107,34 +107,22 @@
 
             <!-- Dados do dispositivo -->
             <section class="bg-white rounded-xl border border-outline-variant shadow-sm p-lg">
-                <div class="flex items-center gap-sm mb-md">
-                    <span class="material-symbols-outlined text-[20px] text-secondary">smartphone</span>
-                    <h2 class="font-title-lg text-title-lg text-primary">Dados do dispositivo</h2>
+                <div class="flex items-center justify-between gap-sm mb-md">
+                    <div class="flex items-center gap-sm">
+                        <span class="material-symbols-outlined text-[20px] text-secondary">smartphone</span>
+                        <h2 class="font-title-lg text-title-lg text-primary">Dados do dispositivo</h2>
+                    </div>
+                    <button id="adicionarAparelhoBtn" type="button" title="Adicionar outro aparelho a esta OS"
+                            class="w-9 h-9 rounded-lg bg-secondary text-white flex items-center justify-center hover:bg-opacity-90 transition-colors shrink-0">
+                        <span class="material-symbols-outlined text-[20px]">add</span>
+                    </button>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-12 gap-md">
-                    <div class="md:col-span-3">
-                        <label class="font-label-md text-label-md text-on-surface-variant" for="dispositivoTipo">Tipo de aparelho</label>
-                        <input id="dispositivoTipo" name="dispositivoTipo" type="text" placeholder="Ex: Celular, Tablet, Notebook" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" value="@Model.DispositivoTipo" />
-                    </div>
-                    <div class="md:col-span-3">
-                        <label class="font-label-md text-label-md text-on-surface-variant" for="dispositivoMarca">Marca</label>
-                        <input id="dispositivoMarca" name="dispositivoMarca" type="text" placeholder="Ex: Samsung, Apple, Xiaomi" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" value="@Model.DispositivoMarca" />
-                    </div>
-                    <div class="md:col-span-3">
-                        <label class="font-label-md text-label-md text-on-surface-variant" for="dispositivoModelo">Modelo</label>
-                        <input id="dispositivoModelo" name="dispositivoModelo" type="text" placeholder="Ex: Galaxy A54" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" value="@Model.DispositivoModelo" />
-                    </div>
-                    <div class="md:col-span-3">
-                        <div class="flex items-center justify-between gap-sm">
-                            <label class="font-label-md text-label-md text-on-surface-variant" for="dispositivoSerie">Número de série / IMEI</label>
-                            <label class="flex items-center gap-xs cursor-pointer shrink-0">
-                                <input id="dispositivoSemSerie" name="semNumeroSerie" type="checkbox" checked="@Model.SemNumeroSerie" class="w-4 h-4 accent-secondary" />
-                                <span class="font-label-sm text-label-sm text-outline">Sem número</span>
-                            </label>
-                        </div>
-                        <input id="dispositivoSerie" name="dispositivoSerie" type="text" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30 disabled:opacity-50 disabled:cursor-not-allowed" value="@Model.DispositivoSerie" />
-                    </div>
-                </div>
+
+                <div id="aparelhosBody" class="flex flex-col gap-md"></div>
+
+                <p id="aparelhosLimite" class="hidden mt-sm font-label-sm text-label-sm text-outline">
+                    Limite de @ListasCompras.Models.OrdemServico.MaximoAparelhos aparelhos por ordem — é o que cabe nas duas vias impressas.
+                </p>
             </section>
 
             <!-- Diagnóstico -->
@@ -203,8 +191,97 @@
                     Nenhum item adicionado. Clique em "Adicionar Item" para incluir peças ou mão de obra.
                 </div>
                 <div class="px-lg py-md border-t border-outline-variant flex items-center justify-end gap-md">
-                    <span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Total do orçamento</span>
+                    <span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Subtotal</span>
                     <span id="totalGeral" class="font-title-lg text-title-lg font-bold text-primary">R$ 0,00</span>
+                </div>
+            </section>
+
+            <!-- Pagamento -->
+            <section class="bg-white rounded-xl border border-outline-variant shadow-sm p-lg">
+                <div class="flex items-center gap-sm mb-md">
+                    <span class="material-symbols-outlined text-[20px] text-secondary">payments</span>
+                    <h2 class="font-title-lg text-title-lg text-primary">Pagamento</h2>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-md">
+
+                    <!-- Sinal (haver) -->
+                    <div class="md:col-span-4">
+                        <label class="flex items-center gap-xs cursor-pointer">
+                            <input id="temSinal" type="checkbox" class="w-4 h-4 accent-secondary" @(Model.Sinal > 0 ? "checked" : "") />
+                            <span class="font-label-md text-label-md text-on-surface-variant">Cliente deixou um haver (adiantamento)</span>
+                        </label>
+                        <input id="sinalVisivel" type="text" inputmode="decimal" placeholder="0,00"
+                               value="@(Model.Sinal > 0 ? Decimal(Model.Sinal) : "")"
+                               class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30 disabled:opacity-50" />
+                        <input type="hidden" name="sinal" id="sinal" value="0" />
+                    </div>
+
+                    <!-- Desconto -->
+                    <div class="md:col-span-4">
+                        <label class="font-label-md text-label-md text-on-surface-variant" for="descontoVisivel">Desconto</label>
+                        <div class="mt-xs flex gap-sm">
+                            <input id="descontoVisivel" type="text" inputmode="decimal" placeholder="0,00"
+                                   value="@(Model.Desconto > 0 ? Decimal(Model.Desconto) : "")"
+                                   class="flex-1 min-w-0 bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                            <select id="descontoTipo" name="descontoTipo"
+                                    class="bg-surface-container-low border-none rounded-lg pl-md pr-10 py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30">
+                                <option value="percentual" selected="@(Model.DescontoTipo != "valor")">%</option>
+                                <option value="valor" selected="@(Model.DescontoTipo == "valor")">R$</option>
+                            </select>
+                        </div>
+                        <input type="hidden" name="desconto" id="desconto" value="0" />
+                    </div>
+
+                    <!-- Forma de pagamento -->
+                    <div class="md:col-span-4">
+                        <label class="font-label-md text-label-md text-on-surface-variant" for="formaPagamento">Forma de pagamento</label>
+                        <select id="formaPagamento" name="formaPagamento"
+                                class="w-full mt-xs bg-surface-container-low border-none rounded-lg pl-md pr-10 py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30">
+                            <option value="" selected="@string.IsNullOrEmpty(Model.FormaPagamento)">A combinar</option>
+                            <option value="dinheiro" selected="@(Model.FormaPagamento == "dinheiro")">Dinheiro</option>
+                            <option value="pix" selected="@(Model.FormaPagamento == "pix")">PIX</option>
+                            <option value="debito" selected="@(Model.FormaPagamento == "debito")">Cartão de débito</option>
+                            <option value="credito" selected="@(Model.FormaPagamento == "credito")">Cartão de crédito</option>
+                        </select>
+                    </div>
+
+                    <!-- Parcelamento -->
+                    <div class="md:col-span-4">
+                        <label class="flex items-center gap-xs cursor-pointer">
+                            <input id="parcelado" name="parcelado" value="true" type="checkbox" class="w-4 h-4 accent-secondary" @(Model.Parcelado ? "checked" : "") />
+                            <span class="font-label-md text-label-md text-on-surface-variant">Parcelado</span>
+                        </label>
+                        <div class="mt-xs flex items-center gap-sm">
+                            <select id="parcelas" name="parcelas"
+                                    class="bg-surface-container-low border-none rounded-lg pl-md pr-10 py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30 disabled:opacity-50">
+                                @for (var n = 2; n <= 12; n++)
+                                {
+                                    <option value="@n" selected="@(Model.Parcelas == n)">@n vezes</option>
+                                }
+                            </select>
+                            <span id="valorParcela" class="font-body-md text-body-md text-on-surface-variant"></span>
+                        </div>
+                    </div>
+
+                    <!-- Resumo das contas -->
+                    <div class="md:col-span-8">
+                        <div class="bg-surface-container-low rounded-lg p-md flex flex-col gap-xs">
+                            <div class="flex justify-between font-body-md text-body-md text-on-surface-variant">
+                                <span>Subtotal dos itens</span><span id="resumoSubtotal">R$ 0,00</span>
+                            </div>
+                            <div class="flex justify-between font-body-md text-body-md text-on-surface-variant">
+                                <span>Desconto</span><span id="resumoDesconto">− R$ 0,00</span>
+                            </div>
+                            <div class="flex justify-between font-body-md text-body-md text-on-surface-variant">
+                                <span>Haver deixado pelo cliente</span><span id="resumoSinal">− R$ 0,00</span>
+                            </div>
+                            <hr class="border-outline-variant" />
+                            <div class="flex justify-between font-title-lg text-title-lg font-bold text-primary">
+                                <span>Falta pagar</span><span id="resumoSaldo">R$ 0,00</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
 
@@ -255,6 +332,12 @@
         </div>
     </div>
 
+    <script>
+        const APARELHOS = @Html.Raw(Json.Serialize(Model.Aparelhos.Select(a => new {
+            tipo = a.Tipo ?? "", marca = a.Marca ?? "", modelo = a.Modelo ?? "",
+            serie = a.NumeroSerie ?? "", semSerie = a.SemNumeroSerie })));
+        const MAX_APARELHOS = @ListasCompras.Models.OrdemServico.MaximoAparelhos;
+    </script>
     <script src="~/js/orcamento.js" asp-append-version="true"></script>
 </body>
 </html>
