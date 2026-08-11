@@ -1,5 +1,29 @@
 # Registro de Alterações
 
+## [2026-08-11] Cancelar da OS ia para o painel; botão de aparelho e assinatura
+
+### Problema
+O "Cancelar" do formulário de ordem de serviço apontava para `Home/Index` — largava o usuário no
+painel em vez de devolvê-lo à lista de ordens. Era o único formulário do sistema com esse destino:
+Cliente, Estoque e Novo usuário já voltavam para a própria listagem.
+
+### Arquivos Alterados
+
+| Arquivo | Alteração |
+|---|---|
+| `Views/Orcamento/Add.cshtml` | Cancelar → `Orcamento/Index`; botão de aparelho ganhou o rótulo "Adicionar aparelho", no mesmo formato do "Adicionar Item" |
+| `Views/Orcamento/Ver.cshtml` | a linha de assinatura do cliente mostra **o nome dele** em vez do rótulo genérico |
+
+Na OS impressa as duas assinaturas ficam simétricas: de um lado o nome do cliente, do outro o do
+técnico que emitiu — cada um assina sobre o próprio nome.
+
+### Sobre o "Salvar"
+Verificado: salvar leva para `Orcamento/Ver/{id}` — a própria ordem recém-gravada, dentro do
+módulo, não para o painel. É de lá que se imprimem as duas vias. Se preferir cair na listagem em
+vez da OS, é uma linha no controller.
+
+---
+
 ## [2026-08-11] Correção: 2ª via da OS saía sem formatação
 
 ### Problema
