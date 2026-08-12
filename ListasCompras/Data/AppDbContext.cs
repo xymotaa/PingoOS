@@ -42,7 +42,18 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<OrdemServico>()
             .Ignore(o => o.Subtotal).Ignore(o => o.DescontoEmReais).Ignore(o => o.Total)
             .Ignore(o => o.SaldoAPagar).Ignore(o => o.QuantidadeParcelas).Ignore(o => o.ValorParcela)
-            .Ignore(o => o.AparelhosResumo);
+            .Ignore(o => o.AparelhosResumo)
+            .Ignore(o => o.GarantiaInicio).Ignore(o => o.GarantiaFim).Ignore(o => o.GarantiaIniciada)
+            .Ignore(o => o.GarantiaVigente).Ignore(o => o.DiasDeGarantiaRestantes)
+            .Ignore(o => o.SituacaoGarantia);
+
+        // Retorno em garantia aponta para a ordem original; excluir a original não
+        // pode apagar o retorno, que é o registro de que o problema voltou
+        modelBuilder.Entity<OrdemServico>()
+            .HasOne(o => o.OrdemOrigem)
+            .WithMany()
+            .HasForeignKey(o => o.OrdemOrigemId)
+            .OnDelete(DeleteBehavior.SetNull);
         modelBuilder.Entity<AparelhoOs>().Ignore(a => a.Resumo);
 
         modelBuilder.Entity<AparelhoOs>()

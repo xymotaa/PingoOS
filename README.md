@@ -38,6 +38,7 @@ lista de compras e está virando um ERP, módulo por módulo.
 | Ordem de Serviço / Orçamento | `OrcamentoController` | `/Orcamento` | ✅ Completo — banco, até 5 aparelhos, pagamento e impressão em duas vias |
 | Estoque | `EstoqueController` | `/Estoque` | ✅ Completo — telas + banco + histórico de movimentações |
 | Caixa | `CaixaController` | `/Caixa` | ✅ Completo — venda gravada e baixa automática do estoque |
+| Garantias | `GarantiaController` | `/Garantia` | ✅ Completo — prazo, vencimento e retorno em garantia |
 | Dashboards | `DashboardsController` | `/Dashboards` | 🚧 Placeholder "Em breve" |
 
 Cada módulo é construído **por partes**: primeiro as telas, o **banco de cada módulo fica para
@@ -56,9 +57,13 @@ esperando dados acumularem.
 |---|---|
 | ![Lista de compras](docs/screenshots/lista-compras.png) | ![Clientes](docs/screenshots/clientes.png) |
 
-| Vendas | Login |
+| Vendas | Garantias |
 |---|---|
-| ![Vendas](docs/screenshots/vendas.png) | ![Login](docs/screenshots/login.png) |
+| ![Vendas](docs/screenshots/vendas.png) | ![Garantias](docs/screenshots/garantias.png) |
+
+| Login |
+|---|
+| ![Login](docs/screenshots/login.png) |
 
 | Usuários |
 |---|
@@ -83,7 +88,10 @@ O módulo é o centro do sistema. Uma OS tem:
   ```
 
 - **Situação** Aberta → Pronta → Entregue, alterável em qualquer direção pela listagem ou pela
-  própria OS. A data de entrega é a que conta para a garantia.
+  própria OS.
+- **Garantia** de 90 dias por padrão (mínimo do CDC, art. 26, II), contada **a partir da entrega**.
+  A tela `/Garantia` lista as ordens entregues com os dias restantes e permite abrir um **retorno em
+  garantia** — uma OS nova, já com cliente e aparelhos preenchidos, ligada à original.
 - **Numeração sequencial** (`OS-000001`) gerada no servidor e **autoria**: o nome de quem emitiu
   aparece na linha de assinatura do técnico.
 
@@ -124,6 +132,18 @@ iniciais (categorias, marcas e modelos de celular) via `Data/SeedData.cs`.
 
 Para configurar o nome, logo, CNPJ e endereço da loja — que aparecem no cabeçalho da OS e do PDF
 — acesse **/Configuracao**.
+
+### Backup
+
+Em **/Configuracao** (visível só para administradores) há dois botões: **Baixar backup**, que gera
+um arquivo `.db` com tudo — clientes, ordens, estoque, vendas e usuários —, e **Restaurar backup**,
+que substitui os dados atuais pelos do arquivo.
+
+A restauração exige digitar `RESTAURAR` para confirmar, recusa arquivo que não seja um banco do
+Pingo OS, guarda o banco anterior ao lado do atual (`loja.db.antes-da-restauracao-...`) e encerra a
+sessão, já que o usuário logado pode não existir no backup.
+
+> Guarde a cópia **fora do computador da loja**. Um backup no mesmo HD que pode falhar não é backup.
 
 ### Como o acesso funciona
 

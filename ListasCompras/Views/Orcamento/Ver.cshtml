@@ -95,6 +95,43 @@
                         <text>· entregue em @Model.DataEntrega.Value.ToString("dd/MM/yyyy")</text>
                     }
                 </p>
+                <div class="mt-sm flex flex-wrap items-center gap-sm">
+                    @if (Model.GarantiaIniciada)
+                    {
+                        <span class="px-sm py-xs rounded-lg font-label-md text-label-md @(Model.GarantiaVigente ? "bg-secondary-container text-on-secondary-container" : "bg-surface-container-high text-on-surface-variant")">
+                            @if (Model.GarantiaVigente)
+                            {
+                                <text>Garantia vigente · vale até @Model.GarantiaFim?.ToString("dd/MM/yyyy") (@Model.DiasDeGarantiaRestantes dias)</text>
+                            }
+                            else
+                            {
+                                <text>Garantia vencida em @Model.GarantiaFim?.ToString("dd/MM/yyyy")</text>
+                            }
+                        </span>
+                        @if (Model.GarantiaVigente)
+                        {
+                            <a asp-action="RetornoGarantia" asp-route-id="@Model.Id"
+                               class="font-label-md text-label-md text-secondary font-bold hover:underline flex items-center gap-xs">
+                                <span class="material-symbols-outlined text-[18px]">assignment_return</span>
+                                Abrir retorno em garantia
+                            </a>
+                        }
+                    }
+                    else
+                    {
+                        <span class="px-sm py-xs rounded-lg font-label-md text-label-md bg-warning-container text-on-surface">
+                            Garantia de @Model.PrazoGarantiaDias dias — começa a contar na retirada
+                        </span>
+                    }
+                    @if (Model.OrdemOrigemId.HasValue)
+                    {
+                        <a asp-action="Ver" asp-route-id="@Model.OrdemOrigemId"
+                           class="font-label-md text-label-md text-secondary font-bold hover:underline">
+                            Retorno da @Model.OrdemOrigem?.Numero
+                        </a>
+                    }
+                </div>
+
                 <form asp-action="AlterarSituacao" method="post" class="mt-sm flex items-center gap-sm">
                     <input type="hidden" name="id" value="@Model.Id" />
                     <input type="hidden" name="retorno" value="Ver" />

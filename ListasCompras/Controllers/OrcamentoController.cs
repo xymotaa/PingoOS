@@ -46,6 +46,7 @@ public class OrcamentoController : LojaControllerBase
             .Include(o => o.Usuario)
             .Include(o => o.Itens)
             .Include(o => o.Aparelhos)
+            .Include(o => o.OrdemOrigem)
             .FirstOrDefault(o => o.Id == id);
 
         if (ordem == null) return NotFound();
@@ -59,7 +60,7 @@ public class OrcamentoController : LojaControllerBase
         string[]? aparelhoTipo, string[]? aparelhoMarca, string[]? aparelhoModelo,
         string[]? aparelhoSerie, string[]? aparelhoSemSerie,
         string? sinal, string? desconto, string? descontoTipo,
-        string? formaPagamento, bool parcelado, int parcelas,
+        string? formaPagamento, bool parcelado, int parcelas, int prazoGarantiaDias, int? ordemOrigemId,
         // Valor chega como texto e é convertido com cultura invariante de propósito: o binding
         // do .NET usa a cultura do sistema, e num Windows/Linux em pt-BR "620.00" viraria 62000.
         string[]? itemDescricao, int[]? itemQuantidade, string[]? itemValor)
@@ -102,6 +103,11 @@ public class OrcamentoController : LojaControllerBase
         ordem.FormaPagamento = Limpar(formaPagamento);
         ordem.Parcelado = parcelado;
         ordem.Parcelas = parcelado ? Math.Clamp(parcelas, 1, 24) : 1;
+
+        // 90 dias é o mínimo do CDC; a loja pode prometer mais, nunca menos
+        ordem.PrazoGarantiaDias = Math.Max(prazoGarantiaDias, OrdemServico.PrazoGarantiaPadrao);
+        if (novo && ordemOrigemId.HasValue && Context.OrdensServico.Any(o => o.Id == ordemOrigemId))
+            ordem.OrdemOrigemId = ordemOrigemId;
 
         // Aparelhos: um cliente pode deixar mais de um na mesma visita
         if (aparelhoModelo != null)
@@ -154,6 +160,38 @@ public class OrcamentoController : LojaControllerBase
             ? $"Ordem de serviço {ordem.Numero} salva."
             : $"Ordem de serviço {ordem.Numero} atualizada.";
         return RedirectToAction(nameof(Ver), new { id = ordem.Id });
+    }
+
+    // Abre uma OS nova já preenchida com o cliente e os aparelhos da original,
+    // marcada como retorno. O reparo em garantia não se cobra de novo.
+    public IActionResult RetornoGarantia(int id)
+    {
+        var original = Context.OrdensServico
+            .Include(o => o.Cliente)
+            .Include(o => o.Aparelhos)
+            .FirstOrDefault(o => o.Id == id);
+
+        if (original == null) return NotFound();
+
+        var retorno = new OrdemServico
+        {
+            ClienteId = original.ClienteId,
+            Cliente = original.Cliente,
+            OrdemOrigemId = original.Id,
+            OrdemOrigem = original,
+            Diagnostico = $"Retorno em garantia da {original.Numero}. Defeito relatado: ",
+        };
+
+        foreach (var ap in original.Aparelhos)
+        {
+            retorno.Aparelhos.Add(new AparelhoOs
+            {
+                Tipo = ap.Tipo, Marca = ap.Marca, Modelo = ap.Modelo,
+                NumeroSerie = ap.NumeroSerie, SemNumeroSerie = ap.SemNumeroSerie,
+            });
+        }
+
+        return View("Add", retorno);
     }
 
     [HttpPost]

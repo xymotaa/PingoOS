@@ -17,11 +17,13 @@ Três itens têm dependência entre si e **precisam ser feitos na sequência aba
 retrabalho garantido:
 
 ```
-✅ Clientes                          (feito em 2026-08-07)
-✅ Ordem de Serviço no banco         (feito em 2026-08-07, já com autoria)
-✅ Estoque e Caixa no banco          (feito em 2026-08-07, venda baixa o estoque)
+✅ Clientes                          (2026-08-07)
+✅ Ordem de Serviço no banco         (2026-08-07, já com autoria)
+✅ Estoque e Caixa no banco          (2026-08-07, venda baixa o estoque)
+✅ Garantias                         (2026-08-11, conta da data de entrega)
+✅ Backup pela tela                  (2026-08-11)
         ↓
-1. Garantia e anexos                 (penduram na OS, que já está gravada)
+1. Anexar fotos do aparelho          (pendura na OS, que já está gravada)
         ↓
 2. Financeiro e relatórios           (a venda já está gravada; falta somar)
 ```
@@ -33,28 +35,7 @@ cadastro de Clientes depois — o que obrigaria a migrar dados na marra. Por iss
 
 ## Alta prioridade
 
-### 1. Garantias
-**Falta porque** nós **imprimimos** 90 dias de garantia em toda Ordem de Serviço e não guardamos
-nada. O cliente volta dizendo "está na garantia" e não há como conferir a data, o que foi trocado,
-nem se já houve retorno pelo mesmo defeito. É um laço que abrimos e não fechamos.
-
-**O que envolve:** data de início (a retirada), prazo, vínculo com a OS e com as peças trocadas, e
-uma tela de consulta rápida por aparelho ou cliente. Barato depois que a OS estiver no banco.
-
-### 2. Backup do banco pela tela de Configuração
-**Falta porque** hoje o backup depende de a pessoa saber copiar `loja.db` pelo terminal — ou seja,
-na prática não acontece. Um dono de loja não vai fazer isso, e o banco guarda cadastro de clientes,
-ordens de serviço e histórico.
-
-**O que envolve:** um botão que devolve o `loja.db` como download, e outro que restaura a partir de
-um arquivo enviado. A parte delicada é a restauração: precisa fechar as conexões do EF Core antes
-de sobrescrever o arquivo, ou o SQLite recusa.
-
----
-
-## Média prioridade
-
-### 3. Catálogo de serviços com preço
+### 1. Catálogo de serviços com preço
 **Falta porque** os itens do orçamento são texto livre. Cada técnico escreve de um jeito e cobra o
 que lembra. Um catálogo ("troca de tela", "limpeza de placa") dá preço consistente e preenchimento
 rápido. É o módulo `Servicos` do MapOS.
@@ -62,7 +43,7 @@ rápido. É o módulo `Servicos` do MapOS.
 **O que envolve:** entidade simples (nome, valor padrão) e um seletor no formulário do Orçamento,
 mantendo a possibilidade de digitar item livre.
 
-### 4. Anexar fotos do aparelho
+### 2. Anexar fotos do aparelho
 **Falta porque** é proteção jurídica direta: fotografar o aparelho na entrada é a defesa contra
 "esse arranhão não estava aí". Reforça exatamente as cláusulas de risco que já estão impressas nos
 termos da OS. O MapOS chama de `Arquivos`.
@@ -70,7 +51,7 @@ termos da OS. O MapOS chama de `Arquivos`.
 **O que envolve:** upload vinculado à OS. Decidir onde guardar — arquivo em pasta é melhor que
 base64 no banco, que é como a logo da loja é armazenada hoje e não escalaria para fotos.
 
-### 5. Relatório de receita bruta MEI
+### 3. Relatório de receita bruta MEI
 **Falta porque** MEI tem teto anual de faturamento, e quem passa sem perceber é desenquadrado e cai
 numa carga tributária maior. O MapOS tem um relatório dedicado a isso
 (`rel_receitas_brutas_mei`) — é o item mais específico do Brasil na lista deles e vale mais para o
@@ -79,7 +60,7 @@ dono da loja do que qualquer gráfico bonito.
 **O que envolve:** somar as vendas e ordens do ano contra o teto vigente, com aviso ao se aproximar.
 Depende de Caixa e OS gravando.
 
-### 6. Impressão térmica da OS
+### 4. Impressão térmica da OS
 **Falta porque** o balcão usa impressora térmica de 58/80mm no dia a dia. Nosso documento A4 de duas
 vias está bem resolvido para a assinatura, mas o comprovante de entrada entregue na hora é térmico.
 O MapOS mantém os dois (`imprimirOs` e `imprimirOsTermica`).
@@ -87,7 +68,7 @@ O MapOS mantém os dois (`imprimirOs` e `imprimirOsTermica`).
 **O que envolve:** uma segunda folha de estilo de impressão, em coluna estreita, sem tabela larga.
 Convivem: térmica na entrada, A4 na assinatura.
 
-### 7. Notificação ao cliente (e-mail ou WhatsApp)
+### 5. Notificação ao cliente (e-mail ou WhatsApp)
 **Falta porque** os termos da OS dizem que, para considerar um aparelho abandonado, o cliente
 precisa ter sido **notificado por escrito**. Hoje o sistema não produz essa prova. Isso deixa de ser
 conveniência e passa a ser o que sustenta juridicamente a cláusula 8 — além de resolver o "seu
@@ -99,13 +80,13 @@ que é a prova) e um `BackgroundService` para reenviar as que falharem.
 > Nota de stack: **não precisamos de cron.** O `BackgroundService` do .NET roda dentro da própria
 > aplicação. O MapOS precisa de duas linhas no crontab do servidor para a mesma coisa.
 
-### 8. Financeiro (lançamentos e contas a pagar)
+### 6. Financeiro (lançamentos e contas a pagar)
 **Falta porque** Caixa sem persistência não é caixa. Entradas, saídas e contas a pagar dão a visão
 do mês, que hoje não existe em lugar nenhum. É o módulo `Financeiro` do MapOS.
 
 **O que envolve:** maior esforço da lista; depende de Caixa e OS gravando.
 
-### 9. Script de instalação para o usuário final
+### 7. Script de instalação para o usuário final
 **Falta porque** o público do sistema é dono de loja, não desenvolvedor. Hoje instalar exige clonar
 o repositório, ter o SDK do .NET e rodar comandos. Essa é a lição que o MapOS acerta: sem instalação
 simples, o sistema não chega em quem precisa dele.
@@ -118,14 +99,14 @@ mais simples que no MapOS: não há PHP, MySQL nem webserver para configurar.
 
 ## Baixa prioridade
 
-### 10. Recuperação de senha por e-mail
+### 8. Recuperação de senha por e-mail
 **Já existe** recuperação por código anotado no papel e por comando de terminal (2026-08-07, ver
 [CHANGES.md](CHANGES.md)). Falta a via por e-mail, que dispensa guardar código: link de uso único
 com validade curta.
 
-**Depende de** o envio de e-mail (item 7). Prioridade baixa agora que o caso de tranca está coberto.
+**Depende de** o envio de e-mail (item 5). Prioridade baixa agora que o caso de tranca está coberto.
 
-### 11. Ilustração própria para a tela de login
+### 9. Ilustração própria para a tela de login
 **Situação atual:** a atribuição da [Storyset](https://storyset.com) está no arquivo `NOTICE`, então
 a obrigação de crédito está cumprida.
 
@@ -133,7 +114,7 @@ a obrigação de crédito está cumprida.
 técnica de celular. Uma ilustração do mundo da loja — bancada, aparelho aberto, ferramenta — diria
 mais e dispensaria a dependência de terceiro.
 
-### 12. Unificar os dois visuais
+### 10. Unificar os dois visuais
 **Situação atual:** convivem dois sistemas de design. As telas novas (Painel, Orçamento, Estoque,
 Caixa, Configuração, Login) usam Tailwind com paleta Material-3. As antigas (Lista de compras,
 "Em breve") usam `wwwroot/css/site.css`, verde institucional com fonte Inter.
@@ -141,14 +122,14 @@ Caixa, Configuração, Login) usam Tailwind com paleta Material-3. As antigas (L
 **O que envolve:** migrar `Views/ListaCompra/` e `Views/Shared/EmBreve.cshtml` para Tailwind,
 aproveitando o partial `_HeadTailwind.cshtml`. Depois o `site.css` encolhe bastante. Cosmético.
 
-### 13. Dashboards de verdade
+### 11. Dashboards de verdade
 **Situação atual:** `DashboardsController` retorna a tela "Em breve" e os KPIs do Painel mostram
 estado vazio.
 
 **O que envolve:** depende de Caixa, Estoque e OS no banco — sem dado gravado não há o que somar.
 
-### 14. Autoria detalhada (auditoria mínima)
-**Situação atual:** o item 4 resolve o essencial (quem emitiu a OS). Uma auditoria completa, como o
+### 12. Autoria detalhada (auditoria mínima)
+**Situação atual:** a OS já grava quem a emitiu, e as movimentações de estoque quem as fez. Uma auditoria completa, como o
 módulo `Auditoria` do MapOS, registraria toda alteração em todo registro.
 
 **O que envolve:** só vale se a loja tiver vários técnicos e surgir a pergunta "quem alterou isso?".

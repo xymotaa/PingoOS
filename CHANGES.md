@@ -1,5 +1,99 @@
 # Registro de Alterações
 
+## [2026-08-11] Backup e restauração pela tela de Configuração (item 2 do roadmap)
+
+### Problema
+O banco guarda clientes, ordens de serviço, estoque, vendas e usuários — e o backup dependia de a
+pessoa saber copiar `loja.db` pelo terminal. Na prática, não acontecia.
+
+### Solução
+Dois botões em **/Configuracao**, visíveis só para administradores.
+
+**Baixar** usa o `VACUUM INTO` do SQLite em vez de copiar o arquivo. Copiar o `.db` na mão deixaria
+de fora o que ainda está no journal **WAL**; o `VACUUM INTO` gera um arquivo já consolidado e
+íntegro. O nome sai como `pingo-os-<loja>-<data-hora>.db`.
+
+**Restaurar** tem três travas, porque é a operação mais destrutiva do sistema:
+
+1. Exige digitar `RESTAURAR` — nome de arquivo errado num clique não apaga a loja.
+2. Valida que o arquivo é um banco do Pingo OS (procura `OrdensServico`, `Clientes`, `Usuarios` e
+   `__EFMigrationsHistory`), recusando qualquer outro SQLite.
+3. Guarda o banco anterior ao lado do atual como `loja.db.antes-da-restauracao-<data>` — restaurar
+   o arquivo errado ainda tem volta.
+
+Antes de trocar o arquivo, o serviço fecha a conexão e chama `SqliteConnection.ClearAllPools()`;
+sem isso o arquivo fica travado e a troca falha (no Windows, sempre). Os arquivos `-wal` e `-shm`
+do banco antigo são apagados — deixá-los corromperia o restaurado. Ao final a sessão é encerrada,
+porque o usuário logado pode não existir no backup.
+
+### Arquivos Alterados
+
+| Arquivo | Alteração |
+|---|---|
+| `Data/BackupServico.cs` | **novo** — `GerarCopia`, `EhBancoValido`, `Restaurar` |
+| `Controllers/ConfiguracaoController.cs` | ações `Backup` e `Restaurar`, restritas a Admin |
+| `Views/Configuracao/Index.cshtml` | seção de backup com os dois cartões |
+
+### Resultado
+Testado numa cópia do banco real: download de 184 KB com 3 ordens, 2 clientes e 1 usuário; upload
+de um arquivo de texto recusado ("não é um banco SQLite válido"); confirmação errada recusada sem
+tocar nos dados; restauração de verdade desfazendo um cliente criado depois do backup (3 → 2), com
+a cópia de segurança gravada e a sessão encerrada. Depois de restaurar, login e as seis telas
+principais responderam 200.
+
+---
+
+## [2026-08-11] Garantias (item 1 do roadmap)
+
+### Problema
+A OS impressa promete 90 dias de garantia e o sistema não guardava nada disso. O cliente voltava
+dizendo "está na garantia" e não havia como conferir a data, o que foi trocado, nem se o mesmo
+defeito já tinha voltado antes. Era um laço que nós mesmos abrimos.
+
+### Solução
+A garantia não virou tabela nova: ela **é** a OS depois da entrega. O que faltava eram três campos
+e uma tela.
+
+- `PrazoGarantiaDias` na OS, padrão **90** (mínimo do CDC, art. 26, II). A loja pode prometer mais,
+  nunca menos — o controller trava com `Math.Max`.
+- A garantia **conta da `DataEntrega`**, não da abertura. Enquanto o aparelho não foi retirado, ela
+  nem começou.
+- `OrdemOrigemId` liga um **retorno em garantia** à ordem original.
+
+Tela `/Garantia` lista as ordens entregues com dias restantes, vencimento, o que foi feito e quantos
+retornos cada uma teve. O botão de retorno abre uma OS nova já com cliente e aparelhos preenchidos e
+o diagnóstico começando em "Retorno em garantia da OS-XXXXXX".
+
+O documento impresso ganhou um bloco **Garantia** com o prazo e a data de validade — antes o cliente
+levava só a promessa genérica de 90 dias no meio dos termos.
+
+### Arquivos Alterados
+
+| Arquivo | Alteração |
+|---|---|
+| `Models/OrdemServico.cs` | `PrazoGarantiaDias`, `OrdemOrigemId` e as contas (`GarantiaFim`, `GarantiaVigente`, `DiasDeGarantiaRestantes`, `SituacaoGarantia`) |
+| `Controllers/GarantiaController.cs` | **novo** — listagem com a contagem de retornos |
+| `Controllers/OrcamentoController.cs` | prazo no `Salvar` e a ação `RetornoGarantia` |
+| `Views/Garantia/Index.cshtml`, `wwwroot/js/garantia.js` | **novos** |
+| `Views/Orcamento/Add.cshtml` | campo de prazo e aviso de retorno |
+| `Views/Orcamento/Ver.cshtml` | selo de garantia, link do retorno e bloco no papel |
+| `Views/Home/Index.cshtml` | "Garantias" na lateral, depois de Orçamento |
+| Migration `AddGarantiaOs` | duas colunas |
+
+### Bug encontrado nos testes
+As ordens já existentes ficaram com **garantia de 0 dias**: o `AddColumn` do EF usa o padrão do tipo
+(0), e o valor padrão do modelo C# só vale para objetos novos, não para linhas já gravadas. Isso
+contrariaria o que a OS delas prometeu impresso. Corrigido com `defaultValue: 90` mais um `UPDATE`
+de backfill na própria migração.
+
+### Resultado
+Testado numa cópia do banco real: as 3 ordens existentes migraram com 90 dias; antes da entrega a
+tela mostra o estado vazio correto; marcar como entregue em 11/08 fez a garantia valer até 09/11;
+o retorno abriu com cliente e aparelho herdados, gravou ligado à origem e passou a ser contado como
+"1 retorno" na listagem.
+
+---
+
 ## [2026-08-11] Cancelar da OS ia para o painel; botão de aparelho e assinatura
 
 ### Problema
