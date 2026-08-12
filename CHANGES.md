@@ -1,5 +1,129 @@
 # Registro de Alterações
 
+## [2026-08-12] Orçamento separado da Ordem de Serviço
+
+### Problema
+A tela chamada "Orçamento" produzia, na verdade, uma ordem de serviço completa: termos legais,
+assinatura das duas partes, garantia de 90 dias e duas vias. Mas nem todo atendimento é um aparelho
+deixado na loja. A maior parte é uma pergunta de balcão — "quanto custa a frontal desse celular?" —
+e para responder isso o sistema obrigava a emitir um documento que promete garantia sobre um serviço
+que ninguém autorizou e que talvez nem seja feito.
+
+O efeito colateral era pior que a burocracia: um papel assinado prometendo 90 dias de garantia,
+entregue a quem só perguntou o preço.
+
+### Solução
+Dois documentos, dois botões na tela inicial, um caminho entre eles.
+
+| | Orçamento | Ordem de serviço |
+|---|---|---|
+| Numeração | `ORC-000001` | `OS-000001` |
+| Situações | Aberto → Aprovado / Recusado | Aberta → Pronta → Entregue |
+| Vias impressas | 1 | 2, com linha de corte |
+| Termos e assinatura | não | sim |
+| Garantia | não | 90 dias, da retirada |
+| Haver, forma de pagamento, parcelamento | não | sim |
+| Validade | 10 dias (ajustável) | não vence |
+
+**Aprovar é um botão.** No orçamento aberto, "Cliente aprovou — gerar OS" cria a ordem já com o
+mesmo cliente, aparelhos, diagnóstico, itens e desconto; o orçamento fica gravado como *Aprovado* e
+as duas telas passam a se referenciar (`OrcamentoOrigemId`). Aprovar duas vezes não gera duas
+ordens — a segunda vez leva para a ordem que já existe.
+
+Digitar tudo de novo seria o mesmo que não ter orçamento: ninguém usaria.
+
+**Não é tabela nova.** Orçamento e ordem compartilham cliente, aparelhos, itens e contas — duplicar
+isso significaria duplicar também toda correção futura. O que os separa é um campo `Tipo`, e o que
+muda de comportamento está em um lugar só: `DocumentoControllerBase`. `OrcamentoController` e
+`OrdemServicoController` são cascas de poucas linhas que fixam o próprio tipo. As três telas
+mudaram de `Views/Orcamento/` para `Views/Documento/` e servem aos dois.
+
+Cada rota só enxerga o seu tipo: abrir `/Orcamento/Ver/1` numa ordem de serviço dá 404, e o
+contrário também. Situação inválida é recusada no servidor — um orçamento não pode ser marcado
+"Entregue" nem uma ordem "Aprovado". No orçamento, haver e parcelamento são ignorados mesmo que
+cheguem no formulário: os campos continuam no HTML (o script de cálculo conta com eles), só ficam
+escondidos, e o servidor não confia neles.
+
+### Arquivos Alterados
+
+| Arquivo | Alteração |
+|---|---|
+| `Controllers/DocumentoControllerBase.cs` | **novo** — toda a lógica compartilhada |
+| `Controllers/OrcamentoController.cs` | reescrito: tipo Orçamento + `GerarOrdem` |
+| `Controllers/OrdemServicoController.cs` | **novo** — tipo OS + `RetornoGarantia` |
+| `Views/Documento/` | era `Views/Orcamento/`; as três telas com o que muda por tipo |
+| `Models/OrdemServico.cs` | `Tipo`, `ValidadeDias`, `Validade`, `OrcamentoOrigemId`, `SituacoesOrcamento` |
+| `Views/Home/Index.cshtml` | botão **Ordem de serviço** (`receipt_long`) no menu |
+| `Views/Garantia/Index.cshtml` | links apontando para `OrdemServico` |
+| `wwwroot/js/os-impressao.js` | pula o clone da 2ª via quando não há `#osVia2` |
+| `wwwroot/js/os-lista.js` | o nome do que se conta vem do HTML ("1 orçamento" / "1 ordem") |
+| Migration `SepararOrcamentoDeOrdemServico` | as três colunas novas |
+
+A migration classifica tudo que já existe como `OrdemServico` — via `defaultValue` **e** um `UPDATE`
+explícito. O padrão declarado no C# só vale para objeto novo; linha que já está no banco precisa do
+UPDATE. Foi exatamente o que faltou quando a garantia entrou zerada nas ordens antigas.
+
+### Resultado
+Testado numa cópia do banco real: as 3 ordens existentes migraram como `OrdemServico` com itens,
+aparelhos e garantia intactos, e continuam aparecendo em `/OrdemServico` e em `/Garantia`. Um
+orçamento novo saiu como `ORC-000001` ignorando o haver, o parcelamento e a garantia enviados no
+formulário; aprovado, gerou a `OS-000004` com cliente, aparelho e item copiados, e a segunda
+aprovação levou à mesma ordem em vez de criar outra. Cruzar as rotas dá 404, situação inválida é
+recusada, e a impressão foi conferida nas duas: orçamento em via única com "Condições", ordem com
+as duas vias, termos e assinaturas.
+
+---
+
+## [2026-08-11] Catálogo de serviços (item 1 do roadmap)
+
+### Problema
+Toda ordem de serviço tinha a descrição do item digitada do zero. "Troca de tela", "troca de telaa",
+"TROCA DE TELA" e "troca tela + película" eram, para o sistema, quatro serviços diferentes — o que
+inviabiliza qualquer relatório de "o que mais se faz aqui". Pior: o preço saía da memória de quem
+estava no balcão, então o mesmo serviço saía por R$ 250 numa OS e R$ 300 na seguinte.
+
+### Solução
+Um cadastro em **/Servico** (listar, adicionar, editar, excluir) **e** um seletor dentro da ordem de
+serviço. Foi o ponto que discutimos antes de começar: catálogo que não alimenta a OS é cadastro que
+ninguém usa — o técnico continuaria digitando à mão e o cadastro envelheceria sozinho.
+
+- Cada serviço tem nome, categoria (com sugestões: Tela, Bateria, Placa, Software…), valor padrão,
+  descrição e a marca **Em oferta**. Serviço que a loja parou de fazer é desmarcado, some do seletor
+  da OS e continua no histórico — não se apaga o passado para mudar o presente.
+- Na OS, cada linha de item ganhou um botão de ferramenta que abre o catálogo, com busca por nome ou
+  categoria. Escolher preenche descrição e valor.
+- O valor do catálogo é **sugestão**: fica editável na linha. Negociar desconto num atendimento não
+  pode exigir alterar o preço de tabela.
+- Continua sendo possível digitar item livre — o catálogo não vira obrigação.
+
+**Excluir um serviço não mexe em ordem nenhuma.** Os itens da OS guardam descrição e valor como
+texto, não como referência ao catálogo. Uma OS impressa e assinada em março tem que continuar
+dizendo o que dizia, mesmo que a loja mude o preço ou pare de oferecer o serviço em agosto.
+
+### Arquivos Alterados
+
+| Arquivo | Alteração |
+|---|---|
+| `Models/Servico.cs` | **novo** — nome, categoria, valor padrão, descrição, `Ativo` |
+| `Controllers/ServicoController.cs` | **novo** — Index, Add, Salvar, Excluir e `Buscar` (JSON) |
+| `Views/Servico/Index.cshtml`, `Add.cshtml` | **novos** — lista com filtro e formulário |
+| `wwwroot/js/servico.js`, `servico-add.js` | **novos** — filtro da lista e vírgula → ponto no envio |
+| `Views/Orcamento/Add.cshtml` | modal `#modalServico` do seletor |
+| `wwwroot/js/orcamento.js` | botão do catálogo nas linhas de item e busca no modal |
+| `Views/Home/Index.cshtml` | botão **Serviços** no menu lateral (ícone `handyman`) |
+| `Data/AppDbContext.cs` + migration `AddServicos` | tabela `Servicos` |
+
+O `Buscar` usa `EF.Functions.Like` (o `Contains` vira `instr()` no SQLite, que diferencia maiúscula)
+e devolve só os ativos. O valor chega como texto e é lido com `CultureInfo.InvariantCulture`, como
+no resto do sistema — o mesmo cuidado que evitou o bug de R$ 620 virar R$ 62.000.
+
+### Resultado
+Testado numa cópia do banco real: 4 serviços cadastrados, o inativo não aparece em `/Servico/Buscar`,
+busca por "tela" encontra "Troca de tela", o seletor preenche descrição e valor na linha da OS, e
+excluir um serviço deixou intactos os 3 itens das ordens já existentes.
+
+---
+
 ## [2026-08-11] Backup e restauração pela tela de Configuração (item 2 do roadmap)
 
 ### Problema

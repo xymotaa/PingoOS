@@ -19,7 +19,7 @@ public class GarantiaController : LojaControllerBase
             .Include(o => o.Aparelhos)
             .Include(o => o.Itens)
             .Include(o => o.OrdemOrigem)
-            .Where(o => o.DataEntrega != null)
+            .Where(o => o.Tipo == TiposDocumento.OrdemServico && o.DataEntrega != null)
             .OrderByDescending(o => o.DataEntrega)
             .ToList();
 

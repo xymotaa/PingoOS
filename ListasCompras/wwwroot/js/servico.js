@@ -1,18 +1,15 @@
 document.addEventListener("DOMContentLoaded", function () {
     const filtroBusca = document.getElementById("filtroBusca");
     const filtroSituacao = document.getElementById("filtroSituacao");
-    const linhas = Array.prototype.slice.call(document.querySelectorAll(".linha-os"));
+    const linhas = Array.prototype.slice.call(document.querySelectorAll(".linha-servico"));
     const vazioState = document.getElementById("vazioState");
     const contagemInfo = document.getElementById("contagemInfo");
-    // A mesma tela lista orçamentos e ordens; o nome vem do HTML
-    const um = contagemInfo.dataset.um || "ordem";
-    const muitos = contagemInfo.dataset.muitos || "ordens";
 
     function atualizarContagem(visiveis) {
         if (linhas.length === 0) { contagemInfo.textContent = ""; return; }
         contagemInfo.textContent = visiveis === linhas.length
-            ? linhas.length + " " + (linhas.length === 1 ? um : muitos)
-            : visiveis + " de " + linhas.length + " " + muitos;
+            ? linhas.length + (linhas.length === 1 ? " serviço" : " serviços")
+            : visiveis + " de " + linhas.length + " serviços";
     }
 
     function filtrar() {
@@ -35,10 +32,3 @@ document.addEventListener("DOMContentLoaded", function () {
     filtroSituacao.addEventListener("change", filtrar);
     atualizarContagem(linhas.length);
 });
-
-// Clicar na linha abre a ordem — menos quando o clique foi num controle dela
-// (o seletor de situação, o botão de excluir, o ícone de ver)
-function abrirOs(evento, url) {
-    if (evento.target.closest("select, button, a, form, input")) return;
-    window.location.href = url;
-}

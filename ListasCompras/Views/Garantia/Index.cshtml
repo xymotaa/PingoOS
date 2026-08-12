@@ -134,13 +134,13 @@
                                 </td>
                                 <td class="px-md py-sm">
                                     <div class="flex items-center justify-center gap-xs">
-                                        <a asp-controller="Orcamento" asp-action="Ver" asp-route-id="@os.Id" title="Ver a ordem"
+                                        <a asp-controller="OrdemServico" asp-action="Ver" asp-route-id="@os.Id" title="Ver a ordem"
                                            class="w-8 h-8 rounded-lg hover:bg-surface-container-high inline-flex items-center justify-center text-on-surface-variant transition-colors">
                                             <span class="material-symbols-outlined text-[18px]">visibility</span>
                                         </a>
                                         @if (os.GarantiaVigente)
                                         {
-                                            <a asp-controller="Orcamento" asp-action="RetornoGarantia" asp-route-id="@os.Id"
+                                            <a asp-controller="OrdemServico" asp-action="RetornoGarantia" asp-route-id="@os.Id"
                                                title="Abrir retorno em garantia — cria uma OS nova com o cliente e o aparelho já preenchidos"
                                                class="w-8 h-8 rounded-lg hover:bg-secondary-container inline-flex items-center justify-center text-on-surface-variant transition-colors">
                                                 <span class="material-symbols-outlined text-[18px]">assignment_return</span>

@@ -9,6 +9,9 @@
     var lojaTelefone = ViewData["LojaTelefone"] as string;
     var lojaEmail = ViewData["LojaEmail"] as string;
     var lojaContato = string.Join(" · ", new[] { lojaTelefone, lojaEmail }.Where(s => !string.IsNullOrWhiteSpace(s)));
+    var ehOrcamento = Model.EhOrcamento;
+    // Preenchido pelo controller quando este orçamento já foi aprovado: [id, número]
+    var ordemGerada = ViewData["OrdemGerada"] as string[];
 
     string Traco(string? v) => string.IsNullOrWhiteSpace(v) ? "—" : v;
     string Moeda(decimal v) => v.ToString("C2", new System.Globalization.CultureInfo("pt-BR"));
@@ -89,14 +92,35 @@
             <div>
                                 <h1 class="font-headline-lg text-headline-lg text-primary">@Model.Numero</h1>
                 <p class="font-body-md text-body-md text-on-surface-variant">
-                    @Model.Cliente.Nome · aberta em @Model.DataAbertura.ToString("dd/MM/yyyy")
+                    @Model.Cliente.Nome · @(ehOrcamento ? "feito" : "aberta") em @Model.DataAbertura.ToString("dd/MM/yyyy")
                     @if (Model.DataEntrega.HasValue)
                     {
                         <text>· entregue em @Model.DataEntrega.Value.ToString("dd/MM/yyyy")</text>
                     }
                 </p>
                 <div class="mt-sm flex flex-wrap items-center gap-sm">
-                    @if (Model.GarantiaIniciada)
+                    @if (ehOrcamento)
+                    {
+                        <span class="px-sm py-xs rounded-lg font-label-md text-label-md @(Model.ValidadeVencida ? "bg-error-container text-error" : "bg-warning-container text-on-surface")">
+                            @if (Model.ValidadeVencida)
+                            {
+                                <text>Venceu em @Model.Validade.ToString("dd/MM/yyyy") — refaça antes de aprovar</text>
+                            }
+                            else
+                            {
+                                <text>Válido até @Model.Validade.ToString("dd/MM/yyyy") (@Model.ValidadeDias dias)</text>
+                            }
+                        </span>
+                        @if (ordemGerada != null)
+                        {
+                            <a asp-controller="OrdemServico" asp-action="Ver" asp-route-id="@ordemGerada[0]"
+                               class="font-label-md text-label-md text-secondary font-bold hover:underline flex items-center gap-xs">
+                                <span class="material-symbols-outlined text-[18px]">receipt_long</span>
+                                Virou a ordem @ordemGerada[1]
+                            </a>
+                        }
+                    }
+                    else if (Model.GarantiaIniciada)
                     {
                         <span class="px-sm py-xs rounded-lg font-label-md text-label-md @(Model.GarantiaVigente ? "bg-secondary-container text-on-secondary-container" : "bg-surface-container-high text-on-surface-variant")">
                             @if (Model.GarantiaVigente)
@@ -123,11 +147,18 @@
                             Garantia de @Model.PrazoGarantiaDias dias — começa a contar na retirada
                         </span>
                     }
-                    @if (Model.OrdemOrigemId.HasValue)
+                    @if (!ehOrcamento && Model.OrdemOrigemId.HasValue)
                     {
                         <a asp-action="Ver" asp-route-id="@Model.OrdemOrigemId"
                            class="font-label-md text-label-md text-secondary font-bold hover:underline">
                             Retorno da @Model.OrdemOrigem?.Numero
+                        </a>
+                    }
+                    @if (!ehOrcamento && Model.OrcamentoOrigemId.HasValue)
+                    {
+                        <a asp-controller="Orcamento" asp-action="Ver" asp-route-id="@Model.OrcamentoOrigemId"
+                           class="font-label-md text-label-md text-secondary font-bold hover:underline">
+                            Veio do orçamento @Model.OrcamentoOrigem?.Numero
                         </a>
                     }
                 </div>
@@ -138,9 +169,10 @@
                     <label class="font-label-md text-label-md text-on-surface-variant" for="situacao">Situação</label>
                     <select id="situacao" name="situacao" onchange="this.form.submit()"
                             class="bg-surface-container-low border-none rounded-lg pl-md pr-10 py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30">
-                        <option value="Aberta" selected="@(Model.Situacao == "Aberta")">Aberta</option>
-                        <option value="Pronta" selected="@(Model.Situacao == "Pronta")">Pronta</option>
-                        <option value="Entregue" selected="@(Model.Situacao == "Entregue")">Entregue</option>
+                        @foreach (var s in Model.SituacoesPossiveis)
+                        {
+                            <option value="@s" selected="@(Model.Situacao == s)">@s</option>
+                        }
                     </select>
                 </form>
             </div>
@@ -151,16 +183,41 @@
                 Editar
             </a>
             <button id="imprimirBtn" type="button"
-                    class="bg-secondary text-white rounded-lg px-lg py-sm font-label-md text-label-md font-bold hover:bg-opacity-90 transition-colors flex items-center gap-xs">
+                    class="@(ehOrcamento && ordemGerada == null ? "border border-outline text-on-surface-variant hover:bg-surface-container-low" : "bg-secondary text-white hover:bg-opacity-90") rounded-lg px-lg py-sm font-label-md text-label-md font-bold transition-colors flex items-center gap-xs">
                 <span class="material-symbols-outlined text-[18px]">print</span>
-                Imprimir as duas vias
+                @(ehOrcamento ? "Imprimir" : "Imprimir as duas vias")
             </button>
+            @if (ehOrcamento && ordemGerada == null)
+            {
+                <form asp-action="GerarOrdem" method="post"
+                      onsubmit="return confirm('O cliente aprovou este orçamento? Vai ser aberta uma ordem de serviço com o mesmo cliente, aparelhos e itens.');">
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <button type="submit"
+                            class="bg-secondary text-white rounded-lg px-lg py-sm font-label-md text-label-md font-bold hover:bg-opacity-90 transition-colors flex items-center gap-xs">
+                        <span class="material-symbols-outlined text-[18px]">check_circle</span>
+                        Cliente aprovou — gerar OS
+                    </button>
+                </form>
+            }
             </div>
         </section>
 
         <p class="mt-md font-body-md text-body-md text-on-surface-variant">
-            Abaixo está o documento como sai na impressora: as duas vias na mesma folha A4, com os
-            termos e a garantia.
+            @if (ehOrcamento)
+            {
+                <text>
+                    Abaixo está o orçamento como sai na impressora: uma via, sem termos e sem
+                    assinatura — nada foi autorizado ainda. Quem promete garantia é a ordem de
+                    serviço, gerada quando o cliente aprovar.
+                </text>
+            }
+            else
+            {
+                <text>
+                    Abaixo está o documento como sai na impressora: as duas vias na mesma folha A4,
+                    com os termos e a garantia.
+                </text>
+            }
         </p>
     </main>
 
@@ -183,8 +240,15 @@
                 </div>
             </div>
             <div class="os-doc-meta">
-                <div class="os-doc-titulo">ORDEM DE SERVIÇO</div>
-                <div class="os-via-label">1ª via — Cliente</div>
+                <div class="os-doc-titulo">@(ehOrcamento ? "ORÇAMENTO" : "ORDEM DE SERVIÇO")</div>
+                @if (ehOrcamento)
+                {
+                    <div class="os-via-label">Válido até @Model.Validade.ToString("dd/MM/yyyy")</div>
+                }
+                else
+                {
+                    <div class="os-via-label">1ª via — Cliente</div>
+                }
                 <div>Nº <span id="osNumero">@Model.Numero</span></div>
                 <div>Data: <span id="osData">@Model.DataAbertura.ToString("dd/MM/yyyy")</span></div>
             </div>
@@ -218,7 +282,7 @@
         </div>
 
         <div class="os-bloco">
-            <div class="os-bloco-titulo">Diagnóstico</div>
+            <div class="os-bloco-titulo">@(ehOrcamento ? "Serviço solicitado" : "Diagnóstico")</div>
             <div id="osDiagnostico" class="os-diag">@Traco(Model.Diagnostico)</div>
         </div>
 
@@ -259,7 +323,7 @@
                         </tr>
                     }
                     <tr>
-                        <td colspan="3" style="text-align:right;font-weight:700">Total do orçamento</td>
+                        <td colspan="3" style="text-align:right;font-weight:700">@(ehOrcamento ? "Total do orçamento" : "Total da ordem")</td>
                         <td id="osTotal" style="text-align:right;font-weight:700">@Moeda(Model.Total)</td>
                     </tr>
                     @if (Model.Sinal > 0)
@@ -277,7 +341,7 @@
             </table>
         </div>
 
-        @if (!string.IsNullOrEmpty(Model.FormaPagamento) || Model.Parcelado)
+        @if (!ehOrcamento && (!string.IsNullOrEmpty(Model.FormaPagamento) || Model.Parcelado))
         {
             <div class="os-bloco">
                 <div class="os-bloco-titulo">Pagamento</div>
@@ -299,6 +363,16 @@
             </div>
         }
 
+        @if (ehOrcamento)
+        {
+            <div class="os-bloco os-termos">
+                <div class="os-bloco-titulo">Condições</div>
+                <p class="os-termos-texto">Este documento é um <b>orçamento</b>: informa preços e não autoriza a execução de nenhum serviço. Válido por @Model.ValidadeDias dias a contar da data acima, sujeito à disponibilidade e ao preço das peças na data da aprovação. Valores estimados a partir do defeito relatado; falhas ocultas, só constatáveis com o aparelho aberto, podem alterar o orçamento, que será submetido de novo ao cliente (CDC, art. 40). Aprovado o orçamento, será emitida <b>Ordem de Serviço</b> com os termos completos, a garantia legal de @ListasCompras.Models.OrdemServico.PrazoGarantiaPadrao dias (CDC, art. 26, II) e a assinatura das partes.</p>
+                <div class="os-aceite">Orçado por @(Model.Usuario?.Nome ?? "—") em @Model.DataAbertura.ToString("dd/MM/yyyy")</div>
+            </div>
+        }
+        else
+        {
         <div class="os-bloco os-termos">
             <div class="os-bloco-titulo">Termos e condições do serviço</div>
             <p class="os-termos-texto"><b>1. Aprovação prévia.</b> O serviço só é executado após aprovação expressa deste orçamento, válido por 10 dias. Uma vez aprovado, obriga ambas as partes: o cliente que desistir responde pelas peças já aplicadas e pela mão de obra executada (CDC, art. 40, §2º). <b>2. Dados e backup.</b> O backup é de responsabilidade do cliente; o reparo pode exigir formatação ou troca de componentes, não respondendo a empresa por perda de dados. <b>3. Privacidade e sigilo.</b> É vedado ao técnico acessar, copiar, compartilhar ou divulgar arquivos pessoais do aparelho, limitando-se o acesso ao estritamente necessário ao diagnóstico e ao teste do reparo, sob sigilo (Lei 13.709/2018 – LGPD; Código Penal, art. 154-A). <b>4. Garantia.</b> 90 dias sobre o serviço executado e as peças substituídas, contados da retirada, mediante apresentação desta Ordem de Serviço (CDC, art. 26, II). <b>5. Exclusões.</b> A garantia não cobre mau uso, quedas e impactos, contato com líquidos, umidade ou oxidação, sobrecarga da rede elétrica, acessórios não originais, software instalado pelo cliente, desgaste natural, nem defeito em componente diverso do reparado (CDC, art. 14, §3º, II). <b>6. Violação.</b> Abertura, reparo ou tentativa de conserto por terceiro não autorizado, durante o serviço ou no prazo de garantia, cancela a garantia integralmente. <b>7. Riscos.</b> Aparelhos com oxidação, queda ou intervenção anterior podem apresentar falhas ocultas, não detectáveis no diagnóstico inicial, inclusive deixar de ligar durante o reparo; o cliente declara ciência ao autorizar. <b>8. Retirada e abandono.</b> O aparelho deve ser retirado em até 90 dias da comunicação da conclusão ou da recusa do orçamento, sob taxa de armazenagem. Notificado o cliente e decorridos mais 90 dias sem manifestação, o bem será considerado abandonado (Código Civil, art. 1.275, III), autorizada sua destinação para cobrir os custos. <b>9. Identificação.</b> A entrega se dá mediante esta via e documento com foto, ou autorização escrita do cliente.</p>
@@ -309,12 +383,18 @@
             <div class="os-assinatura"><div class="os-linha-assinatura"></div>@Model.Cliente.Nome</div>
             <div class="os-assinatura"><div class="os-linha-assinatura"></div>@(Model.Usuario?.Nome ?? "Responsável Técnico")</div>
         </div>
+        }
       </div>
 
-      <div class="os-corte" aria-hidden="true"><span>✂ - - - - - - - - - -  corte aqui  - - - - - - - - - -</span></div>
+      @* Só a ordem de serviço sai em duas vias: uma para assinar e deixar, outra para levar.
+         O orçamento não tem assinatura, então a segunda via seria papel jogado fora. *@
+      @if (!ehOrcamento)
+      {
+          <div class="os-corte" aria-hidden="true"><span>✂ - - - - - - - - - -  corte aqui  - - - - - - - - - -</span></div>
 
-      <!-- 2ª via: preenchida com um clone da 1ª via em prepararImpressao() -->
-      <div id="osVia2"></div>
+          <!-- 2ª via: preenchida com um clone da 1ª via em gerarSegundaVia() -->
+          <div id="osVia2"></div>
+      }
     </div>
         </div>
     </div>

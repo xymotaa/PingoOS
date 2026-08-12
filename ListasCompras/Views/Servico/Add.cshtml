@@ -1,0 +1,104 @@
+@model ListasCompras.Models.Servico
+@{
+    Layout = null;
+    var editando = Model.Id > 0;
+    ViewData["Title"] = editando ? "Editar serviço" : "Novo serviço";
+    var nomeLoja = ViewData["NomeLoja"] as string ?? "Minha Loja";
+    string Decimal(decimal v) => v.ToString("0.00", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"));
+}
+<!DOCTYPE html>
+<html class="light" lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>@nomeLoja — @ViewData["Title"]</title>
+    @await Html.PartialAsync("_HeadTailwind")
+</head>
+<body class="bg-surface">
+    @await Html.PartialAsync("_Navbar")
+
+    <main class="pt-24 px-lg pb-xl max-w-[1440px] mx-auto">
+
+        <section class="mb-md">
+            <h1 class="font-headline-lg text-headline-lg text-primary">@ViewData["Title"]</h1>
+            <p class="font-body-md text-body-md text-on-surface-variant">
+                Um serviço que a loja executa, com o valor que costuma cobrar por ele.
+            </p>
+        </section>
+
+        <form asp-action="Salvar" method="post" id="formServico" class="flex flex-col gap-md">
+            <input type="hidden" name="id" value="@Model.Id" />
+
+            <section class="bg-white rounded-xl border border-outline-variant shadow-sm p-lg">
+                <div class="flex items-center gap-sm mb-md">
+                    <span class="material-symbols-outlined text-[20px] text-secondary">handyman</span>
+                    <h2 class="font-title-lg text-title-lg text-primary">Dados do serviço</h2>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-md">
+                    <div class="md:col-span-6">
+                        <label class="font-label-md text-label-md text-on-surface-variant" for="nome">Nome</label>
+                        <input id="nome" name="nome" type="text" required autofocus maxlength="120"
+                               value="@Model.Nome" placeholder="Ex: Troca de tela"
+                               class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                    </div>
+
+                    <div class="md:col-span-3">
+                        <label class="font-label-md text-label-md text-on-surface-variant" for="categoria">Categoria</label>
+                        <input id="categoria" name="categoria" type="text" maxlength="40" list="categoriasSugeridas"
+                               value="@Model.Categoria" placeholder="Ex: Tela"
+                               class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                        <datalist id="categoriasSugeridas">
+                            <option value="Tela"></option>
+                            <option value="Bateria"></option>
+                            <option value="Conector de carga"></option>
+                            <option value="Placa"></option>
+                            <option value="Software"></option>
+                            <option value="Limpeza"></option>
+                            <option value="Mão de obra"></option>
+                        </datalist>
+                    </div>
+
+                    <div class="md:col-span-3">
+                        <label class="font-label-md text-label-md text-on-surface-variant" for="valorVisivel">Valor padrão (R$)</label>
+                        <input id="valorVisivel" type="text" inputmode="decimal" placeholder="0,00"
+                               value="@(Model.ValorPadrao > 0 ? Decimal(Model.ValorPadrao) : "")"
+                               class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md text-right focus:ring-2 focus:ring-secondary/30" />
+                        <input type="hidden" name="valor" id="valor" value="0" />
+                    </div>
+
+                    <div class="md:col-span-12">
+                        <label class="font-label-md text-label-md text-on-surface-variant" for="descricao">Descrição</label>
+                        <textarea id="descricao" name="descricao" rows="2" maxlength="300"
+                                  placeholder="O que está incluído, o que não está, tempo estimado..."
+                                  class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30">@Model.Descricao</textarea>
+                        <p class="mt-xs font-label-sm text-label-sm text-outline">Aparece só aqui no catálogo, para ajudar quem escolhe. Não sai impressa na ordem.</p>
+                    </div>
+
+                    <div class="md:col-span-12">
+                        <label class="flex items-center gap-xs cursor-pointer w-fit">
+                            <input name="ativo" value="true" type="checkbox" class="w-4 h-4 accent-secondary"
+                                   @(Model.Id == 0 || Model.Ativo ? "checked" : "") />
+                            <span class="font-label-md text-label-md text-on-surface-variant">Em oferta — aparece no seletor da ordem de serviço</span>
+                        </label>
+                    </div>
+                </div>
+            </section>
+
+            <div class="flex items-center justify-end gap-sm">
+                <a asp-action="Index"
+                   class="border border-outline text-on-surface-variant rounded-lg px-lg py-sm font-label-md text-label-md font-bold hover:bg-surface-container-low transition-colors">
+                    Cancelar
+                </a>
+                <button type="submit"
+                        class="bg-secondary text-white rounded-lg px-lg py-sm font-label-md text-label-md font-bold hover:bg-opacity-90 transition-colors flex items-center gap-xs">
+                    <span class="material-symbols-outlined text-[18px]">save</span>
+                    @(editando ? "Salvar alterações" : "Cadastrar serviço")
+                </button>
+            </div>
+        </form>
+    </main>
+
+    <script src="~/js/servico-add.js" asp-append-version="true"></script>
+</body>
+</html>

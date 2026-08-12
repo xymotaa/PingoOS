@@ -9,11 +9,40 @@ public class OrdemServico
     /// <summary>CDC, art. 26, II: 90 dias para serviço durável. É o que a OS impressa promete.</summary>
     public const int PrazoGarantiaPadrao = 90;
 
+    /// <summary>É o prazo que os termos impressos prometem: "orçamento válido por 10 dias".</summary>
+    public const int ValidadePadraoDias = 10;
+
     public int Id { get; set; }
 
     // Número sequencial da loja (OS-000001). Antes vinha do relógio no JavaScript
     // e não sobrevivia à impressão.
     public string Numero { get; set; } = string.Empty;
+
+    // ===== Que documento é este =====
+
+    /// <summary>
+    /// Orçamento é a resposta a "quanto custa?": não autoriza serviço, não tem termos nem
+    /// assinatura. Ordem de serviço é o aparelho entregue na bancada, com garantia e as duas vias.
+    /// </summary>
+    public string Tipo { get; set; } = TiposDocumento.OrdemServico;
+
+    public bool EhOrcamento => Tipo == TiposDocumento.Orcamento;
+
+    /// <summary>Prazo de validade do orçamento. A ordem de serviço já está autorizada e não vence.</summary>
+    public int ValidadeDias { get; set; } = ValidadePadraoDias;
+
+    public DateTime Validade => DataAbertura.Date.AddDays(ValidadeDias);
+
+    public bool ValidadeVencida =>
+        EhOrcamento && Situacao == SituacoesOrcamento.Aberto && Validade < DateTime.Today;
+
+    /// <summary>Preenchido quando esta ordem nasceu da aprovação de um orçamento.</summary>
+    public int? OrcamentoOrigemId { get; set; }
+    public OrdemServico? OrcamentoOrigem { get; set; }
+
+    public string[] SituacoesPossiveis => EhOrcamento ? SituacoesOrcamento.Todas : Situacoes.Todas;
+
+    public string Rotulo => EhOrcamento ? "Orçamento" : "Ordem de serviço";
 
     public DateTime DataAbertura { get; set; } = DateTime.Now;
     public DateTime? DataEntrega { get; set; }
@@ -116,6 +145,12 @@ public class ItemOrdemServico
     public decimal Total => Quantidade * ValorUnitario;
 }
 
+public static class TiposDocumento
+{
+    public const string Orcamento = "Orcamento";
+    public const string OrdemServico = "OrdemServico";
+}
+
 public static class Situacoes
 {
     public const string Aberta = "Aberta";
@@ -123,6 +158,16 @@ public static class Situacoes
     public const string Entregue = "Entregue";
 
     public static readonly string[] Todas = { Aberta, Pronta, Entregue };
+}
+
+// O orçamento não percorre bancada: ou o cliente aprova (e vira ordem de serviço), ou recusa.
+public static class SituacoesOrcamento
+{
+    public const string Aberto = "Aberto";
+    public const string Aprovado = "Aprovado";
+    public const string Recusado = "Recusado";
+
+    public static readonly string[] Todas = { Aberto, Aprovado, Recusado };
 }
 
 public static class TiposDesconto

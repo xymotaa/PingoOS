@@ -31,7 +31,12 @@ document.addEventListener("DOMContentLoaded", function () {
         tr.className = "border-t border-outline-variant";
         tr.innerHTML =
             '<td class="px-md py-sm">' +
-                '<input type="text" name="itemDescricao" class="item-desc w-full bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" placeholder="Ex: Tela Display Frontal Original" />' +
+                '<div class="relative">' +
+                    '<input type="text" name="itemDescricao" class="item-desc w-full bg-surface-container-low border-none rounded-lg pl-md pr-10 py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" placeholder="Digite ou escolha do catálogo" />' +
+                    '<button type="button" class="escolher-servico absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg hover:bg-surface-container-high flex items-center justify-center text-outline transition-colors" title="Escolher do catálogo de serviços">' +
+                        '<span class="material-symbols-outlined text-[20px]">handyman</span>' +
+                    '</button>' +
+                '</div>' +
             '</td>' +
             '<td class="px-md py-sm">' +
                 '<input type="text" name="itemQuantidade" inputmode="numeric" value="1" class="item-qtd w-full text-center bg-surface-container-low border-none rounded-lg px-2 py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />' +
@@ -368,6 +373,98 @@ document.addEventListener("DOMContentLoaded", function () {
     itensBody.addEventListener("input", recalcularPagamento);
     itensBody.addEventListener("click", recalcularPagamento);
     recalcularPagamento();
+
+
+    // ===== Catálogo de serviços: preenche o item em vez de digitar =====
+
+    const modalServico = document.getElementById("modalServico");
+    const buscaServicoInput = document.getElementById("buscaServicoInput");
+    const resultadosServico = document.getElementById("resultadosServico");
+    const fecharModalServico = document.getElementById("fecharModalServico");
+    let linhaDestino = null;
+
+    function abrirCatalogo(tr) {
+        linhaDestino = tr;
+        modalServico.classList.remove("hidden");
+        buscaServicoInput.value = "";
+        buscaServicoInput.focus();
+        procurarServicos("");
+    }
+
+    function fecharCatalogo() {
+        modalServico.classList.add("hidden");
+        linhaDestino = null;
+    }
+
+    function procurarServicos(termo) {
+        resultadosServico.innerHTML = '<p class="px-md py-lg text-center font-body-md text-body-md text-on-surface-variant">Procurando...</p>';
+
+        fetch("/Servico/Buscar?termo=" + encodeURIComponent(termo))
+            .then(function (r) { return r.json(); })
+            .then(function (servicos) {
+                resultadosServico.innerHTML = "";
+
+                if (servicos.length === 0) {
+                    resultadosServico.innerHTML =
+                        '<p class="px-md py-lg text-center font-body-md text-body-md text-on-surface-variant">Nenhum serviço no catálogo. Cadastre em Serviços ou digite o item à mão.</p>';
+                    return;
+                }
+
+                servicos.forEach(function (s) {
+                    const item = document.createElement("button");
+                    item.type = "button";
+                    item.className = "w-full text-left px-md py-sm border-b border-outline-variant hover:bg-surface-container-low transition-colors flex items-center justify-between gap-md";
+
+                    const esquerda = document.createElement("div");
+                    const nome = document.createElement("p");
+                    nome.className = "font-body-md text-body-md text-on-surface";
+                    nome.textContent = s.nome;
+                    const detalhe = document.createElement("p");
+                    detalhe.className = "font-label-sm text-label-sm text-outline";
+                    detalhe.textContent = [s.categoria, s.descricao].filter(Boolean).join(" · ");
+                    esquerda.append(nome, detalhe);
+
+                    const preco = document.createElement("span");
+                    preco.className = "font-body-md text-body-md font-semibold text-secondary shrink-0";
+                    preco.textContent = formatBRL(s.valor);
+
+                    item.append(esquerda, preco);
+                    item.addEventListener("click", function () { aplicarServico(s); });
+                    resultadosServico.appendChild(item);
+                });
+            })
+            .catch(function () {
+                resultadosServico.innerHTML =
+                    '<p class="px-md py-lg text-center font-body-md text-body-md text-error">Não foi possível buscar o catálogo.</p>';
+            });
+    }
+
+    function aplicarServico(s) {
+        if (!linhaDestino) return;
+        linhaDestino.querySelector(".item-desc").value = s.nome;
+        // Valor do catálogo é sugestão: fica editável na linha
+        linhaDestino.querySelector(".item-valor").value = Number(s.valor).toFixed(2).replace(".", ",");
+        recalcular();
+        recalcularPagamento();
+        fecharCatalogo();
+    }
+
+    itensBody.addEventListener("click", function (e) {
+        const botao = e.target.closest(".escolher-servico");
+        if (botao) abrirCatalogo(botao.closest("tr"));
+    });
+
+    fecharModalServico.addEventListener("click", fecharCatalogo);
+    modalServico.addEventListener("click", function (e) { if (e.target === modalServico) fecharCatalogo(); });
+    document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape" && !modalServico.classList.contains("hidden")) fecharCatalogo();
+    });
+
+    let buscaServicoTimer;
+    buscaServicoInput.addEventListener("input", function () {
+        window.clearTimeout(buscaServicoTimer);
+        buscaServicoTimer = window.setTimeout(function () { procurarServicos(buscaServicoInput.value); }, 250);
+    });
 
     // Ao editar, o cliente já vem escolhido: o botão vira o de trocar
     if (document.getElementById("clienteId").value) {

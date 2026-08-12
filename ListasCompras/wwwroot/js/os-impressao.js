@@ -7,6 +7,8 @@ document.addEventListener("DOMContentLoaded", function () {
     function gerarSegundaVia() {
         const via1 = document.getElementById("osVia1");
         const via2 = document.getElementById("osVia2");
+        // O orçamento sai em via única e não tem o segundo bloco
+        if (!via1 || !via2) return;
         const copia = via1.cloneNode(true);
         copia.removeAttribute("id");
         copia.querySelectorAll("[id]").forEach(function (el) { el.removeAttribute("id"); });

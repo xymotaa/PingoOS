@@ -16,6 +16,7 @@ public class AppDbContext : DbContext
     public DbSet<ConfiguracaoLoja> ConfiguracoesLoja { get; set; }
     public DbSet<Usuario> Usuarios { get; set; }
     public DbSet<Cliente> Clientes { get; set; }
+    public DbSet<Servico> Servicos { get; set; }
     public DbSet<OrdemServico> OrdensServico { get; set; }
     public DbSet<ItemOrdemServico> ItensOrdemServico { get; set; }
     public DbSet<AparelhoOs> AparelhosOs { get; set; }
@@ -38,6 +39,8 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Cliente>()
             .HasIndex(c => c.Nome);
 
+        modelBuilder.Entity<Servico>().HasIndex(s => s.Nome);
+
         // Totais são somados em memória, não são colunas
         modelBuilder.Entity<OrdemServico>()
             .Ignore(o => o.Subtotal).Ignore(o => o.DescontoEmReais).Ignore(o => o.Total)
@@ -45,7 +48,24 @@ public class AppDbContext : DbContext
             .Ignore(o => o.AparelhosResumo)
             .Ignore(o => o.GarantiaInicio).Ignore(o => o.GarantiaFim).Ignore(o => o.GarantiaIniciada)
             .Ignore(o => o.GarantiaVigente).Ignore(o => o.DiasDeGarantiaRestantes)
-            .Ignore(o => o.SituacaoGarantia);
+            .Ignore(o => o.SituacaoGarantia)
+            .Ignore(o => o.EhOrcamento).Ignore(o => o.Validade).Ignore(o => o.ValidadeVencida)
+            .Ignore(o => o.SituacoesPossiveis).Ignore(o => o.Rotulo);
+
+        modelBuilder.Entity<OrdemServico>()
+            .Property(o => o.Tipo)
+            .HasMaxLength(20);
+
+        // Filtrar por tipo é o que as duas telas fazem o tempo todo
+        modelBuilder.Entity<OrdemServico>().HasIndex(o => o.Tipo);
+
+        // A ordem gerada aponta para o orçamento aprovado. Excluir o orçamento não pode
+        // apagar a ordem: o serviço foi executado de verdade
+        modelBuilder.Entity<OrdemServico>()
+            .HasOne(o => o.OrcamentoOrigem)
+            .WithMany()
+            .HasForeignKey(o => o.OrcamentoOrigemId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         // Retorno em garantia aponta para a ordem original; excluir a original não
         // pode apagar o retorno, que é o registro de que o problema voltou

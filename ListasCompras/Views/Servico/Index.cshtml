@@ -1,0 +1,146 @@
+@model List<ListasCompras.Models.Servico>
+@{
+    Layout = null;
+    ViewData["Title"] = "Serviços";
+    var nomeLoja = ViewData["NomeLoja"] as string ?? "Minha Loja";
+    string Moeda(decimal v) => v.ToString("C2", new System.Globalization.CultureInfo("pt-BR"));
+}
+<!DOCTYPE html>
+<html class="light" lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>@nomeLoja — Serviços</title>
+    @await Html.PartialAsync("_HeadTailwind")
+</head>
+<body class="bg-surface">
+    @await Html.PartialAsync("_Navbar")
+
+    <main class="pt-24 px-lg pb-xl max-w-[1440px] mx-auto">
+
+        @if (TempData["Sucesso"] != null)
+        {
+            <div class="mb-md bg-secondary-container text-on-secondary-container px-md py-sm rounded-lg font-label-md text-label-md flex items-center gap-xs w-fit">
+                <span class="material-symbols-outlined text-[18px]">check_circle</span>
+                <span>@TempData["Sucesso"]</span>
+            </div>
+        }
+        @if (TempData["Erro"] != null)
+        {
+            <div class="mb-md bg-error-container text-error px-md py-sm rounded-lg font-label-md text-label-md flex items-center gap-xs w-fit">
+                <span class="material-symbols-outlined text-[18px]">error</span>
+                <span>@TempData["Erro"]</span>
+            </div>
+        }
+
+        <!-- Cabeçalho da página -->
+        <section class="mb-md">
+            <h1 class="font-headline-lg text-headline-lg text-primary">Serviços</h1>
+            <p class="font-body-md text-body-md text-on-surface-variant">
+                O que a loja faz e quanto costuma cobrar. Este catálogo alimenta os itens da ordem de serviço.
+            </p>
+        </section>
+
+        <!-- Barra de ferramentas -->
+        <section class="bg-white rounded-t-xl border border-b-0 border-outline-variant p-sm flex flex-wrap items-center gap-sm">
+            <div class="relative flex-1 min-w-[200px]">
+                <input id="filtroBusca" type="text" placeholder="Pesquisar por nome ou categoria..."
+                       class="w-full bg-surface-container-low border-none rounded-full pl-md pr-10 py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline text-[20px]">search</span>
+            </div>
+
+            <select id="filtroSituacao" class="bg-surface-container-low border-none rounded-lg pl-md pr-10 py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30">
+                <option value="">Todos</option>
+                <option value="ativo">Em oferta</option>
+                <option value="inativo">Fora de oferta</option>
+            </select>
+
+            <a asp-action="Add" title="Cadastrar novo serviço"
+               class="h-9 px-md rounded-lg bg-secondary text-white flex items-center justify-center gap-xs hover:bg-opacity-90 transition-colors shrink-0 ml-auto">
+                <span class="material-symbols-outlined text-[20px]">add</span>
+                <span class="font-label-md text-label-md font-bold hidden sm:inline">Novo serviço</span>
+            </a>
+        </section>
+
+        <!-- Tabela -->
+        <section class="bg-white rounded-b-xl border border-outline-variant shadow-sm overflow-hidden">
+            <div class="px-lg py-xs border-b border-outline-variant">
+                <span id="contagemInfo" class="font-label-sm text-label-sm text-outline"></span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-surface-container-low">
+                        <tr>
+                            <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider">Serviço</th>
+                            <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider">Categoria</th>
+                            <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider text-right">Valor padrão</th>
+                            <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider text-center">Situação</th>
+                            <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider text-center w-24">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var s in Model)
+                        {
+                            <tr class="linha-servico border-t border-outline-variant hover:bg-surface-container-low transition-colors"
+                                data-busca="@($"{s.Nome} {s.Categoria}".ToLower())"
+                                data-situacao="@(s.Ativo ? "ativo" : "inativo")">
+                                <td class="px-md py-sm font-body-md text-body-md text-on-surface">
+                                    @s.Nome
+                                    @if (!string.IsNullOrWhiteSpace(s.Descricao))
+                                    {
+                                        <span class="block font-label-sm text-label-sm text-outline">@s.Descricao</span>
+                                    }
+                                </td>
+                                <td class="px-md py-sm font-body-md text-body-md text-on-surface-variant">@(string.IsNullOrWhiteSpace(s.Categoria) ? "—" : s.Categoria)</td>
+                                <td class="px-md py-sm font-body-md text-body-md text-right font-semibold text-secondary">@Moeda(s.ValorPadrao)</td>
+                                <td class="px-md py-sm text-center">
+                                    <span class="px-sm py-xs rounded-full font-label-sm text-label-sm @(s.Ativo ? "bg-secondary-container text-on-secondary-container" : "bg-surface-container-high text-on-surface-variant")">
+                                        @(s.Ativo ? "Em oferta" : "Fora de oferta")
+                                    </span>
+                                </td>
+                                <td class="px-md py-sm">
+                                    <div class="flex items-center justify-center gap-xs">
+                                        <a asp-action="Add" asp-route-id="@s.Id" title="Editar serviço"
+                                           class="w-8 h-8 rounded-lg hover:bg-surface-container-high inline-flex items-center justify-center text-on-surface-variant transition-colors">
+                                            <span class="material-symbols-outlined text-[18px]">edit</span>
+                                        </a>
+                                        <form asp-action="Excluir" method="post" class="inline"
+                                              onsubmit="return confirm('Excluir @s.Nome do catálogo? As ordens antigas não mudam.');">
+                                            <input type="hidden" name="id" value="@s.Id" />
+                                            <button type="submit" title="Excluir do catálogo"
+                                                    class="w-8 h-8 rounded-lg hover:bg-error-container inline-flex items-center justify-center text-outline transition-colors">
+                                                <span class="material-symbols-outlined text-[18px]">delete</span>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="vazioState" class="@(Model.Count == 0 ? "" : "hidden") p-xl text-center">
+                <span class="material-symbols-outlined text-[40px] text-outline">handyman</span>
+                <p class="font-body-md text-body-md text-on-surface-variant">
+                    @(Model.Count == 0 ? "Nenhum serviço cadastrado ainda." : "Nenhum serviço encontrado para esse filtro.")
+                </p>
+                @if (Model.Count == 0)
+                {
+                    <a asp-action="Add" class="mt-md inline-flex items-center gap-xs bg-secondary text-white rounded-lg px-lg py-sm font-label-md text-label-md font-bold hover:bg-opacity-90 transition-colors">
+                        <span class="material-symbols-outlined text-[18px]">add</span>
+                        Cadastrar o primeiro
+                    </a>
+                }
+            </div>
+        </section>
+
+        <p class="mt-md font-label-sm text-label-sm text-outline">
+            O valor é apenas o padrão: ao montar a ordem de serviço dá para alterá-lo sem mexer no
+            catálogo. Serviço "fora de oferta" some do seletor mas continua nas ordens já feitas.
+        </p>
+    </main>
+
+    <script src="~/js/servico.js" asp-append-version="true"></script>
+</body>
+</html>

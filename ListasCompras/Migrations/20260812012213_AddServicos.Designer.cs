@@ -3,6 +3,7 @@ using System;
 using ListasCompras.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ListasCompras.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260812012213_AddServicos")]
+    partial class AddServicos
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.9");
@@ -381,9 +384,6 @@ namespace ListasCompras.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<int?>("OrcamentoOrigemId")
-                        .HasColumnType("INTEGER");
-
                     b.Property<int?>("OrdemOrigemId")
                         .HasColumnType("INTEGER");
 
@@ -404,15 +404,7 @@ namespace ListasCompras.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Tipo")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("TEXT");
-
                     b.Property<int?>("UsuarioId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("ValidadeDias")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
@@ -422,11 +414,7 @@ namespace ListasCompras.Migrations
                     b.HasIndex("Numero")
                         .IsUnique();
 
-                    b.HasIndex("OrcamentoOrigemId");
-
                     b.HasIndex("OrdemOrigemId");
-
-                    b.HasIndex("Tipo");
 
                     b.HasIndex("UsuarioId");
 
@@ -712,11 +700,6 @@ namespace ListasCompras.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("ListasCompras.Models.OrdemServico", "OrcamentoOrigem")
-                        .WithMany()
-                        .HasForeignKey("OrcamentoOrigemId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.HasOne("ListasCompras.Models.OrdemServico", "OrdemOrigem")
                         .WithMany()
                         .HasForeignKey("OrdemOrigemId")
@@ -728,8 +711,6 @@ namespace ListasCompras.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Cliente");
-
-                    b.Navigation("OrcamentoOrigem");
 
                     b.Navigation("OrdemOrigem");
 

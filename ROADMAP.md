@@ -22,6 +22,8 @@ retrabalho garantido:
 ✅ Estoque e Caixa no banco          (2026-08-07, venda baixa o estoque)
 ✅ Garantias                         (2026-08-11, conta da data de entrega)
 ✅ Backup pela tela                  (2026-08-11)
+✅ Catálogo de serviços              (2026-08-11, alimenta os itens da OS)
+✅ Orçamento separado da OS          (2026-08-12, aprovado vira ordem)
         ↓
 1. Anexar fotos do aparelho          (pendura na OS, que já está gravada)
         ↓
@@ -35,15 +37,7 @@ cadastro de Clientes depois — o que obrigaria a migrar dados na marra. Por iss
 
 ## Alta prioridade
 
-### 1. Catálogo de serviços com preço
-**Falta porque** os itens do orçamento são texto livre. Cada técnico escreve de um jeito e cobra o
-que lembra. Um catálogo ("troca de tela", "limpeza de placa") dá preço consistente e preenchimento
-rápido. É o módulo `Servicos` do MapOS.
-
-**O que envolve:** entidade simples (nome, valor padrão) e um seletor no formulário do Orçamento,
-mantendo a possibilidade de digitar item livre.
-
-### 2. Anexar fotos do aparelho
+### 1. Anexar fotos do aparelho
 **Falta porque** é proteção jurídica direta: fotografar o aparelho na entrada é a defesa contra
 "esse arranhão não estava aí". Reforça exatamente as cláusulas de risco que já estão impressas nos
 termos da OS. O MapOS chama de `Arquivos`.
@@ -51,7 +45,7 @@ termos da OS. O MapOS chama de `Arquivos`.
 **O que envolve:** upload vinculado à OS. Decidir onde guardar — arquivo em pasta é melhor que
 base64 no banco, que é como a logo da loja é armazenada hoje e não escalaria para fotos.
 
-### 3. Relatório de receita bruta MEI
+### 2. Relatório de receita bruta MEI
 **Falta porque** MEI tem teto anual de faturamento, e quem passa sem perceber é desenquadrado e cai
 numa carga tributária maior. O MapOS tem um relatório dedicado a isso
 (`rel_receitas_brutas_mei`) — é o item mais específico do Brasil na lista deles e vale mais para o
@@ -60,7 +54,7 @@ dono da loja do que qualquer gráfico bonito.
 **O que envolve:** somar as vendas e ordens do ano contra o teto vigente, com aviso ao se aproximar.
 Depende de Caixa e OS gravando.
 
-### 4. Impressão térmica da OS
+### 3. Impressão térmica da OS
 **Falta porque** o balcão usa impressora térmica de 58/80mm no dia a dia. Nosso documento A4 de duas
 vias está bem resolvido para a assinatura, mas o comprovante de entrada entregue na hora é térmico.
 O MapOS mantém os dois (`imprimirOs` e `imprimirOsTermica`).
@@ -68,7 +62,7 @@ O MapOS mantém os dois (`imprimirOs` e `imprimirOsTermica`).
 **O que envolve:** uma segunda folha de estilo de impressão, em coluna estreita, sem tabela larga.
 Convivem: térmica na entrada, A4 na assinatura.
 
-### 5. Notificação ao cliente (e-mail ou WhatsApp)
+### 4. Notificação ao cliente (e-mail ou WhatsApp)
 **Falta porque** os termos da OS dizem que, para considerar um aparelho abandonado, o cliente
 precisa ter sido **notificado por escrito**. Hoje o sistema não produz essa prova. Isso deixa de ser
 conveniência e passa a ser o que sustenta juridicamente a cláusula 8 — além de resolver o "seu
@@ -80,13 +74,13 @@ que é a prova) e um `BackgroundService` para reenviar as que falharem.
 > Nota de stack: **não precisamos de cron.** O `BackgroundService` do .NET roda dentro da própria
 > aplicação. O MapOS precisa de duas linhas no crontab do servidor para a mesma coisa.
 
-### 6. Financeiro (lançamentos e contas a pagar)
+### 5. Financeiro (lançamentos e contas a pagar)
 **Falta porque** Caixa sem persistência não é caixa. Entradas, saídas e contas a pagar dão a visão
 do mês, que hoje não existe em lugar nenhum. É o módulo `Financeiro` do MapOS.
 
 **O que envolve:** maior esforço da lista; depende de Caixa e OS gravando.
 
-### 7. Script de instalação para o usuário final
+### 6. Script de instalação para o usuário final
 **Falta porque** o público do sistema é dono de loja, não desenvolvedor. Hoje instalar exige clonar
 o repositório, ter o SDK do .NET e rodar comandos. Essa é a lição que o MapOS acerta: sem instalação
 simples, o sistema não chega em quem precisa dele.
@@ -99,14 +93,14 @@ mais simples que no MapOS: não há PHP, MySQL nem webserver para configurar.
 
 ## Baixa prioridade
 
-### 8. Recuperação de senha por e-mail
+### 7. Recuperação de senha por e-mail
 **Já existe** recuperação por código anotado no papel e por comando de terminal (2026-08-07, ver
 [CHANGES.md](CHANGES.md)). Falta a via por e-mail, que dispensa guardar código: link de uso único
 com validade curta.
 
-**Depende de** o envio de e-mail (item 5). Prioridade baixa agora que o caso de tranca está coberto.
+**Depende de** o envio de e-mail (item 4). Prioridade baixa agora que o caso de tranca está coberto.
 
-### 9. Ilustração própria para a tela de login
+### 8. Ilustração própria para a tela de login
 **Situação atual:** a atribuição da [Storyset](https://storyset.com) está no arquivo `NOTICE`, então
 a obrigação de crédito está cumprida.
 
@@ -114,7 +108,7 @@ a obrigação de crédito está cumprida.
 técnica de celular. Uma ilustração do mundo da loja — bancada, aparelho aberto, ferramenta — diria
 mais e dispensaria a dependência de terceiro.
 
-### 10. Unificar os dois visuais
+### 9. Unificar os dois visuais
 **Situação atual:** convivem dois sistemas de design. As telas novas (Painel, Orçamento, Estoque,
 Caixa, Configuração, Login) usam Tailwind com paleta Material-3. As antigas (Lista de compras,
 "Em breve") usam `wwwroot/css/site.css`, verde institucional com fonte Inter.
@@ -122,13 +116,13 @@ Caixa, Configuração, Login) usam Tailwind com paleta Material-3. As antigas (L
 **O que envolve:** migrar `Views/ListaCompra/` e `Views/Shared/EmBreve.cshtml` para Tailwind,
 aproveitando o partial `_HeadTailwind.cshtml`. Depois o `site.css` encolhe bastante. Cosmético.
 
-### 11. Dashboards de verdade
+### 10. Dashboards de verdade
 **Situação atual:** `DashboardsController` retorna a tela "Em breve" e os KPIs do Painel mostram
 estado vazio.
 
 **O que envolve:** depende de Caixa, Estoque e OS no banco — sem dado gravado não há o que somar.
 
-### 12. Autoria detalhada (auditoria mínima)
+### 11. Autoria detalhada (auditoria mínima)
 **Situação atual:** a OS já grava quem a emitiu, e as movimentações de estoque quem as fez. Uma auditoria completa, como o
 módulo `Auditoria` do MapOS, registraria toda alteração em todo registro.
 

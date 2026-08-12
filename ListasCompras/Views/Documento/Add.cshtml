@@ -2,8 +2,13 @@
 @{
     Layout = null;
     var editando = Model.Id > 0;
+    var ehOrcamento = ViewData["EhOrcamento"] as bool? ?? false;
+    // Orçamento não recebe dinheiro nem promete garantia: os campos continuam no HTML
+    // (o script de cálculo conta com eles) mas ficam escondidos
+    var soOs = ehOrcamento ? "hidden" : "";
     ViewData["Title"] = editando ? "Editar " + Model.Numero
-        : Model.OrdemOrigemId.HasValue ? "Retorno em garantia" : "Nova ordem de serviço";
+        : Model.OrdemOrigemId.HasValue ? "Retorno em garantia"
+        : ehOrcamento ? "Novo orçamento" : "Nova ordem de serviço";
     string Decimal(decimal v) => v.ToString("0.00", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"));
     var nomeLoja = ViewData["NomeLoja"] as string ?? "Minha Loja";
     var erro = TempData["Erro"] as string;
@@ -53,7 +58,11 @@
                         <span>Retorno em garantia da @Model.OrdemOrigem?.Numero — o reparo coberto não se cobra de novo.</span>
                     </div>
                 }
-                <p class="font-body-md text-body-md text-on-surface-variant">Registre os dados do cliente, do aparelho e os itens do serviço.</p>
+                <p class="font-body-md text-body-md text-on-surface-variant">
+                    @(ehOrcamento
+                        ? "Quanto custaria o serviço. Nada é autorizado aqui — se o cliente aprovar, este orçamento vira uma ordem de serviço."
+                        : "Registre os dados do cliente, do aparelho e os itens do serviço.")
+                </p>
             </div>
         </section>
 
@@ -178,7 +187,12 @@
                             {
                                 <tr class="border-t border-outline-variant">
                                     <td class="px-md py-sm">
-                                        <input type="text" name="itemDescricao" value="@item.Descricao" class="item-desc w-full bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" placeholder="Ex: Tela Display Frontal Original" />
+                                        <div class="relative">
+                                            <input type="text" name="itemDescricao" value="@item.Descricao" class="item-desc w-full bg-surface-container-low border-none rounded-lg pl-md pr-10 py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" placeholder="Digite ou escolha do catálogo" />
+                                            <button type="button" class="escolher-servico absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg hover:bg-surface-container-high flex items-center justify-center text-outline transition-colors" title="Escolher do catálogo de serviços">
+                                                <span class="material-symbols-outlined text-[20px]">handyman</span>
+                                            </button>
+                                        </div>
                                     </td>
                                     <td class="px-md py-sm">
                                         <input type="text" name="itemQuantidade" inputmode="numeric" value="@item.Quantidade" class="item-qtd w-full text-center bg-surface-container-low border-none rounded-lg px-2 py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
@@ -213,13 +227,30 @@
             <section class="bg-white rounded-xl border border-outline-variant shadow-sm p-lg">
                 <div class="flex items-center gap-sm mb-md">
                     <span class="material-symbols-outlined text-[20px] text-secondary">payments</span>
-                    <h2 class="font-title-lg text-title-lg text-primary">Pagamento</h2>
+                    <h2 class="font-title-lg text-title-lg text-primary">@(ehOrcamento ? "Valores" : "Pagamento")</h2>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-12 gap-md">
 
+                    @if (ehOrcamento)
+                    {
+                        <!-- Validade: um preço de peça não vale para sempre -->
+                        <div class="md:col-span-4">
+                            <label class="font-label-md text-label-md text-on-surface-variant" for="validadeDias">Validade do orçamento</label>
+                            <div class="mt-xs flex items-center gap-sm">
+                                <input id="validadeDias" name="validadeDias" type="number" min="1" max="180"
+                                       value="@(Model.ValidadeDias > 0 ? Model.ValidadeDias : ListasCompras.Models.OrdemServico.ValidadePadraoDias)"
+                                       class="w-24 bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                                <span class="font-body-md text-body-md text-on-surface-variant">dias</span>
+                            </div>
+                            <p class="mt-xs font-label-sm text-label-sm text-outline">
+                                Preço de peça muda. Passado o prazo, o orçamento precisa ser refeito.
+                            </p>
+                        </div>
+                    }
+
                     <!-- Sinal (haver) -->
-                    <div class="md:col-span-4">
+                    <div class="md:col-span-4 @soOs">
                         <label class="flex items-center gap-xs cursor-pointer">
                             <input id="temSinal" type="checkbox" class="w-4 h-4 accent-secondary" @(Model.Sinal > 0 ? "checked" : "") />
                             <span class="font-label-md text-label-md text-on-surface-variant">Cliente deixou um haver (adiantamento)</span>
@@ -247,7 +278,7 @@
                     </div>
 
                     <!-- Forma de pagamento -->
-                    <div class="md:col-span-4">
+                    <div class="md:col-span-4 @soOs">
                         <label class="font-label-md text-label-md text-on-surface-variant" for="formaPagamento">Forma de pagamento</label>
                         <select id="formaPagamento" name="formaPagamento"
                                 class="w-full mt-xs bg-surface-container-low border-none rounded-lg pl-md pr-10 py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30">
@@ -260,7 +291,7 @@
                     </div>
 
                     <!-- Parcelamento -->
-                    <div class="md:col-span-4">
+                    <div class="md:col-span-4 @soOs">
                         <label class="flex items-center gap-xs cursor-pointer">
                             <input id="parcelado" name="parcelado" value="true" type="checkbox" class="w-4 h-4 accent-secondary" @(Model.Parcelado ? "checked" : "") />
                             <span class="font-label-md text-label-md text-on-surface-variant">Parcelado</span>
@@ -278,7 +309,7 @@
                     </div>
 
                     <!-- Garantia -->
-                    <div class="md:col-span-4">
+                    <div class="md:col-span-4 @soOs">
                         <label class="font-label-md text-label-md text-on-surface-variant" for="prazoGarantiaDias">Garantia do serviço</label>
                         <div class="mt-xs flex items-center gap-sm">
                             <input id="prazoGarantiaDias" name="prazoGarantiaDias" type="number" min="90" step="30"
@@ -292,7 +323,7 @@
                     </div>
 
                     <!-- Resumo das contas -->
-                    <div class="md:col-span-8">
+                    <div class="@(ehOrcamento ? "md:col-span-12" : "md:col-span-8")">
                         <div class="bg-surface-container-low rounded-lg p-md flex flex-col gap-xs">
                             <div class="flex justify-between font-body-md text-body-md text-on-surface-variant">
                                 <span>Subtotal dos itens</span><span id="resumoSubtotal">R$ 0,00</span>
@@ -300,12 +331,12 @@
                             <div class="flex justify-between font-body-md text-body-md text-on-surface-variant">
                                 <span>Desconto</span><span id="resumoDesconto">− R$ 0,00</span>
                             </div>
-                            <div class="flex justify-between font-body-md text-body-md text-on-surface-variant">
+                            <div class="flex justify-between font-body-md text-body-md text-on-surface-variant @soOs">
                                 <span>Haver deixado pelo cliente</span><span id="resumoSinal">− R$ 0,00</span>
                             </div>
                             <hr class="border-outline-variant" />
                             <div class="flex justify-between font-title-lg text-title-lg font-bold text-primary">
-                                <span>Falta pagar</span><span id="resumoSaldo">R$ 0,00</span>
+                                <span>@(ehOrcamento ? "Total do orçamento" : "Falta pagar")</span><span id="resumoSaldo">R$ 0,00</span>
                             </div>
                         </div>
                     </div>
@@ -321,7 +352,7 @@
                 <button id="salvarOrcamentoBtn" type="submit"
                         class="bg-secondary text-white rounded-lg px-lg py-sm font-label-md text-label-md font-bold hover:bg-opacity-90 transition-colors flex items-center gap-xs">
                     <span class="material-symbols-outlined text-[18px]">save</span>
-                    @(editando ? "Salvar alterações" : "Salvar ordem de serviço")
+                    @(editando ? "Salvar alterações" : ehOrcamento ? "Salvar orçamento" : "Salvar ordem de serviço")
                 </button>
             </div>
         </div>
@@ -354,6 +385,37 @@
                    class="font-label-md text-label-md text-secondary font-bold hover:underline flex items-center gap-xs">
                     <span class="material-symbols-outlined text-[18px]">person_add</span>
                     Cadastrar
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Escolher do catálogo de serviços -->
+    <div id="modalServico" class="hidden fixed inset-0 z-50 bg-black/40 flex items-start justify-center px-md pt-24">
+        <div class="bg-white rounded-xl border border-outline-variant shadow-lg w-full max-w-[520px] overflow-hidden">
+            <div class="p-md border-b border-outline-variant">
+                <div class="flex items-center justify-between gap-sm mb-sm">
+                    <h2 class="font-title-lg text-title-lg text-primary">Catálogo de serviços</h2>
+                    <button id="fecharModalServico" type="button" title="Fechar"
+                            class="w-8 h-8 rounded-lg hover:bg-surface-container-low flex items-center justify-center text-on-surface-variant transition-colors">
+                        <span class="material-symbols-outlined text-[20px]">close</span>
+                    </button>
+                </div>
+                <div class="relative">
+                    <input id="buscaServicoInput" type="text" placeholder="Nome ou categoria..." autocomplete="off"
+                           class="w-full bg-surface-container-low border-none rounded-full pl-md pr-10 py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                    <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline text-[20px]">search</span>
+                </div>
+            </div>
+
+            <div id="resultadosServico" class="max-h-[320px] overflow-y-auto"></div>
+
+            <div class="p-md border-t border-outline-variant flex items-center justify-between gap-sm">
+                <span class="font-label-sm text-label-sm text-outline">O valor pode ser alterado depois de escolher.</span>
+                <a asp-controller="Servico" asp-action="Add" target="_blank"
+                   class="font-label-md text-label-md text-secondary font-bold hover:underline flex items-center gap-xs">
+                    <span class="material-symbols-outlined text-[18px]">add</span>
+                    Novo serviço
                 </a>
             </div>
         </div>

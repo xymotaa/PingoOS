@@ -1,15 +1,20 @@
 @model List<ListasCompras.Models.OrdemServico>
 @{
     Layout = null;
-    ViewData["Title"] = "Ordens de serviço";
+    var ehOrcamento = ViewData["EhOrcamento"] as bool? ?? false;
+    var titulo = ehOrcamento ? "Orçamentos" : "Ordens de serviço";
+    ViewData["Title"] = titulo;
     var nomeLoja = ViewData["NomeLoja"] as string ?? "Minha Loja";
+    var situacoes = ehOrcamento
+        ? ListasCompras.Models.SituacoesOrcamento.Todas
+        : ListasCompras.Models.Situacoes.Todas;
 
     string Moeda(decimal v) => v.ToString("C2", new System.Globalization.CultureInfo("pt-BR"));
 
     (string fundo, string texto) Cor(string situacao) => situacao switch
     {
-        "Entregue" => ("bg-surface-container-high", "text-on-surface-variant"),
-        "Pronta" => ("bg-secondary-container", "text-on-secondary-container"),
+        "Entregue" or "Recusado" => ("bg-surface-container-high", "text-on-surface-variant"),
+        "Pronta" or "Aprovado" => ("bg-secondary-container", "text-on-secondary-container"),
         _ => ("bg-warning-container", "text-on-surface"),
     };
 }
@@ -18,7 +23,7 @@
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>@nomeLoja — Ordens de serviço</title>
+    <title>@nomeLoja — @titulo</title>
     @await Html.PartialAsync("_HeadTailwind")
 </head>
 <body class="bg-surface">
@@ -43,8 +48,12 @@
 
         <!-- Cabeçalho da página -->
         <section class="mb-md">
-            <h1 class="font-headline-lg text-headline-lg text-primary">Ordens de serviço</h1>
-            <p class="font-body-md text-body-md text-on-surface-variant">Orçamentos abertos, prontos para retirada e já entregues.</p>
+            <h1 class="font-headline-lg text-headline-lg text-primary">@titulo</h1>
+            <p class="font-body-md text-body-md text-on-surface-variant">
+                @(ehOrcamento
+                    ? "O que o cliente perguntou no balcão. Aprovado, o orçamento vira ordem de serviço."
+                    : "Aparelhos na bancada: abertos, prontos para retirada e já entregues.")
+            </p>
         </section>
 
         <!-- Barra de ferramentas -->
@@ -57,22 +66,25 @@
 
             <select id="filtroSituacao" class="bg-surface-container-low border-none rounded-lg pl-md pr-10 py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30">
                 <option value="">Todas as situações</option>
-                <option value="Aberta">Aberta</option>
-                <option value="Pronta">Pronta</option>
-                <option value="Entregue">Entregue</option>
+                @foreach (var s in situacoes)
+                {
+                    <option value="@s">@s</option>
+                }
             </select>
 
-            <a asp-action="Add" title="Nova ordem de serviço"
+            <a asp-action="Add" title="@(ehOrcamento ? "Novo orçamento" : "Nova ordem de serviço")"
                class="h-9 px-md rounded-lg bg-secondary text-white flex items-center justify-center gap-xs hover:bg-opacity-90 transition-colors shrink-0 ml-auto">
                 <span class="material-symbols-outlined text-[20px]">add</span>
-                <span class="font-label-md text-label-md font-bold hidden sm:inline">Nova OS</span>
+                <span class="font-label-md text-label-md font-bold hidden sm:inline">@(ehOrcamento ? "Novo orçamento" : "Nova OS")</span>
             </a>
         </section>
 
         <!-- Tabela -->
         <section class="bg-white rounded-b-xl border border-outline-variant shadow-sm overflow-hidden">
             <div class="px-lg py-xs border-b border-outline-variant">
-                <span id="contagemInfo" class="font-label-sm text-label-sm text-outline"></span>
+                <span id="contagemInfo" class="font-label-sm text-label-sm text-outline"
+                      data-um="@(ehOrcamento ? "orçamento" : "ordem")"
+                      data-muitos="@(ehOrcamento ? "orçamentos" : "ordens")"></span>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
@@ -81,7 +93,7 @@
                             <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider">Nº</th>
                             <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider">Cliente</th>
                             <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider">Aparelho</th>
-                            <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider">Aberta em</th>
+                            <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider">@(ehOrcamento ? "Feito em" : "Aberta em")</th>
                             <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider text-right">Total</th>
                             <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider text-center">Situação</th>
                             <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider text-center w-32">Ações</th>
@@ -105,9 +117,10 @@
                                         <input type="hidden" name="id" value="@os.Id" />
                                         <select name="situacao" onchange="this.form.submit()" title="Alterar a situação"
                                                 class="cursor-pointer border-none rounded-lg pl-sm pr-8 py-xs font-label-sm text-label-sm @cor.fundo @cor.texto focus:ring-2 focus:ring-secondary/30">
-                                            <option value="Aberta" selected="@(os.Situacao == "Aberta")">Aberta</option>
-                                            <option value="Pronta" selected="@(os.Situacao == "Pronta")">Pronta</option>
-                                            <option value="Entregue" selected="@(os.Situacao == "Entregue")">Entregue</option>
+                                            @foreach (var s in situacoes)
+                                            {
+                                                <option value="@s" selected="@(os.Situacao == s)">@s</option>
+                                            }
                                         </select>
                                     </form>
                                 </td>
@@ -117,12 +130,12 @@
                                            class="w-8 h-8 rounded-lg hover:bg-surface-container-high inline-flex items-center justify-center text-on-surface-variant transition-colors">
                                             <span class="material-symbols-outlined text-[18px]">visibility</span>
                                         </a>
-                                        <a asp-action="Add" asp-route-id="@os.Id" title="Editar a ordem"
+                                        <a asp-action="Add" asp-route-id="@os.Id" title="@(ehOrcamento ? "Editar o orçamento" : "Editar a ordem")"
                                            class="w-8 h-8 rounded-lg hover:bg-surface-container-high inline-flex items-center justify-center text-on-surface-variant transition-colors">
                                             <span class="material-symbols-outlined text-[18px]">edit</span>
                                         </a>
                                         <form asp-action="Excluir" method="post" class="inline"
-                                              onsubmit="return confirm('Excluir a ordem @os.Numero?');">
+                                              onsubmit="return confirm('Excluir @(ehOrcamento ? "o orçamento" : "a ordem") @os.Numero?');">
                                             <input type="hidden" name="id" value="@os.Id" />
                                             <button type="submit" title="Excluir"
                                                     class="w-8 h-8 rounded-lg hover:bg-error-container inline-flex items-center justify-center text-outline transition-colors">
@@ -140,13 +153,15 @@
             <div id="vazioState" class="@(Model.Count == 0 ? "" : "hidden") p-xl text-center">
                 <span class="material-symbols-outlined text-[40px] text-outline">request_quote</span>
                 <p class="font-body-md text-body-md text-on-surface-variant">
-                    @(Model.Count == 0 ? "Nenhuma ordem de serviço registrada ainda." : "Nenhuma ordem encontrada para esse filtro.")
+                    @(Model.Count == 0
+                        ? (ehOrcamento ? "Nenhum orçamento registrado ainda." : "Nenhuma ordem de serviço registrada ainda.")
+                        : "Nada encontrado para esse filtro.")
                 </p>
                 @if (Model.Count == 0)
                 {
                     <a asp-action="Add" class="mt-md inline-flex items-center gap-xs bg-secondary text-white rounded-lg px-lg py-sm font-label-md text-label-md font-bold hover:bg-opacity-90 transition-colors">
                         <span class="material-symbols-outlined text-[18px]">add</span>
-                        Abrir a primeira
+                        @(ehOrcamento ? "Fazer o primeiro" : "Abrir a primeira")
                     </a>
                 }
             </div>

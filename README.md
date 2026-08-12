@@ -35,9 +35,11 @@ lista de compras e está virando um ERP, módulo por módulo.
 | Lista de compras | `ListaCompraController` | `/ListaCompra` | ✅ Completo — telas + banco + PDF |
 | Configuração (perfil da loja) | `ConfiguracaoController` | `/Configuracao` | ✅ Completo — telas + banco |
 | Clientes | `ClienteController` | `/Cliente` | ✅ Completo — telas + banco |
-| Ordem de Serviço / Orçamento | `OrcamentoController` | `/Orcamento` | ✅ Completo — banco, até 5 aparelhos, pagamento e impressão em duas vias |
+| Orçamento | `OrcamentoController` | `/Orcamento` | ✅ Completo — preço no balcão, via única, vira OS quando aprovado |
+| Ordem de Serviço | `OrdemServicoController` | `/OrdemServico` | ✅ Completo — banco, até 5 aparelhos, pagamento e impressão em duas vias |
 | Estoque | `EstoqueController` | `/Estoque` | ✅ Completo — telas + banco + histórico de movimentações |
 | Caixa | `CaixaController` | `/Caixa` | ✅ Completo — venda gravada e baixa automática do estoque |
+| Serviços | `ServicoController` | `/Servico` | ✅ Completo — catálogo que alimenta os itens da OS |
 | Garantias | `GarantiaController` | `/Garantia` | ✅ Completo — prazo, vencimento e retorno em garantia |
 | Dashboards | `DashboardsController` | `/Dashboards` | 🚧 Placeholder "Em breve" |
 
@@ -49,27 +51,44 @@ esperando dados acumularem.
 
 ## Telas
 
-| Orçamento / OS | Estoque |
+| Orçamento | Ordem de serviço |
 |---|---|
-| ![Orçamento](docs/screenshots/orcamento.png) | ![Estoque](docs/screenshots/estoque.png) |
+| ![Orçamento](docs/screenshots/orcamento.png) | ![Ordem de serviço](docs/screenshots/ordem-servico.png) |
 
-| Lista de compras | Clientes |
+| Estoque | Lista de compras |
 |---|---|
-| ![Lista de compras](docs/screenshots/lista-compras.png) | ![Clientes](docs/screenshots/clientes.png) |
+| ![Estoque](docs/screenshots/estoque.png) | ![Lista de compras](docs/screenshots/lista-compras.png) |
 
-| Vendas | Garantias |
+| Clientes | Vendas |
 |---|---|
-| ![Vendas](docs/screenshots/vendas.png) | ![Garantias](docs/screenshots/garantias.png) |
+| ![Clientes](docs/screenshots/clientes.png) | ![Vendas](docs/screenshots/vendas.png) |
 
-| Login |
-|---|
-| ![Login](docs/screenshots/login.png) |
+| Garantias | Serviços |
+|---|---|
+| ![Garantias](docs/screenshots/garantias.png) | ![Serviços](docs/screenshots/servicos.png) |
 
-| Usuários |
-|---|
-| ![Usuários](docs/screenshots/usuarios.png) |
+| Login | Usuários |
+|---|---|
+| ![Login](docs/screenshots/login.png) | ![Usuários](docs/screenshots/usuarios.png) |
 
-### Ordem de Serviço
+### Orçamento e Ordem de Serviço
+
+São dois documentos, não um. O **orçamento** é a pergunta do balcão — "quanto custa a frontal
+desse aparelho?": informa preço, sai em **via única**, sem termos, sem assinatura e sem garantia,
+porque nada foi autorizado e o aparelho nem ficou na loja. Tem prazo de validade (10 dias por
+padrão), já que preço de peça muda.
+
+A **ordem de serviço** é o aparelho na bancada: termos completos, assinatura das duas partes,
+garantia contada da retirada e as duas vias na mesma folha.
+
+O caminho entre os dois é um botão. Em um orçamento aberto, **"Cliente aprovou — gerar OS"** cria a
+ordem já com o mesmo cliente, aparelhos, diagnóstico e itens; o orçamento fica no histórico como
+*Aprovado*, e as duas telas passam a mostrar o link uma para a outra. Aprovar de novo não gera uma
+segunda ordem.
+
+Cada um tem sua numeração (`ORC-000001` e `OS-000001`) e suas situações — o orçamento vai de
+**Aberto** a *Aprovado* ou *Recusado*; a ordem, de **Aberta** a *Pronta* e *Entregue*. Nenhum dos
+dois abre pela rota do outro.
 
 O módulo é o centro do sistema. Uma OS tem:
 
@@ -92,6 +111,9 @@ O módulo é o centro do sistema. Uma OS tem:
 - **Garantia** de 90 dias por padrão (mínimo do CDC, art. 26, II), contada **a partir da entrega**.
   A tela `/Garantia` lista as ordens entregues com os dias restantes e permite abrir um **retorno em
   garantia** — uma OS nova, já com cliente e aparelhos preenchidos, ligada à original.
+- **Itens do catálogo** — cada linha tem um botão que abre o catálogo de **Serviços**, preenchendo
+  descrição e valor. Continua dando para digitar item livre, e o valor sugerido é editável na linha
+  sem mexer no catálogo.
 - **Numeração sequencial** (`OS-000001`) gerada no servidor e **autoria**: o nome de quem emitiu
   aparece na linha de assinatura do técnico.
 
@@ -107,7 +129,13 @@ Se a ordem tiver muitos itens ou aparelhos, o documento se ajusta sozinho para c
 
 > O documento de impressão é montado a partir de `#osImpressao`, e **todo o CSS de impressão é
 > escopado nesse id**. A 2ª via é um clone da 1ª feito por JavaScript — se ela sair sem formatação,
-> procure por tag mal fechada que esteja encerrando o `#osImpressao` antes da hora.
+> procure por tag mal fechada que esteja encerrando o `#osImpressao` antes da hora. O orçamento não
+> tem o bloco `#osVia2`, e o clone é simplesmente pulado.
+
+> As três telas (listar, editar, ver) ficam em `Views/Documento/` e servem aos dois documentos.
+> Quem decide o que aparece é o campo `Tipo` do modelo: `OrcamentoController` e
+> `OrdemServicoController` são casca fina sobre `DocumentoControllerBase`, cada um fixando o seu
+> tipo. Mudança que valha para os dois se faz num lugar só.
 
 ## Requisitos
 
