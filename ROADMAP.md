@@ -89,18 +89,49 @@ simples, o sistema não chega em quem precisa dele.
 publicam, registram como serviço do sistema (systemd / Serviço do Windows) e abrem o navegador. Bem
 mais simples que no MapOS: não há PHP, MySQL nem webserver para configurar.
 
+### 7. Hospedar na nuvem (Supabase + domínio próprio)
+**Mudou de ideia (2026-08-12):** a decisão registrada em "Descartado" era rodar só local. O Supabase
+tem um free tier de Postgres, o que reabre a questão — banco gerenciado sem custo muda a conta.
+
+**O que envolve, em ordem:**
+
+1. **Banco: SQLite → Postgres.** Trocar o provider do EF Core
+   (`Npgsql.EntityFrameworkCore.PostgreSQL`) e **recriar as migrations do zero** — as atuais têm
+   tipos e sintaxe específicos do SQLite (`INTEGER`, `TEXT`), não são portáveis por cima. Revisar:
+   - `EF.Functions.Like` (busca case-insensitive) — no Postgres o equivalente correto é `ILIKE`.
+   - Backup pela tela usa `VACUUM INTO`, exclusivo do SQLite. No Supabase, backup automático já vem
+     incluso; a tela perderia a razão de existir como está, ou vira um export adicional (`pg_dump`).
+   - Logo da loja em base64 no banco (`ConfiguracaoLoja`) funciona igual num Postgres.
+2. **Login "real" em produção.** A autenticação já é real (cookie + PBKDF2-SHA512); o que falta é
+   contexto de produção: cookie `Secure`, HTTPS obrigatório, e connection string/segredos saindo do
+   `appsettings.json` para variável de ambiente.
+3. **Hospedagem do binário e domínio.** Duas rotas, a decidir mais perto da hora:
+   - **VPS da Hostinger** (não hospedagem compartilhada — essa não roda .NET) com o runtime
+     instalado, o app como serviço `systemd` atrás de nginx fazendo HTTPS (Let's Encrypt).
+   - **Docker**, reabrindo o item descartado abaixo: builda uma imagem com o `dotnet publish`, sobe
+     num VPS com `docker run`, e o domínio da Hostinger aponta pra lá. Mais portável entre provedores
+     se um dia trocar de VPS, ao custo de manter um `Dockerfile`.
+
+**Consequência que muda a natureza do sistema:** dados pessoais de clientes (CPF, endereço,
+telefone) passam a ficar num servidor exposto à internet, não mais só no PC da loja. É a mesma
+ressalva que já estava na nota de Docker abaixo, e vale ainda mais aqui.
+
+**Ordem recomendada:** migrar para Postgres primeiro (testável de graça, local ou já no Supabase),
+validar tudo funcionando, e só depois resolver hospedagem — misturar as duas frentes dificulta saber
+qual delas quebrou alguma coisa.
+
 ---
 
 ## Baixa prioridade
 
-### 7. Recuperação de senha por e-mail
+### 8. Recuperação de senha por e-mail
 **Já existe** recuperação por código anotado no papel e por comando de terminal (2026-08-07, ver
 [CHANGES.md](CHANGES.md)). Falta a via por e-mail, que dispensa guardar código: link de uso único
 com validade curta.
 
 **Depende de** o envio de e-mail (item 4). Prioridade baixa agora que o caso de tranca está coberto.
 
-### 8. Ilustração própria para a tela de login
+### 9. Ilustração própria para a tela de login
 **Situação atual:** a atribuição da [Storyset](https://storyset.com) está no arquivo `NOTICE`, então
 a obrigação de crédito está cumprida.
 
@@ -108,7 +139,7 @@ a obrigação de crédito está cumprida.
 técnica de celular. Uma ilustração do mundo da loja — bancada, aparelho aberto, ferramenta — diria
 mais e dispensaria a dependência de terceiro.
 
-### 9. Unificar os dois visuais
+### 10. Unificar os dois visuais
 **Situação atual:** convivem dois sistemas de design. As telas novas (Painel, Orçamento, Estoque,
 Caixa, Configuração, Login) usam Tailwind com paleta Material-3. As antigas (Lista de compras,
 "Em breve") usam `wwwroot/css/site.css`, verde institucional com fonte Inter.
@@ -116,13 +147,13 @@ Caixa, Configuração, Login) usam Tailwind com paleta Material-3. As antigas (L
 **O que envolve:** migrar `Views/ListaCompra/` e `Views/Shared/EmBreve.cshtml` para Tailwind,
 aproveitando o partial `_HeadTailwind.cshtml`. Depois o `site.css` encolhe bastante. Cosmético.
 
-### 10. Dashboards de verdade
+### 11. Dashboards de verdade
 **Situação atual:** `DashboardsController` retorna a tela "Em breve" e os KPIs do Painel mostram
 estado vazio.
 
 **O que envolve:** depende de Caixa, Estoque e OS no banco — sem dado gravado não há o que somar.
 
-### 11. Autoria detalhada (auditoria mínima)
+### 12. Autoria detalhada (auditoria mínima)
 **Situação atual:** a OS já grava quem a emitiu, e as movimentações de estoque quem as fez. Uma auditoria completa, como o
 módulo `Auditoria` do MapOS, registraria toda alteração em todo registro.
 
@@ -157,11 +188,8 @@ Metade do assistente deles serve para coletar host, usuário e senha do MySQL �
 existem, porque o SQLite é um arquivo. A outra metade (dados do responsável e da loja) já foi
 resolvida pela tela de **primeiro acesso**.
 
-### Docker
-Faria sentido para hospedar em servidor atendendo várias lojas. **A decisão foi rodar só local**,
-na máquina da própria loja, então Docker seria peso morto: `dotnet publish` já entrega uma pasta
-com executável, sem daemon para instalar.
-
-Se alguém quiser hospedar por conta própria, fica a cargo da pessoa — e nesse caso ela precisa
-resolver HTTPS e revisar a exposição dos dados pessoais dos clientes (CPF, endereço, telefone) que
-o sistema armazena.
+### Docker (decisão revista — ver item 7)
+Estava descartado com a premissa de rodar só local: `dotnet publish` já entrega uma pasta com
+executável, sem daemon para instalar, então Docker seria peso morto. Essa premissa mudou — ver
+item 7 em Alta prioridade, que reabre hospedagem na nuvem via Supabase + Hostinger, com Docker como
+uma das duas rotas possíveis para subir o binário no servidor.
