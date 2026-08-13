@@ -40,6 +40,13 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         npPrecoPost.value = parseDecimal(npPreco.value).toFixed(2);
         npCustoPost.value = parseDecimal(npCusto.value).toFixed(2);
+
+        // location.replace troca a página atual no histórico em vez de empilhar: o
+        // formulário some do histórico e "voltar" na tela seguinte cai na listagem.
+        e.preventDefault();
+        fetch(form.action, { method: "POST", body: new FormData(form) })
+            .then(function (r) { location.replace(r.url); })
+            .catch(function () { form.submit(); });
     });
 
     irParaEtapa(1);

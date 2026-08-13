@@ -35,7 +35,7 @@
             </div>
         }
 
-        <form asp-action="Salvar" method="post" class="flex flex-col gap-md">
+        <form asp-action="Salvar" method="post" id="formCliente" class="flex flex-col gap-md">
             <input type="hidden" asp-for="Id" />
 
             <!-- Identificação -->
@@ -130,5 +130,16 @@
             </div>
         </form>
     </main>
+    <script>
+        // location.replace troca a página atual no histórico em vez de empilhar: o
+        // formulário some do histórico e "voltar" na tela seguinte cai na listagem.
+        document.getElementById("formCliente").addEventListener("submit", function (e) {
+            e.preventDefault();
+            var form = e.target;
+            fetch(form.action, { method: "POST", body: new FormData(form) })
+                .then(function (r) { location.replace(r.url); })
+                .catch(function () { form.submit(); });
+        });
+    </script>
 </body>
 </html>

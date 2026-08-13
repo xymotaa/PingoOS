@@ -300,7 +300,8 @@ document.addEventListener("DOMContentLoaded", function () {
         buscaTimer = window.setTimeout(function () { procurarClientes(buscaClienteInput.value); }, 250);
     });
 
-    document.getElementById("formOs").addEventListener("submit", function (e) {
+    const formOs = document.getElementById("formOs");
+    formOs.addEventListener("submit", function (e) {
         if (!document.getElementById("clienteId").value) {
             e.preventDefault();
             mostrarToast("Selecione o cliente antes de salvar.", true);
@@ -313,7 +314,16 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!temItem) {
             e.preventDefault();
             mostrarToast("Adicione ao menos um item ao orçamento.", true);
+            return;
         }
+
+        // Envia por fetch e troca a página com location.replace: assim esta tela de
+        // formulário não fica no histórico, e o "voltar" do navegador, a partir da tela
+        // seguinte, pula direto para a listagem em vez de reabrir o formulário enviado.
+        e.preventDefault();
+        fetch(formOs.action, { method: "POST", body: new FormData(formOs) })
+            .then(function (r) { location.replace(r.url); })
+            .catch(function () { formOs.submit(); });
     });
 
 

@@ -1,5 +1,30 @@
 # Registro de Alterações
 
+## [2026-08-12] Voltar do navegador não reabre o formulário salvo
+
+### Problema
+Salvar uma OS/orçamento leva para a tela seguinte (`Ver`) e empilha o formulário `Add` no
+histórico do navegador. Clicar em "voltar" reabria o formulário já enviado em vez de ir para a
+listagem — comportamento padrão de qualquer submit HTML, não um bug de rota.
+
+### Solução
+`wwwroot/js/orcamento.js`: o envio do formulário passou a ser por `fetch` seguido de
+`location.replace(r.url)`. `replace` troca a página atual no histórico em vez de empilhar uma
+nova, então o `Add` some do histórico e "voltar" a partir da tela seguinte cai na listagem.
+
+Mesmo padrão nos outros três formulários de cadastro (`Add` → salva → `Index`), que tinham o
+mesmo problema.
+
+### Arquivos Alterados
+| Arquivo | Alteração |
+|---|---|
+| `wwwroot/js/orcamento.js` | submit por `fetch` + `location.replace` |
+| `wwwroot/js/servico-add.js` | idem |
+| `wwwroot/js/estoque-add.js` | idem |
+| `Views/Cliente/Add.cshtml` | idem, id `formCliente` + script inline (não tinha JS próprio) |
+
+---
+
 ## [2026-08-12] Orçamento separado da Ordem de Serviço
 
 ### Problema
