@@ -75,8 +75,27 @@ usuário lançar a mesma OS como venda no Caixa "para aparecer no fechamento", d
 faturamento que a tela de Faturamento MEI já soma. O relatório deve deixar claro que são duas
 fontes diferentes que só estão lado a lado para conferência, nunca a mesma coisa.
 
-**Depende de** nada além do que já é gravado hoje (`Venda.FormaPagamento`, `OrdemServico.FormaPagamento`
-+ `Sinal`). Pode vir antes do item 3 (Financeiro) — é mais simples, é leitura pura.
+**Complicador descoberto na discussão (2026-08-14): o haver não tem data própria.** Hoje
+`OrdemServico.Sinal` é um valor único, sem registro de *quando* entrou. Numa OS aberta num dia e
+entregue dias depois, o haver entra no caixa físico no dia da abertura, mas o `SaldoAPagar` só é
+cobrado no dia da entrega — dois valores, dois dias, duas formas de pagamento possivelmente
+diferentes. Somar "Total da OS" no dia da entrega contaria o haver de novo; o dia em que o haver
+foi deixado ficaria sem aparecer no fechamento nenhum. Ou seja, **não dá para fazer isso só lendo o
+que já existe** — decidido registrar cada pagamento com sua própria data.
+
+**O que passa a envolver, então:**
+1. Tabela nova `PagamentoOrdemServico` (ou nome similar): `OrdemServicoId`, `Data`, `Valor`,
+   `FormaPagamento`. Um registro por entrada de dinheiro — o haver na abertura/edição, o saldo (ou
+   cada parcela) na entrega.
+2. `Salvar` da OS passa a criar esse registro quando um haver novo é informado; `AlterarSituacao`
+   para Entregue cria o registro do saldo.
+3. O relatório do dia soma **pagamentos daquele dia** (não OS daquele dia) — assim o dia do haver e
+   o dia da entrega aparecem cada um com o que realmente entrou na gaveta naquele dia.
+4. Vendas continuam simples (a venda inteira acontece num só momento, sem esse problema).
+
+Maior que "leitura pura" como parecia à primeira vista — precisa de migration e mexe no fluxo de
+salvar/entregar da OS. Ainda vale vir antes do item 3 (Financeiro) por ser mais contido, mas não é
+mais trivial.
 
 ### 3.2. Ordem de compra (peça sob encomenda) — ideia solta (2026-08-14)
 **Falta porque** nem toda peça (ex: frontal de um modelo específico) está em estoque; a loja
