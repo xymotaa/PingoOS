@@ -115,6 +115,8 @@ public abstract class DocumentoControllerBase : LojaControllerBase
             return RedirectToAction(nameof(Add), id > 0 ? new { id } : null);
         }
 
+        decimal haverRecebidoAgora = 0m;
+
         var documento = id > 0
             ? Context.OrdensServico.Include(o => o.Itens).Include(o => o.Aparelhos)
                 .FirstOrDefault(o => o.Id == id && o.Tipo == Tipo)
@@ -159,7 +161,15 @@ public abstract class DocumentoControllerBase : LojaControllerBase
         }
         else
         {
-            documento.Sinal = ParaDecimal(sinal);
+            // O sinal é substituído a cada salvamento, mas só a diferença para cima é dinheiro
+            // que entrou na gaveta agora — editar outra coisa da OS não pode recriar o haver
+            // com a data de hoje, e reduzir o sinal (correção de digitação) não é uma saída.
+            // O registro em si só pode ser feito depois do SaveChanges, quando o Id existe
+            // (numa OS nova); por isso a diferença fica guardada aqui só para uso mais abaixo.
+            var novoSinal = ParaDecimal(sinal);
+            haverRecebidoAgora = novoSinal - documento.Sinal;
+
+            documento.Sinal = novoSinal;
             documento.FormaPagamento = Limpar(formaPagamento);
             documento.Parcelado = parcelado;
             documento.Parcelas = parcelado ? Math.Clamp(parcelas, 1, 24) : 1;
@@ -218,6 +228,19 @@ public abstract class DocumentoControllerBase : LojaControllerBase
         if (novo) Context.OrdensServico.Add(documento);
         Context.SaveChanges();
 
+        // Só agora o Id existe (numa OS nova, o SaveChanges acima é o que o gera)
+        if (haverRecebidoAgora > 0)
+        {
+            Context.PagamentosOrdemServico.Add(new PagamentoOrdemServico
+            {
+                OrdemServicoId = documento.Id,
+                Valor = haverRecebidoAgora,
+                FormaPagamento = documento.FormaPagamento ?? "",
+                Origem = OrigensPagamento.Haver,
+            });
+            Context.SaveChanges();
+        }
+
         TempData["Sucesso"] = $"{documento.Rotulo} {documento.Numero} {(novo ? "salvo" : "atualizado")}.";
         return RedirectToAction(nameof(Ver), new { id = documento.Id });
     }
@@ -226,7 +249,8 @@ public abstract class DocumentoControllerBase : LojaControllerBase
     [ValidateAntiForgeryToken]
     public IActionResult AlterarSituacao(int id, string situacao, string? retorno)
     {
-        var documento = Context.OrdensServico.FirstOrDefault(o => o.Id == id && o.Tipo == Tipo);
+        var documento = Context.OrdensServico.Include(o => o.Itens)
+            .FirstOrDefault(o => o.Id == id && o.Tipo == Tipo);
         if (documento == null || !SituacoesValidas.Contains(situacao)) return RedirectToAction(nameof(Index));
 
         documento.Situacao = situacao;
@@ -235,6 +259,23 @@ public abstract class DocumentoControllerBase : LojaControllerBase
         // então não faz sentido a garantia seguir contando daquele dia.
         if (!EhOrcamento)
         {
+            // Não basta olhar DataEntrega: ela é resetada de propósito quando a situação volta
+            // atrás (Pronta), e marcar Entregue de novo depois não pode cobrar o saldo duas
+            // vezes. Confere se o pagamento do saldo já existe antes de criar outro.
+            var saldoJaRegistrado = situacao == Situacoes.Entregue
+                && Context.PagamentosOrdemServico.Any(p => p.OrdemServicoId == documento.Id && p.Origem == OrigensPagamento.Saldo);
+
+            if (situacao == Situacoes.Entregue && !saldoJaRegistrado && documento.SaldoAPagar > 0)
+            {
+                Context.PagamentosOrdemServico.Add(new PagamentoOrdemServico
+                {
+                    OrdemServicoId = documento.Id,
+                    Valor = documento.SaldoAPagar,
+                    FormaPagamento = documento.FormaPagamento ?? "",
+                    Origem = OrigensPagamento.Saldo,
+                });
+            }
+
             if (situacao == Situacoes.Entregue)
                 documento.DataEntrega ??= DateTime.Now;
             else

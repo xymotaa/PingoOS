@@ -28,8 +28,7 @@ retrabalho garantido:
 ✅ Faturamento MEI                   (2026-08-13, soma contra o teto de R$ 81.000)
 ✅ Impressão térmica da OS           (2026-08-14, comprovante 58/80mm na entrada)
 ✅ Notificação ao cliente (WhatsApp) (2026-08-14, link wa.me, com registro de prova)
-        ↓
-1. Financeiro e relatórios           (a venda já está gravada; falta somar)
+✅ Financeiro e fechamento de caixa  (2026-08-14, pagamentos por data, lançamentos, contas)
 ```
 
 O erro que essa ordem evita: modelar a Ordem de Serviço com os dados do cliente embutidos e criar o
@@ -39,58 +38,7 @@ cadastro de Clientes depois — o que obrigaria a migrar dados na marra. Por iss
 
 ## Alta prioridade
 
-### 1. Financeiro (lançamentos e contas a pagar)
-**Falta porque** Caixa sem persistência não é caixa. Entradas, saídas e contas a pagar dão a visão
-do mês, que hoje não existe em lugar nenhum. É o módulo `Financeiro` do MapOS.
-
-**O que envolve:** maior esforço da lista; depende de Caixa e OS gravando.
-
-### 1.1. Fechamento de caixa do dia (discutido em 2026-08-14)
-**Falta porque** muita loja bate o dinheiro físico da gaveta contra o sistema no fim do expediente,
-e hoje Vendas e Ordens de Serviço entregues não têm um relatório diário — só o total anual da tela
-de Faturamento MEI.
-
-**O que envolve:** relatório do dia (não altera nada, só lê): Vendas por forma de pagamento
-(dinheiro/débito/crédito/PIX), **separado** de Ordens de Serviço entregues por forma de pagamento,
-com um total geral abaixo dos dois. A separação visual é proposital — o risco discutido foi o
-usuário lançar a mesma OS como venda no Caixa "para aparecer no fechamento", duplicando o
-faturamento que a tela de Faturamento MEI já soma. O relatório deve deixar claro que são duas
-fontes diferentes que só estão lado a lado para conferência, nunca a mesma coisa.
-
-**Complicador descoberto na discussão (2026-08-14): o haver não tem data própria.** Hoje
-`OrdemServico.Sinal` é um valor único, sem registro de *quando* entrou. Numa OS aberta num dia e
-entregue dias depois, o haver entra no caixa físico no dia da abertura, mas o `SaldoAPagar` só é
-cobrado no dia da entrega — dois valores, dois dias, duas formas de pagamento possivelmente
-diferentes. Somar "Total da OS" no dia da entrega contaria o haver de novo; o dia em que o haver
-foi deixado ficaria sem aparecer no fechamento nenhum. Ou seja, **não dá para fazer isso só lendo o
-que já existe** — decidido registrar cada pagamento com sua própria data.
-
-**O que passa a envolver, então:**
-1. Tabela nova `PagamentoOrdemServico` (ou nome similar): `OrdemServicoId`, `Data`, `Valor`,
-   `FormaPagamento`. Um registro por entrada de dinheiro — o haver na abertura/edição, o saldo (ou
-   cada parcela) na entrega.
-2. `Salvar` da OS passa a criar esse registro quando um haver novo é informado; `AlterarSituacao`
-   para Entregue cria o registro do saldo.
-3. O relatório do dia soma **pagamentos daquele dia** (não OS daquele dia) — assim o dia do haver e
-   o dia da entrega aparecem cada um com o que realmente entrou na gaveta naquele dia.
-4. Vendas continuam simples (a venda inteira acontece num só momento, sem esse problema).
-
-Maior que "leitura pura" como parecia à primeira vista — precisa de migration e mexe no fluxo de
-salvar/entregar da OS. Ainda vale vir antes do item 1 (Financeiro) por ser mais contido, mas não é
-mais trivial.
-
-### 1.2. Ordem de compra (peça sob encomenda) — ideia solta (2026-08-14)
-**Falta porque** nem toda peça (ex: frontal de um modelo específico) está em estoque; a loja
-encomenda de uma distribuidora e a peça chega depois. Hoje não há como registrar isso — só existe
-lançar a peça no Estoque quando ela já chegou.
-
-**O que envolve, em linhas gerais:** uma tela no molde da Ordem de Serviço, mas de compra: dados da
-distribuidora/fornecedor, item(ns) pedido(s), situação (Pedida → Chegou → Cancelada). Ao chegar,
-provavelmente alimenta o Estoque — parecido com o que o catálogo de Serviços faz para a OS. Ainda
-não desenhado; entra no roadmap só para não perder a ideia. Repensar o relacionamento com
-`ProdutoEstoque` e `MovimentacaoEstoque` quando for para frente.
-
-### 2. Script de instalação para o usuário final
+### 1. Script de instalação para o usuário final
 **Falta porque** o público do sistema é dono de loja, não desenvolvedor. Hoje instalar exige clonar
 o repositório, ter o SDK do .NET e rodar comandos. Essa é a lição que o MapOS acerta: sem instalação
 simples, o sistema não chega em quem precisa dele.
@@ -99,7 +47,7 @@ simples, o sistema não chega em quem precisa dele.
 publicam, registram como serviço do sistema (systemd / Serviço do Windows) e abrem o navegador. Bem
 mais simples que no MapOS: não há PHP, MySQL nem webserver para configurar.
 
-### 3. Hospedar na nuvem (Supabase + domínio próprio)
+### 2. Hospedar na nuvem (Supabase + domínio próprio)
 **Mudou de ideia (2026-08-12):** a decisão registrada em "Descartado" era rodar só local. O Supabase
 tem um free tier de Postgres, o que reabre a questão — banco gerenciado sem custo muda a conta.
 
@@ -134,14 +82,15 @@ qual delas quebrou alguma coisa.
 
 ## Baixa prioridade
 
-### 4. Recuperação de senha por e-mail
+### 3. Recuperação de senha por e-mail
 **Já existe** recuperação por código anotado no papel e por comando de terminal (2026-08-07, ver
 [CHANGES.md](CHANGES.md)). Falta a via por e-mail, que dispensa guardar código: link de uso único
 com validade curta.
 
-**Depende de** o envio de e-mail (item 4). Prioridade baixa agora que o caso de tranca está coberto.
+**Depende de** ter envio de e-mail configurado (SMTP) — o que a notificação por WhatsApp via
+`wa.me` não precisou. Prioridade baixa agora que o caso de tranca está coberto.
 
-### 5. Ilustração própria para a tela de login
+### 4. Ilustração própria para a tela de login
 **Situação atual:** a atribuição da [Storyset](https://storyset.com) está no arquivo `NOTICE`, então
 a obrigação de crédito está cumprida.
 
@@ -149,7 +98,7 @@ a obrigação de crédito está cumprida.
 técnica de celular. Uma ilustração do mundo da loja — bancada, aparelho aberto, ferramenta — diria
 mais e dispensaria a dependência de terceiro.
 
-### 6. Unificar os dois visuais
+### 5. Unificar os dois visuais
 **Situação atual:** convivem dois sistemas de design. As telas novas (Painel, Orçamento, Estoque,
 Caixa, Configuração, Login) usam Tailwind com paleta Material-3. As antigas (Lista de compras,
 "Em breve") usam `wwwroot/css/site.css`, verde institucional com fonte Inter.
@@ -157,13 +106,13 @@ Caixa, Configuração, Login) usam Tailwind com paleta Material-3. As antigas (L
 **O que envolve:** migrar `Views/ListaCompra/` e `Views/Shared/EmBreve.cshtml` para Tailwind,
 aproveitando o partial `_HeadTailwind.cshtml`. Depois o `site.css` encolhe bastante. Cosmético.
 
-### 7. Dashboards de verdade
+### 6. Dashboards de verdade
 **Situação atual:** `DashboardsController` retorna a tela "Em breve" e os KPIs do Painel mostram
 estado vazio.
 
 **O que envolve:** depende de Caixa, Estoque e OS no banco — sem dado gravado não há o que somar.
 
-### 8. Autoria detalhada (auditoria mínima)
+### 7. Autoria detalhada (auditoria mínima)
 **Situação atual:** a OS já grava quem a emitiu, e as movimentações de estoque quem as fez. Uma auditoria completa, como o
 módulo `Auditoria` do MapOS, registraria toda alteração em todo registro.
 
@@ -198,8 +147,8 @@ Metade do assistente deles serve para coletar host, usuário e senha do MySQL �
 existem, porque o SQLite é um arquivo. A outra metade (dados do responsável e da loja) já foi
 resolvida pela tela de **primeiro acesso**.
 
-### Docker (decisão revista — ver item 3)
+### Docker (decisão revista — ver item 2)
 Estava descartado com a premissa de rodar só local: `dotnet publish` já entrega uma pasta com
 executável, sem daemon para instalar, então Docker seria peso morto. Essa premissa mudou — ver
-item 3 em Alta prioridade, que reabre hospedagem na nuvem via Supabase + Hostinger, com Docker como
+item 2 em Alta prioridade, que reabre hospedagem na nuvem via Supabase + Hostinger, com Docker como
 uma das duas rotas possíveis para subir o binário no servidor.

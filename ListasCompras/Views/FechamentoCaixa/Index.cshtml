@@ -1,0 +1,123 @@
+@{
+    Layout = null;
+    ViewData["Title"] = "Fechamento de caixa";
+    var nomeLoja = ViewData["NomeLoja"] as string ?? "Minha Loja";
+    var dia = (DateTime)ViewData["Data"]!;
+    var vendas = ViewData["Vendas"] as List<ListasCompras.Models.Venda> ?? new();
+    var pagamentosOs = ViewData["PagamentosOs"] as List<ListasCompras.Models.PagamentoOrdemServico> ?? new();
+    var vendasPorForma = ViewData["VendasPorForma"] as Dictionary<string, decimal> ?? new();
+    var osPorForma = ViewData["OsPorForma"] as Dictionary<string, decimal> ?? new();
+    var totalVendas = (decimal)ViewData["TotalVendas"]!;
+    var totalOs = (decimal)ViewData["TotalOs"]!;
+    var totalDia = totalVendas + totalOs;
+
+    string Moeda(decimal v) => v.ToString("C2", new System.Globalization.CultureInfo("pt-BR"));
+}
+<!DOCTYPE html>
+<html class="light" lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>@nomeLoja — Fechamento de caixa</title>
+    @await Html.PartialAsync("_HeadTailwind")
+</head>
+<body class="bg-surface">
+    @await Html.PartialAsync("_Navbar")
+
+    <main class="pt-24 px-lg pb-xl max-w-[1440px] mx-auto">
+
+        <!-- Cabeçalho da página -->
+        <section class="mb-md flex flex-wrap items-end justify-between gap-md">
+            <div>
+                <h1 class="font-headline-lg text-headline-lg text-primary">Fechamento de caixa</h1>
+                <p class="font-body-md text-body-md text-on-surface-variant">
+                    O que entrou no dia, para bater com o dinheiro físico da gaveta.
+                </p>
+            </div>
+            <form method="get" class="flex items-center gap-sm">
+                <label class="font-label-md text-label-md text-on-surface-variant" for="data">Dia</label>
+                <input id="data" name="data" type="date" value="@dia.ToString("yyyy-MM-dd")" onchange="this.form.submit()"
+                       class="bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+            </form>
+        </section>
+
+        <!-- Total do dia -->
+        <section class="bg-white rounded-xl border border-outline-variant shadow-sm p-lg mb-md">
+            <span class="font-label-md text-label-md text-outline uppercase tracking-wider">Total do dia @dia.ToString("dd/MM/yyyy")</span>
+            <div class="font-display-lg text-display-lg text-primary">@Moeda(totalDia)</div>
+            <p class="mt-xs font-label-sm text-label-sm text-outline">
+                Vendas e ordens de serviço são fontes diferentes, mostradas lado a lado só para
+                conferência — nunca lance a mesma ordem como venda para "aparecer aqui".
+            </p>
+        </section>
+
+        <!-- Vendas e OS lado a lado, cada um com seu próprio total -->
+        <section class="grid grid-cols-1 lg:grid-cols-2 gap-md">
+            <div class="bg-white rounded-xl border border-outline-variant shadow-sm overflow-hidden">
+                <div class="p-lg flex items-center justify-between gap-sm border-b border-outline-variant">
+                    <div class="flex items-center gap-sm">
+                        <span class="material-symbols-outlined text-[20px] text-secondary">point_of_sale</span>
+                        <h2 class="font-title-lg text-title-lg text-primary">Vendas (Caixa)</h2>
+                    </div>
+                    <span class="font-title-lg text-title-lg font-bold text-secondary">@Moeda(totalVendas)</span>
+                </div>
+                @if (vendasPorForma.Count == 0)
+                {
+                    <p class="p-lg font-body-md text-body-md text-on-surface-variant">Nenhuma venda neste dia.</p>
+                }
+                else
+                {
+                    <div class="p-lg flex flex-col gap-xs">
+                        @foreach (var (forma, valor) in vendasPorForma)
+                        {
+                            <div class="flex justify-between font-body-md text-body-md text-on-surface-variant">
+                                <span>@forma</span><span class="text-on-surface font-semibold">@Moeda(valor)</span>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+
+            <div class="bg-white rounded-xl border border-outline-variant shadow-sm overflow-hidden">
+                <div class="p-lg flex items-center justify-between gap-sm border-b border-outline-variant">
+                    <div class="flex items-center gap-sm">
+                        <span class="material-symbols-outlined text-[20px] text-secondary">receipt_long</span>
+                        <h2 class="font-title-lg text-title-lg text-primary">Ordens de serviço</h2>
+                    </div>
+                    <span class="font-title-lg text-title-lg font-bold text-secondary">@Moeda(totalOs)</span>
+                </div>
+                @if (osPorForma.Count == 0)
+                {
+                    <p class="p-lg font-body-md text-body-md text-on-surface-variant">Nenhum pagamento de OS neste dia.</p>
+                }
+                else
+                {
+                    <div class="p-lg flex flex-col gap-xs">
+                        @foreach (var (forma, valor) in osPorForma)
+                        {
+                            <div class="flex justify-between font-body-md text-body-md text-on-surface-variant">
+                                <span>@forma</span><span class="text-on-surface font-semibold">@Moeda(valor)</span>
+                            </div>
+                        }
+                    </div>
+                }
+                @if (pagamentosOs.Count > 0)
+                {
+                    <div class="border-t border-outline-variant">
+                        @foreach (var p in pagamentosOs)
+                        {
+                            <div class="px-lg py-sm border-b border-outline-variant last:border-0 flex items-center justify-between gap-sm">
+                                <div>
+                                    <span class="font-body-md text-body-md text-on-surface">@p.OrdemServico.Numero</span>
+                                    <span class="font-label-sm text-label-sm text-outline">· @(p.Origem == "Haver" ? "haver" : "saldo na entrega")</span>
+                                </div>
+                                <span class="font-label-sm text-label-sm text-outline">@Moeda(p.Valor)</span>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </section>
+    </main>
+</body>
+</html>

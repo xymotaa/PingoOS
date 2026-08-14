@@ -1,0 +1,228 @@
+@model List<ListasCompras.Models.LancamentoFinanceiro>
+@{
+    Layout = null;
+    ViewData["Title"] = "Financeiro";
+    var nomeLoja = ViewData["NomeLoja"] as string ?? "Minha Loja";
+    var mes = (int)ViewData["Mes"]!;
+    var ano = (int)ViewData["Ano"]!;
+    var entradas = (decimal)ViewData["Entradas"]!;
+    var saidas = (decimal)ViewData["Saidas"]!;
+    var contas = ViewData["Contas"] as List<ListasCompras.Models.ContaAPagar> ?? new();
+    var saldo = entradas - saidas;
+
+    string Moeda(decimal v) => v.ToString("C2", new System.Globalization.CultureInfo("pt-BR"));
+    string[] meses = { "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho",
+        "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro" };
+}
+<!DOCTYPE html>
+<html class="light" lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>@nomeLoja — Financeiro</title>
+    @await Html.PartialAsync("_HeadTailwind")
+</head>
+<body class="bg-surface">
+    @await Html.PartialAsync("_Navbar")
+
+    <main class="pt-24 px-lg pb-xl max-w-[1440px] mx-auto">
+
+        @if (TempData["Sucesso"] != null)
+        {
+            <div class="mb-md bg-secondary-container text-on-secondary-container px-md py-sm rounded-lg font-label-md text-label-md flex items-center gap-xs w-fit">
+                <span class="material-symbols-outlined text-[18px]">check_circle</span>
+                <span>@TempData["Sucesso"]</span>
+            </div>
+        }
+        @if (TempData["Erro"] != null)
+        {
+            <div class="mb-md bg-error-container text-error px-md py-sm rounded-lg font-label-md text-label-md flex items-center gap-xs w-fit">
+                <span class="material-symbols-outlined text-[18px]">error</span>
+                <span>@TempData["Erro"]</span>
+            </div>
+        }
+
+        <!-- Cabeçalho da página -->
+        <section class="mb-md flex flex-wrap items-end justify-between gap-md">
+            <div>
+                <h1 class="font-headline-lg text-headline-lg text-primary">Financeiro</h1>
+                <p class="font-body-md text-body-md text-on-surface-variant">
+                    Entradas e saídas que não são venda nem ordem de serviço, e o que ainda vai vencer.
+                </p>
+            </div>
+            <form method="get" class="flex items-center gap-sm">
+                <select name="mes" onchange="this.form.submit()"
+                        class="bg-surface-container-low border-none rounded-lg pl-md pr-10 py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30">
+                    @for (var m = 1; m <= 12; m++)
+                    {
+                        <option value="@m" selected="@(m == mes)">@meses[m - 1]</option>
+                    }
+                </select>
+                <select name="ano" onchange="this.form.submit()"
+                        class="bg-surface-container-low border-none rounded-lg pl-md pr-10 py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30">
+                    @for (var a = DateTime.Today.Year; a >= DateTime.Today.Year - 3; a--)
+                    {
+                        <option value="@a" selected="@(a == ano)">@a</option>
+                    }
+                </select>
+            </form>
+        </section>
+
+        <!-- Resumo do mês -->
+        <section class="grid grid-cols-1 sm:grid-cols-3 gap-sm mb-md">
+            <div class="bg-white px-md py-sm rounded-lg border border-outline-variant shadow-sm">
+                <span class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Entradas</span>
+                <p class="font-title-lg text-title-lg text-secondary font-bold">@Moeda(entradas)</p>
+            </div>
+            <div class="bg-white px-md py-sm rounded-lg border border-outline-variant shadow-sm">
+                <span class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Saídas</span>
+                <p class="font-title-lg text-title-lg text-error font-bold">@Moeda(saidas)</p>
+            </div>
+            <div class="bg-white px-md py-sm rounded-lg border border-outline-variant shadow-sm">
+                <span class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Saldo do mês</span>
+                <p class="font-title-lg text-title-lg font-bold @(saldo >= 0 ? "text-primary" : "text-error")">@Moeda(saldo)</p>
+            </div>
+        </section>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-md">
+
+            <!-- Lançamentos -->
+            <section class="bg-white rounded-xl border border-outline-variant shadow-sm overflow-hidden">
+                <div class="p-lg border-b border-outline-variant">
+                    <div class="flex items-center gap-sm mb-md">
+                        <span class="material-symbols-outlined text-[20px] text-secondary">payments</span>
+                        <h2 class="font-title-lg text-title-lg text-primary">Novo lançamento</h2>
+                    </div>
+                    <form asp-action="SalvarLancamento" method="post" class="flex flex-col gap-sm">
+                        <div class="flex gap-sm">
+                            <label class="flex items-center gap-xs cursor-pointer">
+                                <input type="radio" name="tipo" value="Entrada" checked class="accent-secondary" />
+                                <span class="font-label-md text-label-md text-on-surface-variant">Entrada</span>
+                            </label>
+                            <label class="flex items-center gap-xs cursor-pointer">
+                                <input type="radio" name="tipo" value="Saida" class="accent-secondary" />
+                                <span class="font-label-md text-label-md text-on-surface-variant">Saída</span>
+                            </label>
+                        </div>
+                        <input name="descricao" type="text" required placeholder="Descrição (ex: aluguel, retirada)"
+                               class="w-full bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                        <div class="flex gap-sm">
+                            <input name="categoria" type="text" placeholder="Categoria (opcional)"
+                                   class="flex-1 min-w-0 bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                            <input name="valorVisivel" id="valorVisivel" type="text" inputmode="decimal" placeholder="0,00"
+                                   class="w-28 bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md text-right focus:ring-2 focus:ring-secondary/30" />
+                            <input type="hidden" name="valor" id="valor" value="0" />
+                        </div>
+                        <button type="submit"
+                                class="self-end bg-secondary text-white rounded-lg px-lg py-sm font-label-md text-label-md font-bold hover:bg-opacity-90 transition-colors">
+                            Lançar
+                        </button>
+                    </form>
+                </div>
+                <div class="max-h-[400px] overflow-y-auto">
+                    @if (Model.Count == 0)
+                    {
+                        <p class="p-lg font-body-md text-body-md text-on-surface-variant">Nenhum lançamento neste mês.</p>
+                    }
+                    else
+                    {
+                        @foreach (var l in Model)
+                        {
+                            <div class="px-lg py-sm border-b border-outline-variant last:border-0 flex items-center justify-between gap-sm">
+                                <div>
+                                    <p class="font-body-md text-body-md text-on-surface">@l.Descricao</p>
+                                    <p class="font-label-sm text-label-sm text-outline">
+                                        @l.Data.ToString("dd/MM/yyyy") @(l.Categoria != null ? $"· {l.Categoria}" : "")
+                                    </p>
+                                </div>
+                                <div class="flex items-center gap-sm shrink-0">
+                                    <span class="font-body-md text-body-md font-semibold @(l.Tipo == "Entrada" ? "text-secondary" : "text-error")">
+                                        @(l.Tipo == "Entrada" ? "+" : "−") @Moeda(l.Valor)
+                                    </span>
+                                    <form asp-action="ExcluirLancamento" method="post"
+                                          onsubmit="return confirm('Excluir este lançamento?');">
+                                        <input type="hidden" name="id" value="@l.Id" />
+                                        <button type="submit" title="Excluir"
+                                                class="w-8 h-8 rounded-lg hover:bg-error-container inline-flex items-center justify-center text-outline transition-colors">
+                                            <span class="material-symbols-outlined text-[18px]">delete</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+            </section>
+
+            <!-- Contas a pagar -->
+            <section class="bg-white rounded-xl border border-outline-variant shadow-sm overflow-hidden">
+                <div class="p-lg border-b border-outline-variant">
+                    <div class="flex items-center gap-sm mb-md">
+                        <span class="material-symbols-outlined text-[20px] text-secondary">event_upcoming</span>
+                        <h2 class="font-title-lg text-title-lg text-primary">Contas a pagar</h2>
+                    </div>
+                    <form asp-action="SalvarConta" method="post" class="flex flex-col gap-sm">
+                        <input name="descricao" type="text" required placeholder="Descrição (ex: fornecedor, aluguel)"
+                               class="w-full bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                        <div class="flex gap-sm">
+                            <input name="vencimento" type="date" required
+                                   class="flex-1 min-w-0 bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                            <input name="valorContaVisivel" id="valorContaVisivel" type="text" inputmode="decimal" placeholder="0,00"
+                                   class="w-28 bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md text-right focus:ring-2 focus:ring-secondary/30" />
+                            <input type="hidden" name="valor" id="valorConta" value="0" />
+                        </div>
+                        <button type="submit"
+                                class="self-end bg-secondary text-white rounded-lg px-lg py-sm font-label-md text-label-md font-bold hover:bg-opacity-90 transition-colors">
+                            Cadastrar
+                        </button>
+                    </form>
+                </div>
+                <div class="max-h-[400px] overflow-y-auto">
+                    @if (contas.Count == 0)
+                    {
+                        <p class="p-lg font-body-md text-body-md text-on-surface-variant">Nenhuma conta cadastrada.</p>
+                    }
+                    else
+                    {
+                        @foreach (var c in contas)
+                        {
+                            <div class="px-lg py-sm border-b border-outline-variant last:border-0 flex items-center justify-between gap-sm">
+                                <div>
+                                    <p class="font-body-md text-body-md text-on-surface @(c.Paga ? "line-through text-on-surface-variant" : "")">@c.Descricao</p>
+                                    <p class="font-label-sm text-label-sm @(c.Vencida ? "text-error font-bold" : "text-outline")">
+                                        @(c.Paga ? $"Paga em {c.DataPagamento:dd/MM/yyyy}" : $"Vence em {c.Vencimento:dd/MM/yyyy}")
+                                        @(c.Vencida ? " · vencida" : "")
+                                    </p>
+                                </div>
+                                <div class="flex items-center gap-sm shrink-0">
+                                    <span class="font-body-md text-body-md font-semibold text-on-surface">@Moeda(c.Valor)</span>
+                                    @if (!c.Paga)
+                                    {
+                                        <form asp-action="MarcarContaPaga" method="post">
+                                            <input type="hidden" name="id" value="@c.Id" />
+                                            <button type="submit" title="Marcar como paga"
+                                                    class="w-8 h-8 rounded-lg hover:bg-secondary-container inline-flex items-center justify-center text-outline transition-colors">
+                                                <span class="material-symbols-outlined text-[18px]">check_circle</span>
+                                            </button>
+                                        </form>
+                                        <form asp-action="ExcluirConta" method="post"
+                                              onsubmit="return confirm('Excluir esta conta?');">
+                                            <input type="hidden" name="id" value="@c.Id" />
+                                            <button type="submit" title="Excluir"
+                                                    class="w-8 h-8 rounded-lg hover:bg-error-container inline-flex items-center justify-center text-outline transition-colors">
+                                                <span class="material-symbols-outlined text-[18px]">delete</span>
+                                            </button>
+                                        </form>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script src="~/js/financeiro.js" asp-append-version="true"></script>
+</body>
+</html>

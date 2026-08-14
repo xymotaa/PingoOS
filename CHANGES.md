@@ -1,5 +1,71 @@
 # Registro de Alterações
 
+## [2026-08-14] Financeiro e fechamento de caixa (itens 1 e 1.1 do roadmap)
+
+### Problema
+Duas lacunas: (1) nada no sistema registrava entradas e saídas que não são venda nem OS — aluguel,
+retirada do dono, compra de material — nem contas com vencimento antes de virarem despesa; (2) não
+havia como bater o dinheiro físico da gaveta contra o sistema no fim do dia, porque a OS só guarda
+o `Sinal` (haver) e o `Total` como valores únicos, sem dizer **em que dia** cada parte entrou.
+
+O segundo problema é mais sério do que parecia. Numa OS aberta com haver num dia e entregue dias
+depois, somar "Total da OS" no dia da entrega contaria o haver de novo; o dia em que o haver foi
+deixado não apareceria em fechamento nenhum. Só dava para resolver registrando cada pagamento com
+sua própria data — não é possível fazer isso lendo só o que já existia.
+
+### Solução
+
+**`PagamentoOrdemServico`** — um registro por entrada de dinheiro na OS, com data, valor e forma de
+pagamento. Dois pontos passaram a criar esses registros:
+
+- `Salvar`: só quando o **sinal aumenta** em relação ao que já estava salvo — editar outra coisa da
+  OS (diagnóstico, itens) não recria o haver com a data de hoje, e reduzir o sinal (correção de
+  digitação) não vira uma saída de caixa fictícia.
+- `AlterarSituacao` para Entregue: registra o saldo que falta, mas só a primeira vez — voltar a
+  situação para "Pronta" e marcar "Entregue" de novo não pode cobrar o mesmo saldo duas vezes. A
+  checagem não usa `DataEntrega` (que é resetada de propósito ao voltar atrás), e sim se já existe
+  um pagamento de origem "Saldo" para aquela OS.
+
+**Fechamento de caixa** (`/FechamentoCaixa`) — Vendas e pagamentos de OS do dia escolhido, cada um
+por forma de pagamento, com total geral. As duas fontes ficam **lado a lado, nunca somadas numa
+tabela única** — o risco discutido foi o usuário lançar a mesma OS como venda no Caixa "para
+aparecer no fechamento", duplicando o que a tela de Faturamento MEI já soma.
+
+**Financeiro** (`/Financeiro`) — lançamentos manuais de entrada/saída com categoria, e contas a
+pagar com vencimento. Marcar uma conta como paga gera o lançamento de saída correspondente e
+vincula os dois; excluir esse lançamento depois não arrasta a conta junto (senão a dívida
+"desapareceria" do controle), mas isso é caso raro e não crítico.
+
+**Sem retroatividade.** As OS que já existiam no banco antes desta mudança não têm pagamento
+registrado — o `Sinal` delas é um valor único sem histórico de datas, não dá para reconstruir
+quando o haver ou o saldo realmente entraram. Elas não aparecem no fechamento de caixa de dias
+passados; só documentos criados ou entregues a partir de agora entram nesse relatório.
+
+### Arquivos Alterados
+| Arquivo | Alteração |
+|---|---|
+| `Models/PagamentoOrdemServico.cs` | **novo** — data, valor, forma, origem (Haver/Saldo) |
+| `Models/LancamentoFinanceiro.cs` | **novo** — `LancamentoFinanceiro` e `ContaAPagar` |
+| `Controllers/DocumentoControllerBase.cs` | `Salvar` e `AlterarSituacao` geram os pagamentos |
+| `Controllers/FechamentoCaixaController.cs` | **novo** |
+| `Controllers/FinanceiroController.cs` | **novo** |
+| `Views/FechamentoCaixa/Index.cshtml`, `Views/Financeiro/Index.cshtml` | **novos** |
+| `wwwroot/js/financeiro.js` | **novo** — vírgula → ponto nos dois formulários de valor |
+| `Views/Home/Index.cshtml` | **Fechamento do dia** dentro do grupo Caixa; **Financeiro** no menu |
+| Migration `AddFinanceiro` | três tabelas novas, nenhuma coluna existente tocada |
+
+### Resultado
+Testado numa cópia do banco real, logado com o usuário de verdade: criar OS com haver de R$ 200
+registrou o pagamento na hora certa; entregar registrou o saldo de R$ 300; alternar Pronta →
+Entregue de novo **não duplicou** o saldo (esse era o bug encontrado e corrigido durante o teste,
+antes de existir a checagem por pagamento já registrado). Editar a OS aumentando o sinal de R$ 100
+para R$ 250 registrou só a diferença (R$ 150); editar sem tocar no sinal não criou nada. Lançamento
+manual de entrada e saída, conta a pagar marcada como paga gerando o lançamento de saída — tudo
+gravado corretamente. Fechamento de caixa do dia somou R$ 750 batendo com os quatro pagamentos de
+teste, Vendas e OS mostradas separadas.
+
+---
+
 ## [2026-08-14] Notificação ao cliente por WhatsApp (item 1 do roadmap)
 
 ### Problema

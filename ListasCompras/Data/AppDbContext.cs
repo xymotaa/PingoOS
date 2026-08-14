@@ -22,10 +22,13 @@ public class AppDbContext : DbContext
     public DbSet<AparelhoOs> AparelhosOs { get; set; }
     public DbSet<FotoAparelho> FotosAparelho { get; set; }
     public DbSet<NotificacaoCliente> NotificacoesCliente { get; set; }
+    public DbSet<PagamentoOrdemServico> PagamentosOrdemServico { get; set; }
     public DbSet<ProdutoEstoque> ProdutosEstoque { get; set; }
     public DbSet<MovimentacaoEstoque> MovimentacoesEstoque { get; set; }
     public DbSet<Venda> Vendas { get; set; }
     public DbSet<ItemVenda> ItensVenda { get; set; }
+    public DbSet<LancamentoFinanceiro> LancamentosFinanceiros { get; set; }
+    public DbSet<ContaAPagar> ContasAPagar { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -91,6 +94,30 @@ public class AppDbContext : DbContext
             .WithMany()
             .HasForeignKey(n => n.UsuarioId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        // Cada entrada de dinheiro na OS, na data em que aconteceu de verdade — a base do
+        // fechamento de caixa. Excluir a OS apaga o histórico de pagamentos dela junto.
+        modelBuilder.Entity<PagamentoOrdemServico>()
+            .HasOne(p => p.OrdemServico)
+            .WithMany()
+            .HasForeignKey(p => p.OrdemServicoId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<LancamentoFinanceiro>()
+            .HasOne(l => l.Usuario)
+            .WithMany()
+            .HasForeignKey(l => l.UsuarioId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // Marcar uma conta como paga gera um lançamento de saída; excluir esse lançamento
+        // não pode arrastar a conta junto, senão a dívida "desaparece" do controle
+        modelBuilder.Entity<ContaAPagar>()
+            .HasOne(c => c.Lancamento)
+            .WithMany()
+            .HasForeignKey(c => c.LancamentoId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<ContaAPagar>().Ignore(c => c.Vencida);
 
         // Retorno em garantia aponta para a ordem original; excluir a original não
         // pode apagar o retorno, que é o registro de que o problema voltou
