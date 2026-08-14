@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using ListasCompras.Data;
 using ListasCompras.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -91,4 +92,56 @@ public class OrdemServicoController : DocumentoControllerBase
 
         return RedirectToAction(nameof(Ver), new { id = ordemId });
     }
+
+    // ===== Notificação ao cliente =====
+
+    // Registra a notificação e só depois redireciona para o wa.me — a prova exigida pela
+    // cláusula de abandono é a intenção de aviso registrada no sistema, não a confirmação
+    // de entrega do WhatsApp, que o sistema não tem como saber.
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult NotificarWhatsApp(int id, string mensagem)
+    {
+        var ordem = Context.OrdensServico
+            .Include(o => o.Cliente)
+            .FirstOrDefault(o => o.Id == id && o.Tipo == TiposDocumento.OrdemServico);
+
+        if (ordem == null) return NotFound();
+
+        var numero = NumeroWhatsApp(ordem.Cliente.Telefone);
+        if (numero == null)
+        {
+            TempData["Erro"] = "Este cliente não tem telefone cadastrado.";
+            return RedirectToAction(nameof(Ver), new { id });
+        }
+
+        var texto = string.IsNullOrWhiteSpace(mensagem) ? MensagemPadrao(ordem) : mensagem.Trim();
+
+        Context.NotificacoesCliente.Add(new NotificacaoCliente
+        {
+            OrdemServicoId = ordem.Id,
+            Canal = CanaisNotificacao.WhatsApp,
+            Destinatario = numero,
+            Mensagem = texto,
+            UsuarioId = IdDoUsuarioLogado(),
+        });
+        Context.SaveChanges();
+
+        var link = $"https://wa.me/{numero}?text={Uri.EscapeDataString(texto)}";
+        return Redirect(link);
+    }
+
+    // DDI 55 fixo: só dígitos, e assume Brasil — mesma suposição que o resto do
+    // cadastro de cliente já faz ao não pedir código de país
+    private static string? NumeroWhatsApp(string? telefone)
+    {
+        var digitos = Regex.Replace(telefone ?? "", @"\D", "");
+        if (digitos.Length < 10) return null;
+        return digitos.StartsWith("55") ? digitos : $"55{digitos}";
+    }
+
+    private static string MensagemPadrao(OrdemServico ordem) =>
+        ordem.Situacao == Situacoes.Pronta
+            ? $"Olá, {ordem.Cliente.Nome}! Seu aparelho ({ordem.AparelhosResumo}) está pronto para retirada. Ordem {ordem.Numero}."
+            : $"Olá, {ordem.Cliente.Nome}! Sobre a ordem {ordem.Numero} ({ordem.AparelhosResumo}) na nossa loja.";
 }

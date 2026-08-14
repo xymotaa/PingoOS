@@ -21,6 +21,7 @@ public class AppDbContext : DbContext
     public DbSet<ItemOrdemServico> ItensOrdemServico { get; set; }
     public DbSet<AparelhoOs> AparelhosOs { get; set; }
     public DbSet<FotoAparelho> FotosAparelho { get; set; }
+    public DbSet<NotificacaoCliente> NotificacoesCliente { get; set; }
     public DbSet<ProdutoEstoque> ProdutosEstoque { get; set; }
     public DbSet<MovimentacaoEstoque> MovimentacoesEstoque { get; set; }
     public DbSet<Venda> Vendas { get; set; }
@@ -75,6 +76,21 @@ public class AppDbContext : DbContext
             .WithMany(a => a.Fotos)
             .HasForeignKey(f => f.AparelhoOsId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // A notificação é prova de que o aviso foi enviado; excluir a OS não deve poder
+        // apagar essa prova por baixo dos panos — mas isso só importa se a OS sumir,
+        // o que hoje só acontece por exclusão manual, então cascade é aceitável aqui
+        modelBuilder.Entity<NotificacaoCliente>()
+            .HasOne(n => n.OrdemServico)
+            .WithMany()
+            .HasForeignKey(n => n.OrdemServicoId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<NotificacaoCliente>()
+            .HasOne(n => n.Usuario)
+            .WithMany()
+            .HasForeignKey(n => n.UsuarioId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         // Retorno em garantia aponta para a ordem original; excluir a original não
         // pode apagar o retorno, que é o registro de que o problema voltou

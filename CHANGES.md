@@ -1,5 +1,48 @@
 # Registro de Alterações
 
+## [2026-08-14] Notificação ao cliente por WhatsApp (item 1 do roadmap)
+
+### Problema
+Os termos da OS dizem que, para considerar um aparelho abandonado, o cliente precisa ter sido
+**notificado por escrito** (cláusula 8, Código Civil art. 1.275, III). O sistema não produzia essa
+prova nem tinha como avisar "seu aparelho está pronto" sem o técnico digitar tudo à mão num
+aplicativo separado.
+
+### Solução
+Decisão de escopo: **link `wa.me`, sem API paga.** Grátis, sem cadastro Business, sem token — troca
+automação por simplicidade imediata. A WhatsApp Business API oficial (Meta) e a notificação por
+e-mail ficaram anotadas no `ROADMAP.md` como itens futuros — a API exige conta verificada e modelos
+de mensagem pré-aprovados, esforço que não se justificava agora.
+
+Botão **"Avisar cliente"** na tela da OS (não aparece no orçamento). Abre um modal com uma mensagem
+pré-preenchida — diferente conforme a situação ("pronto para retirada" quando `Situacao == Pronta`,
+genérica nos demais casos) — editável antes de enviar. Confirmar grava a notificação no banco **e
+só depois** redireciona para `wa.me/55<telefone>?text=<mensagem>` numa nova aba.
+
+**A ordem importa: registra antes de redirecionar.** O sistema não tem como saber se o WhatsApp Web
+realmente abriu ou se a mensagem foi enviada — a prova exigida pelos termos é a notificação
+registrada no sistema (data, destinatário, texto, quem fez), não uma confirmação de entrega que o
+link não oferece. Histórico de avisos fica visível na própria tela da OS.
+
+Telefone normalizado para os dígitos com DDI 55 fixo (mesma suposição de Brasil que o cadastro de
+cliente já faz). Botão desabilitado quando o cliente não tem telefone cadastrado.
+
+### Arquivos Alterados
+| Arquivo | Alteração |
+|---|---|
+| `Models/NotificacaoCliente.cs` | **novo** — canal, destinatário, mensagem, data, quem enviou |
+| `Controllers/OrdemServicoController.cs` | `NotificarWhatsApp`: grava e redireciona para `wa.me` |
+| `Controllers/DocumentoControllerBase.cs` | `Ver` inclui o histórico de notificações da OS |
+| `Views/Documento/Ver.cshtml` | botão, modal de mensagem, seção de histórico |
+| `wwwroot/js/notificar-cliente.js` | **novo** — abre/fecha modal, recarrega após enviar |
+| `Data/AppDbContext.cs` | `DbSet<NotificacaoCliente>` + mapeamento |
+| Migration `AddNotificacaoCliente` | tabela nova, sem dado existente a migrar |
+
+### Resultado
+Build limpo. Migration cria só tabela nova, nenhuma coluna existente é tocada.
+
+---
+
 ## [2026-08-14] Impressão térmica da OS (item 1 do roadmap)
 
 ### Problema

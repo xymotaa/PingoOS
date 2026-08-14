@@ -12,6 +12,11 @@
     var ehOrcamento = Model.EhOrcamento;
     // Preenchido pelo controller quando este orçamento já foi aprovado: [id, número]
     var ordemGerada = ViewData["OrdemGerada"] as string[];
+    var notificacoes = ViewData["Notificacoes"] as List<ListasCompras.Models.NotificacaoCliente> ?? new();
+    var temTelefone = !string.IsNullOrWhiteSpace(Model.Cliente.Telefone);
+    var mensagemSugerida = Model.Situacao == ListasCompras.Models.Situacoes.Pronta
+        ? $"Olá, {Model.Cliente.Nome}! Seu aparelho ({Model.AparelhosResumo}) está pronto para retirada. Ordem {Model.Numero}."
+        : $"Olá, {Model.Cliente.Nome}! Sobre a ordem {Model.Numero} ({Model.AparelhosResumo}) na nossa loja.";
 
     string Traco(string? v) => string.IsNullOrWhiteSpace(v) ? "—" : v;
     string Moeda(decimal v) => v.ToString("C2", new System.Globalization.CultureInfo("pt-BR"));
@@ -111,87 +116,76 @@
             </div>
         }
 
-        <section class="flex flex-wrap items-end justify-between gap-md">
+        <!-- Cabeçalho da página: título e ações na mesma linha, como em Usuários e Garantias -->
+        <section class="mb-md flex flex-wrap items-end justify-between gap-md">
             <div>
-                                <h1 class="font-headline-lg text-headline-lg text-primary">@Model.Numero</h1>
+                <h1 class="font-headline-lg text-headline-lg text-primary">@Model.Numero</h1>
                 <p class="font-body-md text-body-md text-on-surface-variant">
-                    @Model.Cliente.Nome · @(ehOrcamento ? "feito" : "aberta") em @Model.DataAbertura.ToString("dd/MM/yyyy")
-                    @if (Model.DataEntrega.HasValue)
-                    {
-                        <text>· entregue em @Model.DataEntrega.Value.ToString("dd/MM/yyyy")</text>
-                    }
+                    @(ehOrcamento ? "Orçamento" : "Ordem de serviço") de @Model.Cliente.Nome
                 </p>
-                <div class="mt-sm flex flex-wrap items-center gap-sm">
-                    @if (ehOrcamento)
-                    {
-                        <span class="px-sm py-xs rounded-lg font-label-md text-label-md @(Model.ValidadeVencida ? "bg-error-container text-error" : "bg-warning-container text-on-surface")">
-                            @if (Model.ValidadeVencida)
-                            {
-                                <text>Venceu em @Model.Validade.ToString("dd/MM/yyyy") — refaça antes de aprovar</text>
-                            }
-                            else
-                            {
-                                <text>Válido até @Model.Validade.ToString("dd/MM/yyyy") (@Model.ValidadeDias dias)</text>
-                            }
-                        </span>
-                        @if (ordemGerada != null)
-                        {
-                            <a asp-controller="OrdemServico" asp-action="Ver" asp-route-id="@ordemGerada[0]"
-                               class="font-label-md text-label-md text-secondary font-bold hover:underline flex items-center gap-xs">
-                                <span class="material-symbols-outlined text-[18px]">receipt_long</span>
-                                Virou a ordem @ordemGerada[1]
-                            </a>
-                        }
-                    }
-                    else if (Model.GarantiaIniciada)
-                    {
-                        <span class="px-sm py-xs rounded-lg font-label-md text-label-md @(Model.GarantiaVigente ? "bg-secondary-container text-on-secondary-container" : "bg-surface-container-high text-on-surface-variant")">
-                            @if (Model.GarantiaVigente)
-                            {
-                                <text>Garantia vigente · vale até @Model.GarantiaFim?.ToString("dd/MM/yyyy") (@Model.DiasDeGarantiaRestantes dias)</text>
-                            }
-                            else
-                            {
-                                <text>Garantia vencida em @Model.GarantiaFim?.ToString("dd/MM/yyyy")</text>
-                            }
-                        </span>
-                        @if (Model.GarantiaVigente)
-                        {
-                            <a asp-action="RetornoGarantia" asp-route-id="@Model.Id"
-                               class="font-label-md text-label-md text-secondary font-bold hover:underline flex items-center gap-xs">
-                                <span class="material-symbols-outlined text-[18px]">assignment_return</span>
-                                Abrir retorno em garantia
-                            </a>
-                        }
-                    }
-                    else
-                    {
-                        <span class="px-sm py-xs rounded-lg font-label-md text-label-md bg-warning-container text-on-surface">
-                            Garantia de @Model.PrazoGarantiaDias dias — começa a contar na retirada
-                        </span>
-                    }
-                    @if (!ehOrcamento && Model.OrdemOrigemId.HasValue)
-                    {
-                        <a asp-action="Ver" asp-route-id="@Model.OrdemOrigemId"
-                           class="font-label-md text-label-md text-secondary font-bold hover:underline">
-                            Retorno da @Model.OrdemOrigem?.Numero
-                        </a>
-                    }
-                    @if (!ehOrcamento && Model.OrcamentoOrigemId.HasValue)
-                    {
-                        <a asp-controller="Orcamento" asp-action="Ver" asp-route-id="@Model.OrcamentoOrigemId"
-                           class="font-label-md text-label-md text-secondary font-bold hover:underline">
-                            Veio do orçamento @Model.OrcamentoOrigem?.Numero
-                        </a>
-                    }
-                </div>
+            </div>
+            <div class="flex flex-wrap items-center gap-sm">
+                <a asp-action="Add" asp-route-id="@Model.Id"
+                   class="border border-outline text-on-surface-variant rounded-lg px-lg py-sm font-label-md text-label-md font-bold hover:bg-surface-container-low transition-colors flex items-center gap-xs">
+                    <span class="material-symbols-outlined text-[18px]">edit</span>
+                    Editar
+                </a>
+                <button id="imprimirBtn" type="button"
+                        class="@(ehOrcamento && ordemGerada == null ? "border border-outline text-on-surface-variant hover:bg-surface-container-low" : "bg-secondary text-white hover:bg-opacity-90") rounded-lg px-lg py-sm font-label-md text-label-md font-bold transition-colors flex items-center gap-xs">
+                    <span class="material-symbols-outlined text-[18px]">print</span>
+                    @(ehOrcamento ? "Imprimir" : "Imprimir as duas vias")
+                </button>
+                @if (!ehOrcamento)
+                {
+                    <button id="imprimirTermicoBtn" type="button" title="Comprovante de entrada em impressora térmica 58/80mm"
+                            class="border border-outline text-on-surface-variant rounded-lg px-lg py-sm font-label-md text-label-md font-bold hover:bg-surface-container-low transition-colors flex items-center gap-xs">
+                        <span class="material-symbols-outlined text-[18px]">receipt</span>
+                        Comprovante térmico
+                    </button>
+                    <button id="abrirNotificarBtn" type="button" title="@(temTelefone ? "Avisar o cliente por WhatsApp" : "Cliente sem telefone cadastrado")"
+                            @(temTelefone ? "" : "disabled")
+                            class="border border-outline text-on-surface-variant rounded-lg px-lg py-sm font-label-md text-label-md font-bold hover:bg-surface-container-low transition-colors flex items-center gap-xs disabled:opacity-50 disabled:cursor-not-allowed">
+                        <span class="material-symbols-outlined text-[18px]">chat</span>
+                        Avisar cliente
+                    </button>
+                }
+                @if (ehOrcamento && ordemGerada == null)
+                {
+                    <form asp-action="GerarOrdem" method="post"
+                          onsubmit="return confirm('O cliente aprovou este orçamento? Vai ser aberta uma ordem de serviço com o mesmo cliente, aparelhos e itens.');">
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <button type="submit"
+                                class="bg-secondary text-white rounded-lg px-lg py-sm font-label-md text-label-md font-bold hover:bg-opacity-90 transition-colors flex items-center gap-xs">
+                            <span class="material-symbols-outlined text-[18px]">check_circle</span>
+                            Cliente aprovou — gerar OS
+                        </button>
+                    </form>
+                }
+            </div>
+        </section>
 
-                <form asp-action="AlterarSituacao" method="post" class="mt-sm flex items-center gap-sm">
+        <!-- Resumo: mesmos mini-cards de rótulo/valor usados em Garantias, com a situação
+             editável dentro do próprio card em vez de solta na página -->
+        <section class="bg-white rounded-xl border border-outline-variant shadow-sm p-md grid grid-cols-2 sm:grid-cols-4 gap-md mb-md">
+            <div>
+                <span class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Cliente</span>
+                <p class="font-body-md text-body-md text-on-surface font-semibold">@Model.Cliente.Nome</p>
+            </div>
+            <div>
+                <span class="font-label-sm text-label-sm text-outline uppercase tracking-wider">@(ehOrcamento ? "Feito em" : "Aberta em")</span>
+                <p class="font-body-md text-body-md text-on-surface-variant">@Model.DataAbertura.ToString("dd/MM/yyyy")</p>
+            </div>
+            <div>
+                <span class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Entregue em</span>
+                <p class="font-body-md text-body-md text-on-surface-variant">@(Model.DataEntrega.HasValue ? Model.DataEntrega.Value.ToString("dd/MM/yyyy") : "—")</p>
+            </div>
+            <div>
+                <span class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Situação</span>
+                <form asp-action="AlterarSituacao" method="post">
                     <input type="hidden" name="id" value="@Model.Id" />
                     <input type="hidden" name="retorno" value="Ver" />
-                    <label class="font-label-md text-label-md text-on-surface-variant" for="situacao">Situação</label>
-                    <select id="situacao" name="situacao" onchange="this.form.submit()"
-                            class="bg-surface-container-low border-none rounded-lg pl-md pr-10 py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30">
+                    <select name="situacao" onchange="this.form.submit()"
+                            class="mt-[2px] w-full bg-surface-container-low border-none rounded-lg pl-sm pr-8 py-1 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30">
                         @foreach (var s in Model.SituacoesPossiveis)
                         {
                             <option value="@s" selected="@(Model.Situacao == s)">@s</option>
@@ -199,41 +193,80 @@
                     </select>
                 </form>
             </div>
-            <div class="flex items-center gap-sm">
-            <a asp-action="Add" asp-route-id="@Model.Id"
-               class="border border-outline text-on-surface-variant rounded-lg px-lg py-sm font-label-md text-label-md font-bold hover:bg-surface-container-low transition-colors flex items-center gap-xs">
-                <span class="material-symbols-outlined text-[18px]">edit</span>
-                Editar
-            </a>
-            <button id="imprimirBtn" type="button"
-                    class="@(ehOrcamento && ordemGerada == null ? "border border-outline text-on-surface-variant hover:bg-surface-container-low" : "bg-secondary text-white hover:bg-opacity-90") rounded-lg px-lg py-sm font-label-md text-label-md font-bold transition-colors flex items-center gap-xs">
-                <span class="material-symbols-outlined text-[18px]">print</span>
-                @(ehOrcamento ? "Imprimir" : "Imprimir as duas vias")
-            </button>
-            @if (!ehOrcamento)
-            {
-                <button id="imprimirTermicoBtn" type="button" title="Comprovante de entrada em impressora térmica 58/80mm"
-                        class="border border-outline text-on-surface-variant rounded-lg px-lg py-sm font-label-md text-label-md font-bold hover:bg-surface-container-low transition-colors flex items-center gap-xs">
-                    <span class="material-symbols-outlined text-[18px]">receipt</span>
-                    Comprovante térmico
-                </button>
-            }
-            @if (ehOrcamento && ordemGerada == null)
-            {
-                <form asp-action="GerarOrdem" method="post"
-                      onsubmit="return confirm('O cliente aprovou este orçamento? Vai ser aberta uma ordem de serviço com o mesmo cliente, aparelhos e itens.');">
-                    <input type="hidden" name="id" value="@Model.Id" />
-                    <button type="submit"
-                            class="bg-secondary text-white rounded-lg px-lg py-sm font-label-md text-label-md font-bold hover:bg-opacity-90 transition-colors flex items-center gap-xs">
-                        <span class="material-symbols-outlined text-[18px]">check_circle</span>
-                        Cliente aprovou — gerar OS
-                    </button>
-                </form>
-            }
-            </div>
         </section>
 
-        <p class="mt-md font-body-md text-body-md text-on-surface-variant">
+        <!-- Garantia/validade e de onde este documento veio ou para onde foi -->
+        <div class="flex flex-wrap items-center gap-sm mb-md">
+            @if (ehOrcamento)
+            {
+                <span class="px-sm py-xs rounded-lg font-label-md text-label-md @(Model.ValidadeVencida ? "bg-error-container text-error" : "bg-warning-container text-on-surface")">
+                    @if (Model.ValidadeVencida)
+                    {
+                        <text>Venceu em @Model.Validade.ToString("dd/MM/yyyy") — refaça antes de aprovar</text>
+                    }
+                    else
+                    {
+                        <text>Válido até @Model.Validade.ToString("dd/MM/yyyy") (@Model.ValidadeDias dias)</text>
+                    }
+                </span>
+                @if (ordemGerada != null)
+                {
+                    <a asp-controller="OrdemServico" asp-action="Ver" asp-route-id="@ordemGerada[0]"
+                       class="font-label-md text-label-md text-secondary font-bold hover:underline flex items-center gap-xs">
+                        <span class="material-symbols-outlined text-[18px]">receipt_long</span>
+                        Virou a ordem @ordemGerada[1]
+                    </a>
+                }
+            }
+            else
+            {
+                @if (Model.GarantiaIniciada)
+                {
+                    <span class="px-sm py-xs rounded-lg font-label-md text-label-md @(Model.GarantiaVigente ? "bg-secondary-container text-on-secondary-container" : "bg-surface-container-high text-on-surface-variant")">
+                        @if (Model.GarantiaVigente)
+                        {
+                            <text>Garantia vigente · vale até @Model.GarantiaFim?.ToString("dd/MM/yyyy") (@Model.DiasDeGarantiaRestantes dias)</text>
+                        }
+                        else
+                        {
+                            <text>Garantia vencida em @Model.GarantiaFim?.ToString("dd/MM/yyyy")</text>
+                        }
+                    </span>
+                    @if (Model.GarantiaVigente)
+                    {
+                        <a asp-action="RetornoGarantia" asp-route-id="@Model.Id"
+                           class="font-label-md text-label-md text-secondary font-bold hover:underline flex items-center gap-xs">
+                            <span class="material-symbols-outlined text-[18px]">assignment_return</span>
+                            Abrir retorno em garantia
+                        </a>
+                    }
+                }
+                else
+                {
+                    <span class="px-sm py-xs rounded-lg font-label-md text-label-md bg-warning-container text-on-surface">
+                        Garantia de @Model.PrazoGarantiaDias dias — começa a contar na retirada
+                    </span>
+                }
+                @if (Model.OrdemOrigemId.HasValue)
+                {
+                    <a asp-action="Ver" asp-route-id="@Model.OrdemOrigemId"
+                       class="font-label-md text-label-md text-secondary font-bold hover:underline flex items-center gap-xs">
+                        <span class="material-symbols-outlined text-[18px]">assignment_return</span>
+                        Retorno da @Model.OrdemOrigem?.Numero
+                    </a>
+                }
+                @if (Model.OrcamentoOrigemId.HasValue)
+                {
+                    <a asp-controller="Orcamento" asp-action="Ver" asp-route-id="@Model.OrcamentoOrigemId"
+                       class="font-label-md text-label-md text-secondary font-bold hover:underline flex items-center gap-xs">
+                        <span class="material-symbols-outlined text-[18px]">receipt_long</span>
+                        Veio do orçamento @Model.OrcamentoOrigem?.Numero
+                    </a>
+                }
+            }
+        </div>
+
+        <p class="font-body-md text-body-md text-on-surface-variant">
             @if (ehOrcamento)
             {
                 <text>
@@ -296,8 +329,72 @@
                     }
                 </div>
             </section>
+
+            <!-- Histórico de avisos: prova de "notificado por escrito" exigida na cláusula de abandono -->
+            <section class="mt-md bg-white rounded-xl border border-outline-variant shadow-sm p-lg">
+                <div class="flex items-center gap-sm mb-md">
+                    <span class="material-symbols-outlined text-[20px] text-secondary">chat</span>
+                    <h2 class="font-title-lg text-title-lg text-primary">Avisos ao cliente</h2>
+                </div>
+                @if (notificacoes.Count == 0)
+                {
+                    <p class="font-body-md text-body-md text-on-surface-variant">Nenhum aviso enviado ainda.</p>
+                }
+                else
+                {
+                    <div class="flex flex-col gap-sm">
+                        @foreach (var n in notificacoes)
+                        {
+                            <div class="border-b border-outline-variant last:border-0 pb-sm last:pb-0">
+                                <div class="flex items-center justify-between gap-sm">
+                                    <span class="font-label-md text-label-md font-bold text-on-surface">@n.Canal · @n.Destinatario</span>
+                                    <span class="font-label-sm text-label-sm text-outline">@n.DataEnvio.ToString("dd/MM/yyyy HH:mm") @(n.Usuario != null ? $"· {n.Usuario.Nome}" : "")</span>
+                                </div>
+                                <p class="font-body-md text-body-md text-on-surface-variant">@n.Mensagem</p>
+                            </div>
+                        }
+                    </div>
+                }
+            </section>
         }
     </main>
+
+    @if (!ehOrcamento)
+    {
+        <!-- Confirma/edita a mensagem antes de abrir o WhatsApp; o registro no banco acontece
+             no POST, antes do redirect para o wa.me -->
+        <div id="modalNotificar" class="no-print hidden fixed inset-0 z-50 bg-black/40 flex items-start justify-center px-md pt-24">
+            <div class="bg-white rounded-xl border border-outline-variant shadow-lg w-full max-w-[480px] overflow-hidden">
+                <div class="p-md border-b border-outline-variant flex items-center justify-between gap-sm">
+                    <h2 class="font-title-lg text-title-lg text-primary">Avisar cliente por WhatsApp</h2>
+                    <button id="fecharModalNotificar" type="button" title="Fechar"
+                            class="w-8 h-8 rounded-lg hover:bg-surface-container-low flex items-center justify-center text-on-surface-variant transition-colors">
+                        <span class="material-symbols-outlined text-[20px]">close</span>
+                    </button>
+                </div>
+                <form asp-controller="OrdemServico" asp-action="NotificarWhatsApp" method="post" target="_blank" id="formNotificar" class="p-md flex flex-col gap-sm">
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <label class="font-label-md text-label-md text-on-surface-variant" for="mensagemNotificar">Mensagem</label>
+                    <textarea id="mensagemNotificar" name="mensagem" rows="4"
+                              class="w-full bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30">@mensagemSugerida</textarea>
+                    <p class="font-label-sm text-label-sm text-outline">
+                        Ao confirmar, o aviso é registrado no sistema e o WhatsApp Web abre com a mensagem pronta — conferir e enviar é manual.
+                    </p>
+                    <div class="flex items-center justify-end gap-sm mt-xs">
+                        <button type="button" id="cancelarNotificarBtn"
+                                class="border border-outline text-on-surface-variant rounded-lg px-lg py-sm font-label-md text-label-md font-bold hover:bg-surface-container-low transition-colors">
+                            Cancelar
+                        </button>
+                        <button type="submit"
+                                class="bg-secondary text-white rounded-lg px-lg py-sm font-label-md text-label-md font-bold hover:bg-opacity-90 transition-colors flex items-center gap-xs">
+                            <span class="material-symbols-outlined text-[18px]">chat</span>
+                            Registrar e abrir WhatsApp
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    }
 
     <div class="moldura px-lg pb-xl max-w-[1440px] mx-auto">
         <div class="bg-white rounded-xl border border-outline-variant shadow-sm p-lg overflow-x-auto">
@@ -523,5 +620,6 @@
 
     <script src="~/js/os-impressao.js" asp-append-version="true"></script>
     <script src="~/js/fotos-aparelho.js" asp-append-version="true"></script>
+    <script src="~/js/notificar-cliente.js" asp-append-version="true"></script>
 </body>
 </html>

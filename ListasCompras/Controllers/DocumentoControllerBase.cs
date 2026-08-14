@@ -84,6 +84,14 @@ public abstract class DocumentoControllerBase : LojaControllerBase
                 .Select(o => new[] { o.Id.ToString(), o.Numero })
                 .FirstOrDefault();
         }
+        else
+        {
+            ViewData["Notificacoes"] = Context.NotificacoesCliente
+                .Include(n => n.Usuario)
+                .Where(n => n.OrdemServicoId == id)
+                .OrderByDescending(n => n.DataEnvio)
+                .ToList();
+        }
 
         return Tela("Ver", documento);
     }
