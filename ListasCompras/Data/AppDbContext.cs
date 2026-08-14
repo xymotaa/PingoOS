@@ -20,6 +20,7 @@ public class AppDbContext : DbContext
     public DbSet<OrdemServico> OrdensServico { get; set; }
     public DbSet<ItemOrdemServico> ItensOrdemServico { get; set; }
     public DbSet<AparelhoOs> AparelhosOs { get; set; }
+    public DbSet<FotoAparelho> FotosAparelho { get; set; }
     public DbSet<ProdutoEstoque> ProdutosEstoque { get; set; }
     public DbSet<MovimentacaoEstoque> MovimentacoesEstoque { get; set; }
     public DbSet<Venda> Vendas { get; set; }
@@ -66,6 +67,14 @@ public class AppDbContext : DbContext
             .WithMany()
             .HasForeignKey(o => o.OrcamentoOrigemId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        // Apagar o aparelho apaga os registros das fotos; o arquivo em disco é removido
+        // à parte pelo controller antes disso, senão viraria lixo órfão
+        modelBuilder.Entity<FotoAparelho>()
+            .HasOne(f => f.AparelhoOs)
+            .WithMany(a => a.Fotos)
+            .HasForeignKey(f => f.AparelhoOsId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         // Retorno em garantia aponta para a ordem original; excluir a original não
         // pode apagar o retorno, que é o registro de que o problema voltou

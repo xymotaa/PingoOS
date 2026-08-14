@@ -24,10 +24,10 @@ retrabalho garantido:
 ✅ Backup pela tela                  (2026-08-11)
 ✅ Catálogo de serviços              (2026-08-11, alimenta os itens da OS)
 ✅ Orçamento separado da OS          (2026-08-12, aprovado vira ordem)
+✅ Fotos do aparelho                 (2026-08-13, evidência na entrada)
+✅ Faturamento MEI                   (2026-08-13, soma contra o teto de R$ 81.000)
         ↓
-1. Anexar fotos do aparelho          (pendura na OS, que já está gravada)
-        ↓
-2. Financeiro e relatórios           (a venda já está gravada; falta somar)
+1. Financeiro e relatórios           (a venda já está gravada; falta somar)
 ```
 
 O erro que essa ordem evita: modelar a Ordem de Serviço com os dados do cliente embutidos e criar o
@@ -37,24 +37,7 @@ cadastro de Clientes depois — o que obrigaria a migrar dados na marra. Por iss
 
 ## Alta prioridade
 
-### 1. Anexar fotos do aparelho
-**Falta porque** é proteção jurídica direta: fotografar o aparelho na entrada é a defesa contra
-"esse arranhão não estava aí". Reforça exatamente as cláusulas de risco que já estão impressas nos
-termos da OS. O MapOS chama de `Arquivos`.
-
-**O que envolve:** upload vinculado à OS. Decidir onde guardar — arquivo em pasta é melhor que
-base64 no banco, que é como a logo da loja é armazenada hoje e não escalaria para fotos.
-
-### 2. Relatório de receita bruta MEI
-**Falta porque** MEI tem teto anual de faturamento, e quem passa sem perceber é desenquadrado e cai
-numa carga tributária maior. O MapOS tem um relatório dedicado a isso
-(`rel_receitas_brutas_mei`) — é o item mais específico do Brasil na lista deles e vale mais para o
-dono da loja do que qualquer gráfico bonito.
-
-**O que envolve:** somar as vendas e ordens do ano contra o teto vigente, com aviso ao se aproximar.
-Depende de Caixa e OS gravando.
-
-### 3. Impressão térmica da OS
+### 1. Impressão térmica da OS
 **Falta porque** o balcão usa impressora térmica de 58/80mm no dia a dia. Nosso documento A4 de duas
 vias está bem resolvido para a assinatura, mas o comprovante de entrada entregue na hora é térmico.
 O MapOS mantém os dois (`imprimirOs` e `imprimirOsTermica`).
@@ -62,7 +45,7 @@ O MapOS mantém os dois (`imprimirOs` e `imprimirOsTermica`).
 **O que envolve:** uma segunda folha de estilo de impressão, em coluna estreita, sem tabela larga.
 Convivem: térmica na entrada, A4 na assinatura.
 
-### 4. Notificação ao cliente (e-mail ou WhatsApp)
+### 2. Notificação ao cliente (e-mail ou WhatsApp)
 **Falta porque** os termos da OS dizem que, para considerar um aparelho abandonado, o cliente
 precisa ter sido **notificado por escrito**. Hoje o sistema não produz essa prova. Isso deixa de ser
 conveniência e passa a ser o que sustenta juridicamente a cláusula 8 — além de resolver o "seu
@@ -74,13 +57,39 @@ que é a prova) e um `BackgroundService` para reenviar as que falharem.
 > Nota de stack: **não precisamos de cron.** O `BackgroundService` do .NET roda dentro da própria
 > aplicação. O MapOS precisa de duas linhas no crontab do servidor para a mesma coisa.
 
-### 5. Financeiro (lançamentos e contas a pagar)
+### 3. Financeiro (lançamentos e contas a pagar)
 **Falta porque** Caixa sem persistência não é caixa. Entradas, saídas e contas a pagar dão a visão
 do mês, que hoje não existe em lugar nenhum. É o módulo `Financeiro` do MapOS.
 
 **O que envolve:** maior esforço da lista; depende de Caixa e OS gravando.
 
-### 6. Script de instalação para o usuário final
+### 3.1. Fechamento de caixa do dia (discutido em 2026-08-14)
+**Falta porque** muita loja bate o dinheiro físico da gaveta contra o sistema no fim do expediente,
+e hoje Vendas e Ordens de Serviço entregues não têm um relatório diário — só o total anual da tela
+de Faturamento MEI.
+
+**O que envolve:** relatório do dia (não altera nada, só lê): Vendas por forma de pagamento
+(dinheiro/débito/crédito/PIX), **separado** de Ordens de Serviço entregues por forma de pagamento,
+com um total geral abaixo dos dois. A separação visual é proposital — o risco discutido foi o
+usuário lançar a mesma OS como venda no Caixa "para aparecer no fechamento", duplicando o
+faturamento que a tela de Faturamento MEI já soma. O relatório deve deixar claro que são duas
+fontes diferentes que só estão lado a lado para conferência, nunca a mesma coisa.
+
+**Depende de** nada além do que já é gravado hoje (`Venda.FormaPagamento`, `OrdemServico.FormaPagamento`
++ `Sinal`). Pode vir antes do item 3 (Financeiro) — é mais simples, é leitura pura.
+
+### 3.2. Ordem de compra (peça sob encomenda) — ideia solta (2026-08-14)
+**Falta porque** nem toda peça (ex: frontal de um modelo específico) está em estoque; a loja
+encomenda de uma distribuidora e a peça chega depois. Hoje não há como registrar isso — só existe
+lançar a peça no Estoque quando ela já chegou.
+
+**O que envolve, em linhas gerais:** uma tela no molde da Ordem de Serviço, mas de compra: dados da
+distribuidora/fornecedor, item(ns) pedido(s), situação (Pedida → Chegou → Cancelada). Ao chegar,
+provavelmente alimenta o Estoque — parecido com o que o catálogo de Serviços faz para a OS. Ainda
+não desenhado; entra no roadmap só para não perder a ideia. Repensar o relacionamento com
+`ProdutoEstoque` e `MovimentacaoEstoque` quando for para frente.
+
+### 4. Script de instalação para o usuário final
 **Falta porque** o público do sistema é dono de loja, não desenvolvedor. Hoje instalar exige clonar
 o repositório, ter o SDK do .NET e rodar comandos. Essa é a lição que o MapOS acerta: sem instalação
 simples, o sistema não chega em quem precisa dele.
@@ -89,7 +98,7 @@ simples, o sistema não chega em quem precisa dele.
 publicam, registram como serviço do sistema (systemd / Serviço do Windows) e abrem o navegador. Bem
 mais simples que no MapOS: não há PHP, MySQL nem webserver para configurar.
 
-### 7. Hospedar na nuvem (Supabase + domínio próprio)
+### 5. Hospedar na nuvem (Supabase + domínio próprio)
 **Mudou de ideia (2026-08-12):** a decisão registrada em "Descartado" era rodar só local. O Supabase
 tem um free tier de Postgres, o que reabre a questão — banco gerenciado sem custo muda a conta.
 
@@ -124,14 +133,14 @@ qual delas quebrou alguma coisa.
 
 ## Baixa prioridade
 
-### 8. Recuperação de senha por e-mail
+### 6. Recuperação de senha por e-mail
 **Já existe** recuperação por código anotado no papel e por comando de terminal (2026-08-07, ver
 [CHANGES.md](CHANGES.md)). Falta a via por e-mail, que dispensa guardar código: link de uso único
 com validade curta.
 
-**Depende de** o envio de e-mail (item 4). Prioridade baixa agora que o caso de tranca está coberto.
+**Depende de** o envio de e-mail (item 3). Prioridade baixa agora que o caso de tranca está coberto.
 
-### 9. Ilustração própria para a tela de login
+### 7. Ilustração própria para a tela de login
 **Situação atual:** a atribuição da [Storyset](https://storyset.com) está no arquivo `NOTICE`, então
 a obrigação de crédito está cumprida.
 
@@ -139,7 +148,7 @@ a obrigação de crédito está cumprida.
 técnica de celular. Uma ilustração do mundo da loja — bancada, aparelho aberto, ferramenta — diria
 mais e dispensaria a dependência de terceiro.
 
-### 10. Unificar os dois visuais
+### 8. Unificar os dois visuais
 **Situação atual:** convivem dois sistemas de design. As telas novas (Painel, Orçamento, Estoque,
 Caixa, Configuração, Login) usam Tailwind com paleta Material-3. As antigas (Lista de compras,
 "Em breve") usam `wwwroot/css/site.css`, verde institucional com fonte Inter.
@@ -147,13 +156,13 @@ Caixa, Configuração, Login) usam Tailwind com paleta Material-3. As antigas (L
 **O que envolve:** migrar `Views/ListaCompra/` e `Views/Shared/EmBreve.cshtml` para Tailwind,
 aproveitando o partial `_HeadTailwind.cshtml`. Depois o `site.css` encolhe bastante. Cosmético.
 
-### 11. Dashboards de verdade
+### 9. Dashboards de verdade
 **Situação atual:** `DashboardsController` retorna a tela "Em breve" e os KPIs do Painel mostram
 estado vazio.
 
 **O que envolve:** depende de Caixa, Estoque e OS no banco — sem dado gravado não há o que somar.
 
-### 12. Autoria detalhada (auditoria mínima)
+### 10. Autoria detalhada (auditoria mínima)
 **Situação atual:** a OS já grava quem a emitiu, e as movimentações de estoque quem as fez. Uma auditoria completa, como o
 módulo `Auditoria` do MapOS, registraria toda alteração em todo registro.
 
@@ -188,8 +197,8 @@ Metade do assistente deles serve para coletar host, usuário e senha do MySQL �
 existem, porque o SQLite é um arquivo. A outra metade (dados do responsável e da loja) já foi
 resolvida pela tela de **primeiro acesso**.
 
-### Docker (decisão revista — ver item 7)
+### Docker (decisão revista — ver item 6)
 Estava descartado com a premissa de rodar só local: `dotnet publish` já entrega uma pasta com
 executável, sem daemon para instalar, então Docker seria peso morto. Essa premissa mudou — ver
-item 7 em Alta prioridade, que reabre hospedagem na nuvem via Supabase + Hostinger, com Docker como
+item 6 em Alta prioridade, que reabre hospedagem na nuvem via Supabase + Hostinger, com Docker como
 uma das duas rotas possíveis para subir o binário no servidor.

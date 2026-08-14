@@ -1,5 +1,78 @@
 # Registro de Alterações
 
+## [2026-08-13] Faturamento MEI (item 2 do roadmap)
+
+### Problema
+MEI tem teto anual de faturamento; quem passa sem perceber é desenquadrado do regime e cai numa
+carga tributária maior. O sistema já grava vendas e ordens de serviço, mas nada somava isso contra
+o teto.
+
+### Solução
+Tela nova, **/Faturamento**, com filtro por ano: soma o total das Vendas (Caixa) mais as Ordens de
+Serviço **entregues** do ano escolhido, contra o teto de **R$ 81.000** (padrão MEI vigente). Barra
+de progresso muda de cor perto do limite (80%) e ao ultrapassar.
+
+**Regime de caixa.** A venda entra na data da venda; a ordem de serviço entra na data de
+**entrega**, não na de abertura — é quando o saldo é de fato cobrado. Orçamentos não entram na
+soma, porque nada foi recebido ainda.
+
+**Teto fixo por enquanto.** Deixar configurável em `/Configuracao` ficou anotado no `ROADMAP.md`
+como melhoria futura, para quando a lei mudar o valor ou a loja precisar de outra faixa — não é
+necessário agora.
+
+### Arquivos Alterados
+| Arquivo | Alteração |
+|---|---|
+| `Controllers/FaturamentoController.cs` | **novo** — soma por ano, `TetoAnualMei = 81_000m` |
+| `Views/Faturamento/Index.cshtml` | **novo** |
+| `Views/Home/Index.cshtml` | botão **Faturamento MEI** (`trending_up`) no menu |
+
+Nenhuma coluna nova — soma o que já estava gravado. Sem migration.
+
+---
+
+## [2026-08-13] Fotos do aparelho (item 1 do roadmap)
+
+### Problema
+Os termos impressos da OS já preveem exclusão de garantia por mau uso, queda e oxidação, mas nada
+registrava o estado do aparelho **na entrada**. Sem isso, a cláusula não tem como se defender de
+"esse arranhão não estava aí" — é a palavra da loja contra a do cliente.
+
+### Solução
+Seção **Fotos do aparelho** na tela `Ver` da ordem de serviço (não no orçamento — o aparelho ainda
+não foi entregue). Cada aparelho da OS tem seu próprio conjunto de fotos; escolher um arquivo já
+envia, sem botão de confirmação separado.
+
+Guardadas em **disco**, não no banco: `wwwroot/uploads/aparelhos/`, fora do controle de versão
+(`.gitignore`). Base64 no banco é como a logo da loja é guardada hoje, e o roadmap já registrava que
+"não escalaria para fotos" — várias fotos por aparelho, em várias ordens, infla o `.db` rápido e
+pesa em todo backup.
+
+Validado no servidor, não só no `accept` do input: apenas JPEG/PNG/WEBP, até 8 MB. Nome do arquivo
+em disco é um GUID novo — o nome original do upload não é confiável (pode ter caminho, caracteres
+especiais) nem é guardado.
+
+### Arquivos Alterados
+| Arquivo | Alteração |
+|---|---|
+| `Models/FotoAparelho.cs` | **novo** — arquivo, data de envio, pertence a um `AparelhoOs` |
+| `Data/FotoAparelhoServico.cs` | **novo** — validação de tipo/tamanho, salvar e remover do disco |
+| `Controllers/OrdemServicoController.cs` | `EnviarFoto` e `ExcluirFoto`, restritos a ordens (não orçamentos) |
+| `Controllers/DocumentoControllerBase.cs` | `Ver` inclui `Aparelhos.Fotos` |
+| `Views/Documento/Ver.cshtml` | seção de fotos, fora da área de impressão |
+| `wwwroot/js/fotos-aparelho.js` | **novo** — envia ao escolher arquivo, exclui com confirmação |
+| `.gitignore` | `ListasCompras/wwwroot/uploads/` |
+| Migration `AddFotosAparelho` | tabela nova, sem dado existente a migrar |
+
+Exclusão de foto e de arquivo em disco são independentes de propósito: se o arquivo já sumiu do
+disco por algum motivo, o registro ainda sai do banco — o inverso nunca deixaria lixo órfão sem
+alguém notar, mas travar a exclusão por um arquivo ausente seria pior.
+
+### Resultado
+Build limpo. Migration cria só a tabela nova, nenhuma coluna existente é tocada.
+
+---
+
 ## [2026-08-12] Voltar do navegador não reabre o formulário salvo
 
 ### Problema

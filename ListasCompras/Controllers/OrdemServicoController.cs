@@ -46,4 +46,49 @@ public class OrdemServicoController : DocumentoControllerBase
         ViewData["EhOrcamento"] = false;
         return View("~/Views/Documento/Add.cshtml", retorno);
     }
+
+    // ===== Fotos do aparelho =====
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EnviarFoto(int aparelhoId, IFormFile? foto)
+    {
+        var aparelho = Context.AparelhosOs
+            .Include(a => a.OrdemServico)
+            .FirstOrDefault(a => a.Id == aparelhoId && a.OrdemServico.Tipo == TiposDocumento.OrdemServico);
+
+        if (aparelho == null) return NotFound();
+
+        if (foto == null || !FotoAparelhoServico.TamanhoValido(foto.Length) || !FotoAparelhoServico.TipoValido(foto.ContentType))
+        {
+            TempData["Erro"] = "Envie uma foto em JPEG, PNG ou WEBP de até 8 MB.";
+            return RedirectToAction(nameof(Ver), new { id = aparelho.OrdemServicoId });
+        }
+
+        await using var stream = foto.OpenReadStream();
+        var arquivo = await FotoAparelhoServico.SalvarAsync(stream, foto.ContentType);
+
+        Context.FotosAparelho.Add(new FotoAparelho { AparelhoOsId = aparelho.Id, Arquivo = arquivo });
+        Context.SaveChanges();
+
+        return RedirectToAction(nameof(Ver), new { id = aparelho.OrdemServicoId });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult ExcluirFoto(int id)
+    {
+        var foto = Context.FotosAparelho
+            .Include(f => f.AparelhoOs).ThenInclude(a => a.OrdemServico)
+            .FirstOrDefault(f => f.Id == id && f.AparelhoOs.OrdemServico.Tipo == TiposDocumento.OrdemServico);
+
+        if (foto == null) return NotFound();
+
+        var ordemId = foto.AparelhoOs.OrdemServicoId;
+        FotoAparelhoServico.Remover(foto.Arquivo);
+        Context.FotosAparelho.Remove(foto);
+        Context.SaveChanges();
+
+        return RedirectToAction(nameof(Ver), new { id = ordemId });
+    }
 }

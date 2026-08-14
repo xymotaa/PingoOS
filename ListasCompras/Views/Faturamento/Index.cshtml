@@ -1,0 +1,118 @@
+@model decimal
+@{
+    Layout = null;
+    ViewData["Title"] = "Faturamento MEI";
+    var nomeLoja = ViewData["NomeLoja"] as string ?? "Minha Loja";
+    var ano = (int)ViewData["Ano"]!;
+    var anos = ViewData["AnosDisponiveis"] as List<int> ?? new();
+    var totalVendas = (decimal)ViewData["TotalVendas"]!;
+    var totalOrdens = (decimal)ViewData["TotalOrdens"]!;
+    var teto = (decimal)ViewData["Teto"]!;
+    var percentual = (decimal)ViewData["Percentual"]!;
+
+    string Moeda(decimal v) => v.ToString("C2", new System.Globalization.CultureInfo("pt-BR"));
+
+    var estourou = Model > teto;
+    var alerta = !estourou && percentual >= 0.8m;
+
+    (string fundo, string texto, string barra) cor =
+        estourou ? ("bg-error-container", "text-error", "bg-error")
+        : alerta ? ("bg-warning-container", "text-on-surface", "bg-warning")
+        : ("bg-secondary-container", "text-on-secondary-container", "bg-secondary");
+}
+<!DOCTYPE html>
+<html class="light" lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>@nomeLoja — Faturamento MEI</title>
+    @await Html.PartialAsync("_HeadTailwind")
+</head>
+<body class="bg-surface">
+    @await Html.PartialAsync("_Navbar")
+
+    <main class="pt-24 px-lg pb-xl max-w-[1440px] mx-auto">
+
+        <!-- Cabeçalho da página -->
+        <section class="mb-md flex flex-wrap items-end justify-between gap-md">
+            <div>
+                <h1 class="font-headline-lg text-headline-lg text-primary">Faturamento MEI</h1>
+                <p class="font-body-md text-body-md text-on-surface-variant">
+                    Vendas e ordens de serviço entregues, somadas por ano, contra o teto do MEI.
+                </p>
+            </div>
+            <form method="get" class="flex items-center gap-sm">
+                <label class="font-label-md text-label-md text-on-surface-variant" for="ano">Ano</label>
+                <select id="ano" name="ano" onchange="this.form.submit()"
+                        class="bg-surface-container-low border-none rounded-lg pl-md pr-10 py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30">
+                    @foreach (var a in anos)
+                    {
+                        <option value="@a" selected="@(a == ano)">@a</option>
+                    }
+                </select>
+            </form>
+        </section>
+
+        <!-- Faturamento contra o teto -->
+        <section class="bg-white rounded-xl border border-outline-variant shadow-sm p-lg mb-md">
+            <div class="flex flex-wrap items-end justify-between gap-sm mb-sm">
+                <div>
+                    <span class="font-label-md text-label-md text-outline uppercase tracking-wider">Faturamento em @ano</span>
+                    <div class="font-display-lg text-display-lg text-primary">@Moeda(Model)</div>
+                </div>
+                <span class="px-md py-sm rounded-lg font-label-md text-label-md font-bold @cor.fundo @cor.texto">
+                    @if (estourou)
+                    {
+                        <text>Passou o teto de @Moeda(teto)</text>
+                    }
+                    else if (alerta)
+                    {
+                        <text>@percentual.ToString("P0") do teto — atenção</text>
+                    }
+                    else
+                    {
+                        <text>@percentual.ToString("P0") do teto de @Moeda(teto)</text>
+                    }
+                </span>
+            </div>
+
+            <div class="w-full h-3 rounded-full bg-surface-container-low overflow-hidden">
+                <div class="h-full @cor.barra" style="width: @(Math.Min(percentual, 1m).ToString("P0", System.Globalization.CultureInfo.InvariantCulture))"></div>
+            </div>
+
+            @if (estourou)
+            {
+                <p class="mt-sm font-body-md text-body-md text-error">
+                    O faturamento de @ano já ultrapassou o teto do MEI (@Moeda(teto)). Passar do limite
+                    pode levar ao desenquadramento do regime e a uma carga tributária maior — vale
+                    confirmar a situação com o contador.
+                </p>
+            }
+            else if (alerta)
+            {
+                <p class="mt-sm font-body-md text-body-md text-on-surface-variant">
+                    Faltam @Moeda(teto - Model) para o teto anual. Vale acompanhar de perto pelo resto do ano.
+                </p>
+            }
+        </section>
+
+        <!-- Composição -->
+        <section class="grid grid-cols-1 sm:grid-cols-2 gap-md">
+            <div class="bg-white rounded-xl border border-outline-variant shadow-sm p-lg">
+                <span class="font-label-md text-label-md text-outline uppercase tracking-wider">Vendas (Caixa)</span>
+                <div class="font-title-lg text-title-lg font-bold text-primary">@Moeda(totalVendas)</div>
+            </div>
+            <div class="bg-white rounded-xl border border-outline-variant shadow-sm p-lg">
+                <span class="font-label-md text-label-md text-outline uppercase tracking-wider">Ordens de serviço entregues</span>
+                <div class="font-title-lg text-title-lg font-bold text-primary">@Moeda(totalOrdens)</div>
+            </div>
+        </section>
+
+        <p class="mt-md font-label-sm text-label-sm text-outline">
+            Conta pelo regime de caixa: a venda entra na data da venda, e a ordem de serviço na data
+            de entrega — que é quando o saldo é efetivamente cobrado. Orçamentos não entram nessa
+            soma, porque nada foi recebido ainda.
+        </p>
+    </main>
+</body>
+</html>

@@ -1,3 +1,6 @@
 # Ferramentas de agente (skills do Claude Code) — locais, não vão para o repositório
 .agents/
 skills-lock.json
+
+# Fotos enviadas pelos usuários — dados da loja, não fazem parte do código
+ListasCompras/wwwroot/uploads/

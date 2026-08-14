@@ -69,7 +69,7 @@ public abstract class DocumentoControllerBase : LojaControllerBase
             .Include(o => o.Cliente)
             .Include(o => o.Usuario)
             .Include(o => o.Itens)
-            .Include(o => o.Aparelhos)
+            .Include(o => o.Aparelhos).ThenInclude(a => a.Fotos)
             .Include(o => o.OrdemOrigem)
             .Include(o => o.OrcamentoOrigem)
             .FirstOrDefault(o => o.Id == id && o.Tipo == Tipo);

@@ -15,6 +15,8 @@ public class AparelhoOs
     public string? NumeroSerie { get; set; }
     public bool SemNumeroSerie { get; set; }
 
+    public ICollection<FotoAparelho> Fotos { get; set; } = new List<FotoAparelho>();
+
     public string Resumo
     {
         get

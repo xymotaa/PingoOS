@@ -219,6 +219,53 @@
                 </text>
             }
         </p>
+
+        @if (!ehOrcamento)
+        {
+            <!-- Fotos do aparelho: evidência do estado na entrada, defesa contra "esse arranhão não estava aí" -->
+            <section class="mt-md bg-white rounded-xl border border-outline-variant shadow-sm p-lg">
+                <div class="flex items-center gap-sm mb-md">
+                    <span class="material-symbols-outlined text-[20px] text-secondary">photo_camera</span>
+                    <h2 class="font-title-lg text-title-lg text-primary">Fotos do aparelho</h2>
+                </div>
+                <div class="flex flex-col gap-lg">
+                    @foreach (var ap in Model.Aparelhos)
+                    {
+                        <div>
+                            <div class="flex items-center justify-between gap-sm mb-sm">
+                                <span class="font-label-md text-label-md text-on-surface-variant">@ap.Resumo</span>
+                                <form asp-controller="OrdemServico" asp-action="EnviarFoto" method="post" enctype="multipart/form-data" class="form-enviar-foto">
+                                    <input type="hidden" name="aparelhoId" value="@ap.Id" />
+                                    <label class="cursor-pointer inline-flex items-center gap-xs font-label-md text-label-md text-secondary font-bold hover:underline">
+                                        <span class="material-symbols-outlined text-[18px]">add_a_photo</span>
+                                        Adicionar foto
+                                        <input type="file" name="foto" accept="image/jpeg,image/png,image/webp" class="input-foto hidden" />
+                                    </label>
+                                </form>
+                            </div>
+                            <div class="grid grid-cols-3 sm:grid-cols-6 gap-sm">
+                                @foreach (var foto in ap.Fotos)
+                                {
+                                    <div class="relative group aspect-square rounded-lg overflow-hidden border border-outline-variant">
+                                        <img src="~/uploads/aparelhos/@foto.Arquivo" class="w-full h-full object-cover" />
+                                        <form asp-controller="OrdemServico" asp-action="ExcluirFoto" method="post" class="form-excluir-foto absolute top-1 right-1">
+                                            <input type="hidden" name="id" value="@foto.Id" />
+                                            <button type="submit" class="w-6 h-6 rounded-full bg-black/60 hover:bg-error text-white flex items-center justify-center transition-colors" title="Remover foto">
+                                                <span class="material-symbols-outlined text-[16px]">close</span>
+                                            </button>
+                                        </form>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                    @if (Model.Aparelhos.Count == 0)
+                    {
+                        <p class="font-body-md text-body-md text-on-surface-variant">Nenhum aparelho nesta ordem.</p>
+                    }
+                </div>
+            </section>
+        }
     </main>
 
     <div class="moldura px-lg pb-xl max-w-[1440px] mx-auto">
@@ -400,5 +447,6 @@
     </div>
 
     <script src="~/js/os-impressao.js" asp-append-version="true"></script>
+    <script src="~/js/fotos-aparelho.js" asp-append-version="true"></script>
 </body>
 </html>
