@@ -37,4 +37,16 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const imprimirBtn = document.getElementById("imprimirBtn");
     if (imprimirBtn) imprimirBtn.addEventListener("click", function () { window.print(); });
+
+    // Térmica e A4 nunca saem juntas: a classe no body escolhe qual das duas o CSS mostra
+    const imprimirTermicoBtn = document.getElementById("imprimirTermicoBtn");
+    if (imprimirTermicoBtn) {
+        imprimirTermicoBtn.addEventListener("click", function () {
+            document.body.classList.add("modo-termico");
+            window.print();
+        });
+        window.addEventListener("afterprint", function () {
+            document.body.classList.remove("modo-termico");
+        });
+    }
 });

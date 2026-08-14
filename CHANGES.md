@@ -1,5 +1,34 @@
 # Registro de Alterações
 
+## [2026-08-14] Impressão térmica da OS (item 1 do roadmap)
+
+### Problema
+O documento A4 de duas vias está bem resolvido para a assinatura, mas o balcão usa impressora
+térmica de 58/80mm no dia a dia — é o comprovante que o cliente leva na hora de deixar o aparelho,
+antes de o serviço estar concluído e pronto para o A4 completo.
+
+### Solução
+Botão **"Comprovante térmico"** na tela `Ver` da ordem de serviço (não aparece no orçamento — nada
+foi deixado fisicamente ainda). Gera um segundo documento, resumido, numa coluna de 74mm: dados da
+loja, cliente, aparelho(s), defeito relatado, total previsto, haver e saldo, e uma nota de garantia.
+Não repete os termos completos nem duas vias — é comprovante de entrada, não o contrato assinado.
+
+**A4 e térmico nunca saem juntos.** Os dois blocos (`#osImpressao` e `#osTermico`) já vêm prontos
+do servidor na mesma página; uma classe no `<body>`, ligada só na hora de clicar o botão, esconde um
+e mostra o outro. Usa `@page` nomeado (`page: termica`) para o tamanho 80mm — suportado em
+Chrome/Edge/Brave, a base da maioria das impressoras térmicas USB; sem suporte, cai no tamanho A4
+padrão (pior encaixe, não quebra a impressão).
+
+### Arquivos Alterados
+| Arquivo | Alteração |
+|---|---|
+| `Views/Documento/Ver.cshtml` | `#osTermico`, botão, CSS de impressão nomeada |
+| `wwwroot/js/os-impressao.js` | liga/desliga `body.modo-termico` no clique e no `afterprint` |
+
+Nenhuma mudança de modelo — usa os mesmos dados já exibidos no A4. Sem migration.
+
+---
+
 ## [2026-08-13] Faturamento MEI (item 2 do roadmap)
 
 ### Problema
