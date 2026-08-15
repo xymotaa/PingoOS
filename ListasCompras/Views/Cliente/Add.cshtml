@@ -52,12 +52,12 @@
                     </div>
                     <div class="md:col-span-3">
                         <label class="font-label-md text-label-md text-on-surface-variant" for="Telefone">Telefone</label>
-                        <input asp-for="Telefone" id="Telefone" type="tel" inputmode="tel" placeholder="(00) 00000-0000"
+                        <input asp-for="Telefone" id="Telefone" type="tel" inputmode="tel" placeholder="(00) 00000-0000" data-mascara="telefone"
                                class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
                     </div>
                     <div class="md:col-span-3">
                         <label class="font-label-md text-label-md text-on-surface-variant" for="Documento">CPF ou RG</label>
-                        <input asp-for="Documento" id="Documento" type="text" inputmode="numeric"
+                        <input asp-for="Documento" id="Documento" type="text" inputmode="numeric" placeholder="000.000.000-00" data-mascara="cpf-opcional"
                                class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
                     </div>
                 </div>
@@ -130,6 +130,7 @@
             </div>
         </form>
     </main>
+    <script src="~/js/mascaras.js" asp-append-version="true"></script>
     <script>
         // location.replace troca a página atual no histórico em vez de empilhar: o
         // formulário some do histórico e "voltar" na tela seguinte cai na listagem.

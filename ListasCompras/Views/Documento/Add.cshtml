@@ -198,7 +198,7 @@
                                         <input type="text" name="itemQuantidade" inputmode="numeric" value="@item.Quantidade" class="item-qtd w-full text-center bg-surface-container-low border-none rounded-lg px-2 py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
                                     </td>
                                     <td class="px-md py-sm">
-                                        <input type="text" inputmode="decimal" value="@Decimal(item.ValorUnitario)" placeholder="0,00" class="item-valor w-full text-right bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                                        <input type="text" inputmode="decimal" value="@Decimal(item.ValorUnitario)" placeholder="0,00" data-mascara="valor" class="item-valor w-full text-right bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
                                         <input type="hidden" name="itemValor" class="item-valor-post" value="0" />
                                     </td>
                                     <td class="px-md py-sm text-right">
@@ -255,7 +255,7 @@
                             <input id="temSinal" type="checkbox" class="w-4 h-4 accent-secondary" @(Model.Sinal > 0 ? "checked" : "") />
                             <span class="font-label-md text-label-md text-on-surface-variant">Cliente deixou um haver (adiantamento)</span>
                         </label>
-                        <input id="sinalVisivel" type="text" inputmode="decimal" placeholder="0,00"
+                        <input id="sinalVisivel" type="text" inputmode="decimal" placeholder="0,00" data-mascara="valor"
                                value="@(Model.Sinal > 0 ? Decimal(Model.Sinal) : "")"
                                class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30 disabled:opacity-50" />
                         <input type="hidden" name="sinal" id="sinal" value="0" />
@@ -265,7 +265,7 @@
                     <div class="md:col-span-4">
                         <label class="font-label-md text-label-md text-on-surface-variant" for="descontoVisivel">Desconto</label>
                         <div class="mt-xs flex gap-sm">
-                            <input id="descontoVisivel" type="text" inputmode="decimal" placeholder="0,00"
+                            <input id="descontoVisivel" type="text" inputmode="decimal" placeholder="0,00" data-mascara="valor"
                                    value="@(Model.Desconto > 0 ? Decimal(Model.Desconto) : "")"
                                    class="flex-1 min-w-0 bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
                             <select id="descontoTipo" name="descontoTipo"
@@ -427,6 +427,7 @@
             serie = a.NumeroSerie ?? "", semSerie = a.SemNumeroSerie })));
         const MAX_APARELHOS = @ListasCompras.Models.OrdemServico.MaximoAparelhos;
     </script>
+    <script src="~/js/mascaras.js" asp-append-version="true"></script>
     <script src="~/js/orcamento.js" asp-append-version="true"></script>
 </body>
 </html>

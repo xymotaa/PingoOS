@@ -109,7 +109,7 @@
                         <div class="flex gap-sm">
                             <input name="categoria" type="text" placeholder="Categoria (opcional)"
                                    class="flex-1 min-w-0 bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
-                            <input name="valorVisivel" id="valorVisivel" type="text" inputmode="decimal" placeholder="0,00"
+                            <input name="valorVisivel" id="valorVisivel" type="text" inputmode="decimal" placeholder="0,00" data-mascara="valor"
                                    class="w-28 bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md text-right focus:ring-2 focus:ring-secondary/30" />
                             <input type="hidden" name="valor" id="valor" value="0" />
                         </div>
@@ -167,7 +167,7 @@
                         <div class="flex gap-sm">
                             <input name="vencimento" type="date" required
                                    class="flex-1 min-w-0 bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
-                            <input name="valorContaVisivel" id="valorContaVisivel" type="text" inputmode="decimal" placeholder="0,00"
+                            <input name="valorContaVisivel" id="valorContaVisivel" type="text" inputmode="decimal" placeholder="0,00" data-mascara="valor"
                                    class="w-28 bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md text-right focus:ring-2 focus:ring-secondary/30" />
                             <input type="hidden" name="valor" id="valorConta" value="0" />
                         </div>
@@ -223,6 +223,7 @@
         </div>
     </main>
 
+    <script src="~/js/mascaras.js" asp-append-version="true"></script>
     <script src="~/js/financeiro.js" asp-append-version="true"></script>
 </body>
 </html>

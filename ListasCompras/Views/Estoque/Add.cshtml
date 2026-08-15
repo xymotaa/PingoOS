@@ -131,7 +131,7 @@
                                     Preço venda
                                     <span class="material-symbols-outlined text-[16px] text-secondary" title="Valor de venda ao cliente">info</span>
                                 </label>
-                                <input id="npPreco" value="@(Model.Id > 0 ? Model.PrecoVenda.ToString("0.00", System.Globalization.CultureInfo.GetCultureInfo("pt-BR")) : "")" type="text" inputmode="decimal" placeholder="0,00"
+                                <input id="npPreco" value="@(Model.Id > 0 ? Model.PrecoVenda.ToString("0.00", System.Globalization.CultureInfo.GetCultureInfo("pt-BR")) : "")" type="text" inputmode="decimal" placeholder="0,00" data-mascara="valor"
                                        class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
                             </div>
 
@@ -259,7 +259,7 @@
                             </div>
                             <div class="md:col-span-3">
                                 <label class="font-label-md text-label-md text-on-surface-variant" for="npCusto">Custo unitário</label>
-                                <input id="npCusto" value="@(Model.Id > 0 ? Model.CustoUnitario.ToString("0.00", System.Globalization.CultureInfo.GetCultureInfo("pt-BR")) : "")" type="text" inputmode="decimal" placeholder="0,00" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                                <input id="npCusto" value="@(Model.Id > 0 ? Model.CustoUnitario.ToString("0.00", System.Globalization.CultureInfo.GetCultureInfo("pt-BR")) : "")" type="text" inputmode="decimal" placeholder="0,00" data-mascara="valor" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
                             </div>
                             <div class="md:col-span-6">
                                 <label class="font-label-md text-label-md text-on-surface-variant" for="npLocalizacao">Localização no estoque</label>
@@ -336,6 +336,7 @@
         const ESTOQUE_INDEX_URL = "@Url.Action("Index", "Estoque")";
         const EDITAR_CODIGO = @Html.Raw(Json.Serialize(ViewData["EditarCodigo"] as string ?? ""));
     </script>
+    <script src="~/js/mascaras.js" asp-append-version="true"></script>
     <script src="~/js/estoque-add.js" asp-append-version="true"></script>
 </body>
 </html>

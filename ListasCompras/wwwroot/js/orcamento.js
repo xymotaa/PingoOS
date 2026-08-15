@@ -42,7 +42,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 '<input type="text" name="itemQuantidade" inputmode="numeric" value="1" class="item-qtd w-full text-center bg-surface-container-low border-none rounded-lg px-2 py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />' +
             '</td>' +
             '<td class="px-md py-sm">' +
-                '<input type="text" inputmode="decimal" placeholder="0,00" class="item-valor w-full text-right bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />' +
+                '<input type="text" inputmode="decimal" placeholder="0,00" data-mascara="valor" class="item-valor w-full text-right bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />' +
                 // O visível aceita vírgula; o que vai para o servidor usa ponto, senão o binding do .NET recusa
                 '<input type="hidden" name="itemValor" class="item-valor-post" value="0" />' +
             '</td>' +
