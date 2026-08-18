@@ -146,6 +146,31 @@ Não precisa instalar servidor de banco: o SQLite é um arquivo, criado automati
 
 ## Instalação
 
+### Para usar na loja (não precisa saber programar)
+
+1. Baixe o projeto (botão verde **Code → Download ZIP** no GitHub, ou `git clone`) e extraia.
+2. Abra a pasta extraída.
+3. **Linux:** clique com o botão direito, abra um terminal ali, e rode:
+   ```bash
+   sudo ./install.sh
+   ```
+   **Windows:** clique com o botão direito em `install.bat` e escolha **Executar como
+   administrador**.
+
+O instalador confere se o .NET já está presente e instala sozinho se faltar, publica o sistema
+numa pasta fixa (`/opt/pingo-os` no Linux, `Arquivos de Programa\PingoOS` no Windows), registra
+como **serviço do sistema** — sobe sozinho quando o computador liga, sem precisar abrir terminal
+todo dia — e abre o navegador em `http://localhost:5096` quando termina.
+
+Rodar o instalador de novo (depois de baixar uma versão mais nova do sistema) **atualiza sem
+apagar os dados**: o banco é preservado à parte durante a publicação e devolvido no lugar.
+
+> Se um dia quiser desinstalar: Linux, `sudo systemctl disable --now pingo-os` e apague
+> `/opt/pingo-os`; Windows, `sc delete PingoOS` (com o serviço parado) e apague a pasta de
+> instalação. O `loja.db` fica nessas pastas — copie antes se quiser guardar os dados.
+
+### Para desenvolver ou explorar o código
+
 ```bash
 git clone https://github.com/xymotaa/xypedidos.git
 cd xypedidos/ListasCompras
@@ -191,9 +216,18 @@ dá para descobrir qual era.
   (com ou sem hífen, maiúscula ou minúscula) e defina a nova senha. O código usado é queimado e um
   novo é entregue na hora.
 - **Gerar um código novo:** menu do usuário → Usuários → "Novo código". O anterior deixa de valer.
-- **Esqueci a senha E o código:** quem tem acesso ao computador da loja redefine pelo terminal:
+- **Esqueci a senha E o código:** quem tem acesso ao computador da loja redefine pelo terminal.
+  Instalado pelo `install.sh`/`install.bat`, o comando é o executável direto (sem `dotnet run`,
+  que só existe rodando a partir do código-fonte):
 
   ```bash
+  # Linux, instalado via install.sh
+  sudo /opt/pingo-os/ListasCompras redefinir-senha dono@loja.com novasenha123
+
+  # Windows, instalado via install.bat (Prompt como Administrador)
+  "%ProgramFiles%\PingoOS\ListasCompras.exe" redefinir-senha dono@loja.com novasenha123
+
+  # Rodando a partir do código-fonte, em desenvolvimento
   cd ListasCompras
   dotnet run -- redefinir-senha dono@loja.com novasenha123
   ```

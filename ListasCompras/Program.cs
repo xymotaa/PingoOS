@@ -17,6 +17,22 @@ if (args.Length > 0 && args[0] == "redefinir-senha")
 }
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Deixa o executável rodar como Serviço do Windows quando o install.bat o registra assim
+// (sc.exe). Sem efeito quando roda direto no terminal ou como systemd no Linux.
+builder.Host.UseWindowsService();
+
+// Porta fixa em produção (5096, a mesma do dev) para o script de instalação saber qual
+// endereço abrir no navegador — sem isso o Kestrel cairia no padrão 5000, que pode já
+// estar ocupado por outra coisa na máquina da loja. Só entra se nada foi definido por
+// fora (variável de ambiente ou --urls), então continua possível sobrescrever.
+if (builder.Environment.IsProduction()
+    && Environment.GetEnvironmentVariable("ASPNETCORE_URLS") == null
+    && !args.Any(a => a.StartsWith("--urls", StringComparison.OrdinalIgnoreCase)))
+{
+    builder.WebHost.UseUrls("http://localhost:5096");
+}
+
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite($"Data Source={dbPath}"));
 

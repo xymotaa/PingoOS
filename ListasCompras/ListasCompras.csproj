@@ -15,6 +15,9 @@
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.9" />
     <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="2.1.12" />
+    <!-- Deixa o executável rodar como Serviço do Windows (install.bat usa sc.exe pra
+         registrar); no Linux/systemd este pacote não faz nada, então não custa nada aqui -->
+    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.0" />
   </ItemGroup>
 
 </Project>

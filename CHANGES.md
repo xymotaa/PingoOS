@@ -1,5 +1,52 @@
 # Registro de Alterações
 
+## [2026-08-18] Script de instalação (item 1 do roadmap)
+
+### Problema
+O público do sistema é dono de loja, não desenvolvedor. Instalar exigia clonar o repositório, ter
+o SDK do .NET e rodar `dotnet run` manualmente toda vez que o computador ligasse — sem serviço do
+sistema, o Pingo OS parava de rodar no primeiro reinício e ninguém saberia religar.
+
+### Solução
+`install.sh` (Linux) e `install.bat` (Windows), na raiz do repositório. Os dois seguem os mesmos
+passos: instalam o runtime do .NET se estiver faltando, publicam o sistema numa pasta fixa fora da
+pasta baixada (`/opt/pingo-os` / `Arquivos de Programa\PingoOS`), registram como **serviço do
+sistema** (systemd / Serviço do Windows — sobe sozinho no boot, reinicia se cair) e abrem o
+navegador quando termina.
+
+**Preserva dados em atualização.** Rodar o instalador de novo por cima de uma instalação existente
+não pode apagar `loja.db` — o `dotnet publish` limpa a pasta de destino inteira. Os dois scripts
+tiram o banco do caminho antes de publicar e devolvem depois. Testado publicando duas vezes seguidas
+sobre a mesma pasta: o conteúdo do banco sobreviveu.
+
+**Serviço do Windows de verdade, não gambiarra.** Em vez de depender de uma ferramenta externa
+(NSSM) para fingir um serviço, o próprio `Program.cs` ganhou `UseWindowsService()`
+(`Microsoft.Extensions.Hosting.WindowsServices`) — o executável sabe se comportar como serviço
+quando o `sc create` do `install.bat` o registra assim. No Linux/systemd esse pacote não faz nada,
+então não custa nada tê-lo.
+
+**Porta fixa em produção.** Sem isso o Kestrel cairia no padrão 5000, que pode já estar ocupado por
+outra coisa na máquina da loja, e o instalador não saberia qual endereço abrir no navegador. Fixado
+em `http://localhost:5096` — a mesma porta já usada em desenvolvimento —, só quando nada foi
+definido por fora (`ASPNETCORE_URLS` ou `--urls` continuam podendo sobrescrever).
+
+### Arquivos Alterados
+| Arquivo | Alteração |
+|---|---|
+| `install.sh` | **novo** — instalação/atualização como serviço systemd |
+| `install.bat` | **novo** — instalação/atualização como Serviço do Windows |
+| `ListasCompras/Program.cs` | `UseWindowsService()` + porta fixa em produção |
+| `ListasCompras/ListasCompras.csproj` | pacote `Microsoft.Extensions.Hosting.WindowsServices` |
+| `README.md` | seção "Para usar na loja" com o passo a passo do instalador |
+
+### Resultado
+Build limpo. Testado (sem `sudo`, sem systemd de verdade — só a parte seguinte de publicar):
+`dotnet publish` duas vezes seguidas sobre a mesma pasta com o banco preservado entre elas; o
+executável publicado com `UseWindowsService()` rodando fora do Windows não gera nenhuma exceção,
+sobe normalmente na porta 5096 fixa, e responde 200 nas telas.
+
+---
+
 ## [2026-08-14] Financeiro e fechamento de caixa (itens 1 e 1.1 do roadmap)
 
 ### Problema
