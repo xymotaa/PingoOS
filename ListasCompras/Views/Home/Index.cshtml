@@ -1,3 +1,4 @@
+@model ListasCompras.Models.PainelViewModel
 @{
     Layout = null;
     ViewData["Title"] = "Painel";
@@ -8,6 +9,10 @@
 
     var hora = DateTime.Now.Hour;
     var saudacao = hora < 12 ? "Bom dia" : hora < 18 ? "Boa tarde" : "Boa noite";
+
+    string Moeda(decimal v) => v.ToString("C2", new System.Globalization.CultureInfo("pt-BR"));
+    var diasSemana = new[] { "Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb" };
+    var maiorValorSemana = Model.DesempenhoSemanal.Count > 0 ? Model.DesempenhoSemanal.Max(p => p.Total) : 0m;
 }
 <!DOCTYPE html>
 <html class="light" lang="pt-BR">
@@ -155,63 +160,102 @@
         <!-- Indicadores -->
         <section class="grid grid-cols-1 lg:grid-cols-3 gap-xl mb-xl">
             <div class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-gutter">
-                <div class="bg-white p-md rounded-xl border border-outline-variant shadow-sm">
+                <a asp-controller="Caixa" asp-action="Vendas" class="bg-white p-md rounded-xl border border-outline-variant shadow-sm hover:border-secondary transition-colors">
                     <div class="flex justify-between items-start mb-xs">
                         <span class="font-label-md text-label-md text-outline uppercase tracking-wider">Vendas Hoje</span>
                     </div>
-                    <h3 class="font-headline-lg text-[26px] font-semibold text-primary">R$ 0,00</h3>
-                    <p class="font-body-md text-body-md text-on-surface-variant mt-sm">Sem dados ainda</p>
-                </div>
-                <div class="bg-white p-md rounded-xl border border-outline-variant shadow-sm">
+                    <h3 class="font-headline-lg text-[26px] font-semibold text-primary">@Moeda(Model.VendasHoje)</h3>
+                    <p class="font-body-md text-body-md text-on-surface-variant mt-sm">
+                        @(Model.VendasHoje > 0 ? "Total vendido no dia" : "Nenhuma venda ainda hoje")
+                    </p>
+                </a>
+                <a asp-controller="Estoque" asp-action="Index" class="bg-white p-md rounded-xl border border-outline-variant shadow-sm hover:border-secondary transition-colors">
                     <div class="flex justify-between items-start mb-xs">
                         <span class="font-label-md text-label-md text-outline uppercase tracking-wider">Itens em Falta</span>
                     </div>
-                    <h3 class="font-headline-lg text-[26px] font-semibold text-primary">0</h3>
-                    <p class="font-body-md text-body-md text-on-surface-variant mt-sm">Sem dados ainda</p>
-                </div>
-                <div class="bg-white p-md rounded-xl border border-outline-variant shadow-sm">
+                    <h3 class="font-headline-lg text-[26px] font-semibold @(Model.ItensEmFalta > 0 ? "text-error" : "text-primary")">@Model.ItensEmFalta</h3>
+                    <p class="font-body-md text-body-md text-on-surface-variant mt-sm">
+                        @(Model.ItensEmFalta > 0 ? "Esgotados ou abaixo do mínimo" : "Estoque em dia")
+                    </p>
+                </a>
+                <a asp-controller="Cliente" asp-action="Index" class="bg-white p-md rounded-xl border border-outline-variant shadow-sm hover:border-secondary transition-colors">
                     <div class="flex justify-between items-start mb-xs">
                         <span class="font-label-md text-label-md text-outline uppercase tracking-wider">Novos Clientes</span>
                     </div>
-                    <h3 class="font-headline-lg text-[26px] font-semibold text-primary">0</h3>
-                    <p class="font-body-md text-body-md text-on-surface-variant mt-sm">Sem dados ainda</p>
-                </div>
+                    <h3 class="font-headline-lg text-[26px] font-semibold text-primary">@Model.NovosClientesHoje</h3>
+                    <p class="font-body-md text-body-md text-on-surface-variant mt-sm">
+                        @(Model.NovosClientesHoje > 0 ? "Cadastrados hoje" : "Nenhum cadastro hoje")
+                    </p>
+                </a>
             </div>
 
-            <div class="bg-white p-md rounded-xl border border-outline-variant shadow-sm">
+            <a asp-controller="Financeiro" asp-action="Index" class="bg-white p-md rounded-xl border border-outline-variant shadow-sm hover:border-secondary transition-colors">
                 <div class="flex justify-between items-start mb-xs">
                     <span class="font-label-md text-label-md text-outline uppercase tracking-wider">Contas a Pagar</span>
                 </div>
-                <h3 class="font-headline-lg text-[26px] font-semibold text-primary">R$ 0,00</h3>
-                <p class="font-body-md text-body-md text-on-surface-variant mt-sm">Sem dados ainda</p>
-            </div>
+                <h3 class="font-headline-lg text-[26px] font-semibold @(Model.ContasAPagarPendentes > 0 ? "text-error" : "text-primary")">@Moeda(Model.ContasAPagarPendentes)</h3>
+                <p class="font-body-md text-body-md text-on-surface-variant mt-sm">
+                    @(Model.ContasAPagarPendentes > 0 ? "Ainda não pagas" : "Nada pendente")
+                </p>
+            </a>
         </section>
 
         <!-- Gráfico + atividades -->
         <section class="grid grid-cols-1 lg:grid-cols-3 gap-xl">
             <div class="lg:col-span-2 bg-white rounded-xl border border-outline-variant overflow-hidden shadow-sm flex flex-col">
-                <div class="p-lg border-b border-outline-variant flex justify-between items-center">
-                    <div>
-                        <h4 class="font-title-lg text-title-lg text-primary">Desempenho Semanal</h4>
-                        <p class="font-body-md text-body-md text-on-surface-variant">Fluxo de caixa e vendas</p>
+                <div class="p-lg border-b border-outline-variant">
+                    <h4 class="font-title-lg text-title-lg text-primary">Desempenho Semanal</h4>
+                    <p class="font-body-md text-body-md text-on-surface-variant">Vendas e ordens de serviço pagas nos últimos 7 dias</p>
+                </div>
+                @if (maiorValorSemana <= 0)
+                {
+                    <div class="flex-1 p-lg min-h-[300px] flex items-center justify-center">
+                        <p class="font-body-md text-body-md text-on-surface-variant">Sem dados para exibir ainda.</p>
                     </div>
-                    <select class="bg-surface border-outline-variant rounded-lg font-label-md text-label-md pl-md pr-10 py-sm">
-                        <option>Últimos 7 dias</option>
-                        <option>Últimos 30 dias</option>
-                    </select>
-                </div>
-                <div class="flex-1 p-lg min-h-[300px] flex items-center justify-center">
-                    <p class="font-body-md text-body-md text-on-surface-variant">Sem dados para exibir ainda.</p>
-                </div>
+                }
+                else
+                {
+                    <div class="flex-1 p-lg min-h-[300px] flex items-end justify-between gap-sm">
+                        @foreach (var ponto in Model.DesempenhoSemanal)
+                        {
+                            var alturaPct = maiorValorSemana > 0 ? (double)(ponto.Total / maiorValorSemana) * 100 : 0;
+                            <div class="flex-1 flex flex-col items-center gap-xs h-full justify-end group">
+                                <span class="font-label-sm text-label-sm text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity">@Moeda(ponto.Total)</span>
+                                <div class="w-full bg-secondary-container rounded-t-md transition-all hover:bg-secondary"
+                                     style="height: @(Math.Max(alturaPct, 2))%"
+                                     title="@ponto.Dia.ToString("dd/MM") — @Moeda(ponto.Total)"></div>
+                                <span class="font-label-sm text-label-sm text-outline">@diasSemana[(int)ponto.Dia.DayOfWeek]</span>
+                            </div>
+                        }
+                    </div>
+                }
             </div>
 
             <div class="bg-white rounded-xl border border-outline-variant shadow-sm flex flex-col">
                 <div class="p-lg border-b border-outline-variant">
                     <h4 class="font-title-lg text-title-lg text-primary">Atividades Recentes</h4>
                 </div>
-                <div class="flex-1 overflow-y-auto max-h-[400px] custom-scrollbar flex items-center justify-center p-lg">
-                    <p class="font-body-md text-body-md text-on-surface-variant text-center">Nenhuma atividade recente.</p>
-                </div>
+                @if (Model.AtividadesRecentes.Count == 0)
+                {
+                    <div class="flex-1 overflow-y-auto max-h-[400px] custom-scrollbar flex items-center justify-center p-lg">
+                        <p class="font-body-md text-body-md text-on-surface-variant text-center">Nenhuma atividade recente.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="flex-1 overflow-y-auto max-h-[400px] custom-scrollbar">
+                        @foreach (var atv in Model.AtividadesRecentes)
+                        {
+                            <a href="@atv.Url" class="flex items-start gap-sm px-lg py-sm border-b border-outline-variant last:border-0 hover:bg-surface-container-low transition-colors">
+                                <span class="material-symbols-outlined text-[18px] text-secondary mt-[2px]">@atv.Icone</span>
+                                <div class="min-w-0">
+                                    <p class="font-body-md text-body-md text-on-surface truncate">@atv.Descricao</p>
+                                    <p class="font-label-sm text-label-sm text-outline">@atv.Data.ToString("dd/MM/yyyy HH:mm")</p>
+                                </div>
+                            </a>
+                        }
+                    </div>
+                }
                 <div class="p-md border-t border-outline-variant text-center">
                     <a asp-controller="Dashboards" asp-action="Index" class="font-label-md text-label-md text-secondary font-bold hover:underline">Ver todo o histórico</a>
                 </div>
@@ -222,7 +266,7 @@
         <section class="mt-xl bg-white rounded-xl border border-outline-variant shadow-sm overflow-hidden">
             <div class="p-lg flex justify-between items-center">
                 <h4 class="font-title-lg text-title-lg text-primary">Últimos Orçamentos</h4>
-                <a asp-controller="Orcamento" asp-action="Index" class="bg-secondary text-white px-md py-sm rounded-lg font-label-md text-label-md hover:bg-opacity-90 transition-all flex items-center gap-xs">
+                <a asp-controller="Orcamento" asp-action="Add" class="bg-secondary text-white px-md py-sm rounded-lg font-label-md text-label-md hover:bg-opacity-90 transition-all flex items-center gap-xs">
                     <span class="material-symbols-outlined text-[18px]">add</span>
                     Novo Orçamento
                 </a>
@@ -231,7 +275,7 @@
                 <table class="w-full text-left">
                     <thead>
                         <tr class="bg-surface-container-low border-y border-outline-variant">
-                            <th class="px-lg py-md font-label-md text-label-md text-outline uppercase">ID</th>
+                            <th class="px-lg py-md font-label-md text-label-md text-outline uppercase">Número</th>
                             <th class="px-lg py-md font-label-md text-label-md text-outline uppercase">Cliente</th>
                             <th class="px-lg py-md font-label-md text-label-md text-outline uppercase">Data</th>
                             <th class="px-lg py-md font-label-md text-label-md text-outline uppercase">Valor</th>
@@ -239,9 +283,33 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-outline-variant">
-                        <tr>
-                            <td colspan="5" class="px-lg py-xl text-center font-body-md text-body-md text-on-surface-variant">Nenhum orçamento cadastrado ainda.</td>
-                        </tr>
+                        @if (Model.UltimosOrcamentos.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="5" class="px-lg py-xl text-center font-body-md text-body-md text-on-surface-variant">Nenhum orçamento cadastrado ainda.</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var orc in Model.UltimosOrcamentos)
+                            {
+                                (string fundo, string texto) cor = orc.Situacao switch
+                                {
+                                    "Aprovado" => ("bg-secondary-container", "text-on-secondary-container"),
+                                    "Recusado" => ("bg-surface-container-high", "text-on-surface-variant"),
+                                    _ => ("bg-warning-container", "text-on-surface"),
+                                };
+                                <tr class="hover:bg-surface-container-low transition-colors cursor-pointer" onclick="location.href='@Url.Action("Ver", "Orcamento", new { id = orc.Id })'">
+                                    <td class="px-lg py-md font-body-md text-body-md font-semibold text-primary">@orc.Numero</td>
+                                    <td class="px-lg py-md font-body-md text-body-md text-on-surface">@orc.Cliente.Nome</td>
+                                    <td class="px-lg py-md font-body-md text-body-md text-on-surface-variant">@orc.DataAbertura.ToString("dd/MM/yyyy")</td>
+                                    <td class="px-lg py-md font-body-md text-body-md font-semibold text-secondary">@Moeda(orc.Total)</td>
+                                    <td class="px-lg py-md">
+                                        <span class="px-sm py-xs rounded-full font-label-sm text-label-sm @cor.fundo @cor.texto">@orc.Situacao</span>
+                                    </td>
+                                </tr>
+                            }
+                        }
                     </tbody>
                 </table>
             </div>

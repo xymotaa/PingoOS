@@ -99,10 +99,13 @@ Caixa, Configuração, Login) usam Tailwind com paleta Material-3. As antigas (L
 aproveitando o partial `_HeadTailwind.cshtml`. Depois o `site.css` encolhe bastante. Cosmético.
 
 ### 5. Dashboards de verdade
-**Situação atual:** `DashboardsController` retorna a tela "Em breve" e os KPIs do Painel mostram
-estado vazio.
+**Situação atual:** `DashboardsController` (menu "Dashboards", separado do Painel) ainda retorna a
+tela "Em breve". Os cards do **Painel principal** (Vendas Hoje, Itens em Falta, Novos Clientes,
+Contas a Pagar, Desempenho Semanal, Atividades Recentes, Últimos Orçamentos) já foram ligados a
+dado real em 2026-08-18 — não são mais placeholder.
 
-**O que envolve:** depende de Caixa, Estoque e OS no banco — sem dado gravado não há o que somar.
+**O que envolve:** uma tela de análise mais profunda que o Painel (filtros de período, comparação
+mês a mês, por categoria/vendedor) — o Painel é o resumo do dia, Dashboards seria a exploração.
 
 ### 6. Autoria detalhada (auditoria mínima)
 **Situação atual:** a OS já grava quem a emitiu, e as movimentações de estoque quem as fez. Uma auditoria completa, como o

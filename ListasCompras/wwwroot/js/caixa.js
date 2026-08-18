@@ -17,6 +17,19 @@ document.addEventListener("DOMContentLoaded", function () {
     const toastMsg = document.getElementById("toastMsg");
     const toastIcon = document.getElementById("toastIcon");
 
+    // O banner de TempData vem do servidor já renderizado (não passa por mostrarToast);
+    // some sozinho como o toast, senão fica preso na tela até a próxima navegação —
+    // e na frente de caixa a pessoa continua vendendo sem recarregar a página.
+    ["avisoSucesso", "avisoAtencao", "avisoErro"].forEach(function (id) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        window.setTimeout(function () {
+            el.style.transition = "opacity .3s ease";
+            el.style.opacity = "0";
+            window.setTimeout(function () { el.remove(); }, 300);
+        }, 3000);
+    });
+
     function formatBRL(valor) {
         return "R$ " + valor.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
@@ -41,6 +54,14 @@ document.addEventListener("DOMContentLoaded", function () {
         return PRODUTOS.find(function (p) {
             return p.codigo.toLowerCase() === alvo || p.nome.toLowerCase().includes(alvo);
         }) || null;
+    }
+
+    function buscarProdutos(termo) {
+        const alvo = termo.trim().toLowerCase();
+        if (!alvo) return [];
+        return PRODUTOS.filter(function (p) {
+            return p.codigo.toLowerCase().includes(alvo) || p.nome.toLowerCase().includes(alvo);
+        }).slice(0, 8);
     }
 
     // Preço final da unidade após desconto. O tipo (percentual ou valor em
@@ -175,6 +196,91 @@ document.addEventListener("DOMContentLoaded", function () {
         adicionarItem(produto);
         buscaInput.value = "";
         buscaInput.focus();
+        fecharSugestoes();
+    });
+
+    // ===== Sugestões de produto: dropdown do mesmo tamanho do campo de busca =====
+
+    const sugestoesProduto = document.getElementById("sugestoesProduto");
+    let indiceSugestaoAtiva = -1;
+
+    function fecharSugestoes() {
+        sugestoesProduto.classList.add("hidden");
+        sugestoesProduto.innerHTML = "";
+        indiceSugestaoAtiva = -1;
+    }
+
+    function selecionarProdutoDaLista(produto) {
+        adicionarItem(produto);
+        buscaInput.value = "";
+        buscaInput.focus();
+        fecharSugestoes();
+    }
+
+    function renderSugestoes() {
+        const encontrados = buscarProdutos(buscaInput.value);
+        if (encontrados.length === 0) {
+            fecharSugestoes();
+            return;
+        }
+
+        sugestoesProduto.innerHTML = "";
+        encontrados.forEach(function (p, i) {
+            const item = document.createElement("button");
+            item.type = "button";
+            item.className = "sugestao-item w-full text-left px-md py-sm border-b border-outline-variant last:border-0 hover:bg-surface-container-low transition-colors flex items-center justify-between gap-md" +
+                (i === indiceSugestaoAtiva ? " bg-surface-container-low" : "");
+
+            const esquerda = document.createElement("div");
+            esquerda.className = "min-w-0";
+            const nome = document.createElement("p");
+            nome.className = "font-body-md text-body-md text-on-surface truncate";
+            nome.textContent = p.nome;
+            const detalhe = document.createElement("p");
+            detalhe.className = "font-label-sm text-label-sm text-outline";
+            detalhe.textContent = p.codigo + " · estoque: " + p.saldoAtual;
+            esquerda.append(nome, detalhe);
+
+            const preco = document.createElement("span");
+            preco.className = "font-body-md text-body-md font-semibold text-secondary shrink-0";
+            preco.textContent = formatBRL(p.precoUnitario);
+
+            item.append(esquerda, preco);
+            item.addEventListener("click", function () { selecionarProdutoDaLista(p); });
+            sugestoesProduto.appendChild(item);
+        });
+
+        sugestoesProduto.classList.remove("hidden");
+    }
+
+    buscaInput.addEventListener("input", function () {
+        indiceSugestaoAtiva = -1;
+        renderSugestoes();
+    });
+
+    buscaInput.addEventListener("keydown", function (e) {
+        const itens = sugestoesProduto.querySelectorAll(".sugestao-item");
+        if (itens.length === 0) return;
+
+        if (e.key === "ArrowDown") {
+            e.preventDefault();
+            indiceSugestaoAtiva = Math.min(indiceSugestaoAtiva + 1, itens.length - 1);
+            renderSugestoes();
+        } else if (e.key === "ArrowUp") {
+            e.preventDefault();
+            indiceSugestaoAtiva = Math.max(indiceSugestaoAtiva - 1, 0);
+            renderSugestoes();
+        } else if (e.key === "Enter" && indiceSugestaoAtiva >= 0) {
+            e.preventDefault();
+            const encontrados = buscarProdutos(buscaInput.value);
+            if (encontrados[indiceSugestaoAtiva]) selecionarProdutoDaLista(encontrados[indiceSugestaoAtiva]);
+        } else if (e.key === "Escape") {
+            fecharSugestoes();
+        }
+    });
+
+    document.addEventListener("click", function (e) {
+        if (!buscaForm.contains(e.target)) fecharSugestoes();
     });
 
     itensBody.addEventListener("click", function (e) {
@@ -251,15 +357,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     valorRecebido.addEventListener("input", recalcular);
-
-    finalizarBtn.addEventListener("click", function () {
-        if (finalizarBtn.disabled) return;
-        const totalFinalizado = totalValor.textContent;
-        mostrarToast("Venda finalizada: " + totalFinalizado + " (exemplo, ainda não gravado no banco de dados).");
-        cart.length = 0;
-        valorRecebido.value = "";
-        renderTabela();
-    });
 
     document.addEventListener("keydown", function (e) {
         if (e.key === "F2") {

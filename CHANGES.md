@@ -1,5 +1,98 @@
 # Registro de Alterações
 
+## [2026-08-18] Caixa: venda não gravava, e dropdown de busca vira dropdown de verdade (versão 1.0.0.4)
+
+### Problema 1: venda não salvava no banco, não aparecia em Vendas nem no Fechamento
+O botão "Finalizar Venda" tinha **dois** listeners competindo: um `click` no próprio botão (resquício
+de uma versão anterior mockada — o texto do toast admitia "exemplo, ainda não gravado no banco de
+dados") e o `submit` de verdade no formulário. O `click` dispara antes do `submit`; o handler antigo
+zerava `cart.length = 0` e re-renderizava a tabela vazia **antes** do submit rodar, então quando o
+form de fato enviava, `itensPost` ficava sem nenhum item — o controller recebia `itemProdutoId` nulo
+e recusava a venda com "Adicione ao menos um produto antes de finalizar", sem o usuário perceber que
+o carrinho já tinha sido limpo na tela.
+
+**Solução:** removido o handler de `click` fake. Só o `submit` real permanece.
+
+### Problema 2: sugestões de produto num datalist nativo, sem controle de tamanho
+A busca de produto usava `<datalist>` do navegador — sem CSS aplicável, largura e estilo fora do
+controle do sistema, e sem mostrar preço/estoque de cada opção.
+
+**Solução:** substituído por um dropdown customizado (`#sugestoesProduto`), mesma largura do campo
+de busca (`w-full` dentro do `relative`), seguindo o padrão visual já usado no modal de busca de
+cliente da OS. Mostra nome, código, saldo em estoque e preço de cada sugestão; navegável por
+teclado (setas + Enter), fecha com Escape ou clique fora.
+
+### Problema 3: banner de venda concluída ficava preso na tela
+O card verde de sucesso (`TempData["Sucesso"]`, renderizado pelo servidor) não tinha temporizador
+— diferente do `#toast` já existente ao lado dele, que some sozinho em 3s. Na frente de caixa a
+pessoa continua vendendo sem recarregar a página, então o banner ficava preso indefinidamente.
+
+**Solução:** os três banners de `TempData` (Sucesso/Aviso/Erro) ganharam `id` e um temporizador
+de 3s com fade antes de remover o elemento — mesmo comportamento do toast.
+
+### Arquivos Alterados
+| Arquivo | Alteração |
+|---|---|
+| `wwwroot/js/caixa.js` | remove o `click` fake; adiciona `buscarProdutos`, dropdown de sugestões, auto-some dos banners de TempData |
+| `Views/Caixa/Index.cshtml` | `<datalist>` trocado por `#sugestoesProduto`; `id` nos banners |
+| `VERSION.txt` | `1.0.0.4` |
+
+### Resultado
+Testado numa cópia do banco real: dropdown mostra sugestões corretas ao digitar (confirmado via
+`getComputedStyle`/`getBoundingClientRect` — visível, posicionado, com os itens certos); clicar
+numa sugestão adiciona ao carrinho; finalizar a venda grava em `Vendas` e `ItensVenda`, baixa o
+estoque do produto (10 → 8 unidades vendendo 2), e aparece corretamente em `/Caixa/Vendas` e no
+Fechamento de Caixa do dia (R$ 100,00 em Dinheiro). Banner de sucesso confirmado presente
+imediatamente após a venda e ausente 3,5s depois. Build limpo.
+
+---
+
+## [2026-08-18] Painel principal com dado real (versão 1.0.0.5)
+
+### Problema
+O Painel (`/`) inteiro era maquete estática desde a origem: "Vendas Hoje" sempre R$ 0,00, "Itens
+em Falta" e "Novos Clientes" sempre 0, "Contas a Pagar" sempre R$ 0,00, gráfico de desempenho
+semanal sem dado nenhum, "Atividades Recentes" e "Últimos Orçamentos" sempre vazios — mesmo com
+vendas, OS, orçamentos e contas já gravados no banco havia meses.
+
+### Solução
+`PainelViewModel` novo, montado no `HomeController.Index`:
+
+- **Vendas Hoje** — soma `Venda.Total` do dia, mesma fonte usada no Fechamento de Caixa.
+- **Itens em Falta** — conta `ProdutoEstoque` com `Situacao != "ok"` (esgotado ou abaixo do mínimo;
+  a propriedade já existia, só não era usada aqui).
+- **Novos Clientes** — `Cliente` com `DataCadastro` de hoje.
+- **Contas a Pagar** — soma de `ContaAPagar` com `Paga == false`.
+- **Desempenho Semanal** — vira um gráfico de barras (CSS puro, sem lib): soma Vendas + pagamentos
+  de OS (`PagamentoOrdemServico`, a mesma tabela por trás do Fechamento de Caixa) por dia, últimos
+  7 dias. Barra mostra o valor ao passar o mouse.
+- **Atividades Recentes** — não existe uma tabela de log de atividades no sistema; o feed é
+  composto na hora juntando as últimas Vendas, OS/orçamentos e contas pagas, ordenados por data,
+  cada um linkando para a tela de origem.
+- **Últimos Orçamentos** — últimos 5 documentos com `Tipo == Orcamento`, com o badge de situação
+  (Aberto/Aprovado/Recusado) no mesmo esquema de cor já usado nas outras telas.
+
+Os quatro cards de indicador viraram links para a tela correspondente (Vendas, Estoque, Clientes,
+Financeiro) — antes eram só `<div>`, sem destino.
+
+### Arquivos Alterados
+| Arquivo | Alteração |
+|---|---|
+| `Models/PainelViewModel.cs` | **novo** — `PainelViewModel`, `PontoDesempenho`, `AtividadeRecente` |
+| `Controllers/HomeController.cs` | `Index` monta o modelo; `DesempenhoUltimos7Dias`, `AtividadesRecentes` |
+| `Views/Home/Index.cshtml` | todos os cards passam a ler `Model` em vez de valor fixo |
+| `ROADMAP.md` | nota no item "Dashboards de verdade" — Painel não é mais placeholder, só a tela `/Dashboards` separada continua |
+| `VERSION.txt` | `1.0.0.5` |
+
+### Resultado
+Testado numa cópia do banco real com uma venda e uma conta a pagar criadas na hora: "Vendas Hoje"
+mostrou R$ 145,00 correto, "Contas a Pagar" R$ 800,00, gráfico da semana com a barra de hoje
+visível, Atividades Recentes misturando venda/OS/orçamentos por data, tabela de Últimos Orçamentos
+com status coloridos batendo com os dados reais (5 orçamentos existentes desde antes desta
+sessão). Banco de desenvolvimento não foi tocado — só a cópia. Build limpo.
+
+---
+
 ## [2026-08-18] Instalador vira instalador de verdade: clona e atualiza sozinho (versão 1.0.0.3)
 
 ### Problema
