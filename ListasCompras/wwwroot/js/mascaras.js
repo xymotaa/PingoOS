@@ -30,6 +30,30 @@
         return d.slice(0, 3) + "." + d.slice(3, 6) + "." + d.slice(6, 9) + "-" + d.slice(9);
     }
 
+    // 00.000.000/0000-00 — 14 dígitos
+    function mascararCnpj(valor) {
+        var d = soDigitos(valor).slice(0, 14);
+        if (d.length === 0) return "";
+        if (d.length <= 2) return d;
+        if (d.length <= 5) return d.slice(0, 2) + "." + d.slice(2);
+        if (d.length <= 8) return d.slice(0, 2) + "." + d.slice(2, 5) + "." + d.slice(5);
+        if (d.length <= 12) return d.slice(0, 2) + "." + d.slice(2, 5) + "." + d.slice(5, 8) + "/" + d.slice(8);
+        return d.slice(0, 2) + "." + d.slice(2, 5) + "." + d.slice(5, 8) + "/" + d.slice(8, 12) + "-" + d.slice(12);
+    }
+
+    // Documento da loja/do cliente pode ser CPF ou CNPJ: até 11 dígitos formata como CPF,
+    // a partir do 12º já é CNPJ — é o próprio tamanho do número que diferencia os dois.
+    function mascararCpfCnpj(valor) {
+        return soDigitos(valor).length > 11 ? mascararCnpj(valor) : mascararCpf(valor);
+    }
+
+    // 00000-000
+    function mascararCep(valor) {
+        var d = soDigitos(valor).slice(0, 8);
+        if (d.length <= 5) return d;
+        return d.slice(0, 5) + "-" + d.slice(5);
+    }
+
     // Dígitos entram da direita: "1" -> 0,01 · "12" -> 0,12 · "1250" -> 12,50
     function mascararValor(valor) {
         var d = soDigitos(valor).replace(/^0+(?=\d)/, "");
@@ -59,10 +83,17 @@
             aplicar(input, mascararTelefone(input.value));
         } else if (tipo === "cpf") {
             aplicar(input, mascararCpf(input.value));
-        } else if (tipo === "cpf-opcional") {
-            // Campo que também aceita RG: só formata como CPF enquanto o texto digitado
-            // ainda é compatível (só dígitos, ponto e traço) — RG com letra não é mexido
-            if (/^[\d.\-]*$/.test(input.value)) aplicar(input, mascararCpf(input.value));
+        } else if (tipo === "cnpj") {
+            aplicar(input, mascararCnpj(input.value));
+        } else if (tipo === "cpf-cnpj") {
+            aplicar(input, mascararCpfCnpj(input.value));
+        } else if (tipo === "cpf-cnpj-opcional" || tipo === "cpf-opcional") {
+            // Campo que também aceita RG: só formata como CPF/CNPJ enquanto o texto
+            // digitado ainda é compatível (só dígitos, ponto, barra e traço) — RG com
+            // letra não é mexido
+            if (/^[\d.\/\-]*$/.test(input.value)) aplicar(input, mascararCpfCnpj(input.value));
+        } else if (tipo === "cep") {
+            aplicar(input, mascararCep(input.value));
         } else if (tipo === "valor") {
             aplicar(input, mascararValor(input.value));
         }
