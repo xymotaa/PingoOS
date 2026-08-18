@@ -7,8 +7,8 @@ if (!EhAdministrador())
 {
     Console.WriteLine();
     Console.WriteLine("  Este instalador precisa ser executado como Administrador.");
-    Console.WriteLine("  O manifesto do aplicativo já pede elevação automática (UAC) — se você");
-    Console.WriteLine("  ainda assim está vendo esta mensagem, abra-o novamente e aceite o UAC.");
+    Console.WriteLine("  O manifesto do aplicativo ja pede elevacao automatica (UAC) - se voce");
+    Console.WriteLine("  ainda assim esta vendo esta mensagem, abra-o novamente e aceite o UAC.");
     Console.WriteLine();
     Console.WriteLine("  Pressione qualquer tecla para sair...");
     Tela.AguardarTecla();
@@ -17,8 +17,7 @@ if (!EhAdministrador())
 
 while (true)
 {
-    var desenhouLayout = DesenharTelaBase();
-    if (!desenhouLayout) continue; // janela estreita: já mostrou o aviso, tenta de novo
+    var linhaMenu = DesenharTelaBase();
 
     if (Config.JaInstalado())
     {
@@ -30,7 +29,8 @@ while (true)
             new OpcaoMenu("Desligar servidor"),
             new OpcaoMenu("Sair", ConsoleColor.DarkGray),
         };
-        var escolha = Menu.Escolher(Tela.ColunaDireita, 10, opcoes);
+        var colunaMenu = ColunaCentralizada(opcoes.Max(o => o.Rotulo.Length) + 4);
+        var escolha = Menu.Escolher(colunaMenu, linhaMenu, opcoes);
 
         switch (escolha)
         {
@@ -43,7 +43,8 @@ while (true)
     }
     else
     {
-        var instalar = Menu.PerguntarSimNao(Tela.ColunaDireita, 10, "Instalar PingoOS?", padraoSim: true);
+        var colunaPergunta = ColunaCentralizada(20);
+        var instalar = Menu.PerguntarSimNao(colunaPergunta, linhaMenu, "Instalar PingoOS?", padraoSim: true);
         if (!instalar) return 0;
         RodarInstalacao();
     }
@@ -98,11 +99,11 @@ void RodarInstalacao()
     Console.WriteLine();
     Console.ForegroundColor = ConsoleColor.Green;
     Console.WriteLine("  ======================================");
-    Console.WriteLine("   Pronto! O PingoOS está rodando.");
+    Console.WriteLine("   Pronto! O PingoOS esta rodando.");
     Console.WriteLine("  ======================================");
     Console.ResetColor();
     Console.WriteLine();
-    Console.WriteLine("  Endereço: " + Config.Url);
+    Console.WriteLine("  Endereco: " + Config.Url);
     Console.WriteLine("  Ele inicia sozinho toda vez que o computador ligar.");
     Console.WriteLine();
 
@@ -112,37 +113,43 @@ void RodarInstalacao()
     Tela.AguardarTecla();
 }
 
-bool DesenharTelaBase()
+// Desenha logo + painel de info e devolve a primeira linha livre abaixo deles, onde o
+// menu (ou a pergunta Instalar y/n) deve começar.
+int DesenharTelaBase()
 {
     Tela.Limpar();
 
-    if (Tela.JanelaEstreitaDemais())
+    // Centraliza o logo como um bloco único (mesma coluna inicial para todas as linhas),
+    // não linha por linha — senão a largura desigual de cada linha do desenho ASCII
+    // desalinha as letras entre si.
+    var larguraLogo = Logo.Linhas.Max(l => l.Length);
+    var colunaLogo = ColunaCentralizada(larguraLogo);
+    var linha = 1;
+    foreach (var linhaLogo in Logo.Linhas)
     {
-        Console.WriteLine();
-        Console.WriteLine("  Maximize esta janela (ou aumente a largura) para ver o instalador");
-        Console.WriteLine($"  corretamente — precisa de pelo menos {Tela.LarguraMinima} colunas.");
-        Console.WriteLine();
-        Console.WriteLine("  Pressione qualquer tecla depois de redimensionar...");
-        Tela.AguardarTecla();
-        return false;
+        Tela.Escrever(colunaLogo, linha, linhaLogo, ConsoleColor.Cyan);
+        linha++;
     }
 
-    Tela.DesenharArte(linhaTopo: 1);
+    linha += 1;
+    Tela.EscreverCentralizado(linha, "Maquina: " + InfoMaquina.ObterMaquina() + "   IP: " + InfoMaquina.ObterIpLocal(), ConsoleColor.Gray);
+    linha++;
+    Tela.EscreverCentralizado(linha, "Usuario: " + InfoMaquina.ObterUsuario() + "   " + InfoMaquina.ObterDataHora(), ConsoleColor.Gray);
+    linha += 2;
 
-    var col = Tela.ColunaDireita;
-    Tela.Escrever(col, 1, "PingoOS", ConsoleColor.Cyan);
-    Tela.Escrever(col, 2, "════════", ConsoleColor.DarkCyan);
+    Tela.EscreverCentralizado(linha, Config.JaInstalado()
+        ? "PingoOS ja esta instalado nesta maquina."
+        : "PingoOS ainda nao esta instalado nesta maquina.", ConsoleColor.DarkYellow);
+    linha += 2;
 
-    Tela.Escrever(col, 4, $"Máquina  : {InfoMaquina.ObterMaquina()}", ConsoleColor.Gray);
-    Tela.Escrever(col, 5, $"IP local : {InfoMaquina.ObterIpLocal()}", ConsoleColor.Gray);
-    Tela.Escrever(col, 6, $"Usuário  : {InfoMaquina.ObterUsuario()}", ConsoleColor.Gray);
-    Tela.Escrever(col, 7, $"Data/hora: {InfoMaquina.ObterDataHora()}", ConsoleColor.Gray);
+    return linha;
+}
 
-    Tela.Escrever(col, 9, Config.JaInstalado()
-        ? "PingoOS já está instalado nesta máquina."
-        : "PingoOS ainda não está instalado nesta máquina.", ConsoleColor.DarkYellow);
-
-    return true;
+int ColunaCentralizada(int larguraConteudo)
+{
+    int largura;
+    try { largura = Console.WindowWidth; } catch { largura = Tela.LarguraJanela; }
+    return Math.Max(0, (largura - larguraConteudo) / 2);
 }
 
 static bool EhAdministrador()

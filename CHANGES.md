@@ -1,5 +1,53 @@
 # Registro de Alterações
 
+## [2026-08-18] PingoInstaller: arte ASCII removida (virava "????" no Windows 10) (versão 1.0.0.17)
+
+### Problema
+A versão anterior do `PingoInstaller.exe` (1.0.0.16) usava uma arte feita de caracteres em blocos
+Unicode/braille, além de alguns símbolos gráficos (linha decorativa `════════`, seta `▶`) e texto
+acentuado normal. Testado numa máquina Windows 10 real pela primeira vez: a arte e os símbolos
+gráficos apareceram como `????` — a fonte padrão do console do Windows 10 (Consolas/Terminal
+legado) não tem esses glifos. `Console.OutputEncoding = Encoding.UTF8` resolve a codificação, mas
+não resolve a fonte não ter o desenho do caractere.
+
+### Solução
+Removida a arte por completo. Layout novo: "PingoOS" grande e centralizado no topo — agora
+desenhado só com caracteres ASCII puro (letras feitas de `_`, `|`, `\`, `/`, sem nenhum bloco
+Unicode), painel de máquina/IP/usuário/data-hora centralizado logo abaixo, e o menu (ou a pergunta
+Instalar y/n) centralizado em seguida — tudo em uma coluna só, sem a composição lado a lado de
+antes. A seta de seleção do menu virou `>` (ASCII) em vez de `▶`. Todo texto exibido na tela foi
+revisado e reescrito sem acentuação (`Nao` em vez de `Não`, `Servico` em vez de `Serviço`, etc) —
+decisão para zerar qualquer risco residual, já que a máquina de teste mostrou `????` na tela
+inteira, não só na arte.
+
+### Outro problema encontrado durante o teste
+`InfoMaquina.ObterIpLocal()` (conexão UDP só pra descobrir a interface de rede local, sem tráfego
+real) podia demorar vários segundos para retornar dependendo da configuração de rede da máquina,
+atrasando visivelmente a primeira tela. Corrigido: a chamada agora roda com um timeout de 500ms —
+se não responder a tempo, mostra "indisponivel" em vez de travar a tela de boas-vindas.
+
+### Arquivos Alterados
+| Arquivo | Alteração |
+|---|---|
+| `PingoInstaller/AsciiArt.txt` | removido |
+| `PingoInstaller/Logo.cs` (novo) | "PingoOS" em ASCII puro, substitui a arte |
+| `PingoInstaller/Tela.cs` | remove leitura de recurso embutido; adiciona `EscreverCentralizado` |
+| `PingoInstaller/Program.cs` | layout em coluna única, centralizado (logo, info, menu) |
+| `PingoInstaller/Menu.cs` | seta `▶` → `>`; "Não" → "Nao" |
+| `PingoInstaller/AcoesServico.cs`, `Instalador.cs` | textos de tela sem acentuação |
+| `PingoInstaller/InfoMaquina.cs` | timeout de 500ms na detecção de IP local |
+| `PingoInstaller/PingoInstaller.csproj` | remove referência ao `AsciiArt.txt` como recurso embutido |
+| `VERSION.txt` | `1.0.0.17` |
+
+### Resultado
+Testado neste ambiente via Wine + pty simulado: tela de "Instalar PingoOS?" e o menu de 5 opções
+(instalação já existente) renderizam corretamente, logo alinhada como bloco único, sem nenhum
+caractere fora do ASCII básico. Corrigida uma armadilha do próprio processo de teste (ruído do
+stderr do Wine intercalado no mesmo stream mascarava linhas do app no parser usado para inspecionar
+visualmente — não era um bug do app). **Reportado pelo usuário rodando numa máquina Windows 10
+real** que a versão anterior mostrava "????" — esta versão ainda não foi confirmada na mesma
+máquina real após a correção. Build sem avisos.
+
 ## [2026-08-18] Novo instalador Windows com interface de terminal (versão 1.0.0.16)
 
 ### Motivação

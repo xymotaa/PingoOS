@@ -13,17 +13,17 @@ static class Instalador
         status("Verificando o .NET...");
         if (Processos.ComandoExiste("dotnet"))
         {
-            status("Verificando o .NET... já instalado.");
+            status("Verificando o .NET... ja instalado.");
             return new PassoResultado(true);
         }
 
-        status("Verificando o .NET... não encontrado, instalando (pode levar alguns minutos)...");
+        status("Verificando o .NET... nao encontrado, instalando (pode levar alguns minutos)...");
         var tempScript = Path.Combine(Path.GetTempPath(), "dotnet-install.ps1");
         var download = Processos.Executar("powershell",
             $"-NoProfile -Command \"Invoke-WebRequest -Uri https://dot.net/v1/dotnet-install.ps1 -OutFile '{tempScript}'\"",
             timeoutSegundos: 60);
         if (!download.Sucesso)
-            return new PassoResultado(false, "Não foi possível baixar o instalador do .NET. Confira sua conexão com a internet.");
+            return new PassoResultado(false, "Nao foi possivel baixar o instalador do .NET. Confira sua conexao com a internet.");
 
         var instalarDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "dotnet");
         var instalacao = Processos.Executar("powershell",
@@ -54,11 +54,11 @@ static class Instalador
         status("Verificando o Git...");
         if (Processos.ComandoExiste("git"))
         {
-            status("Verificando o Git... já instalado.");
+            status("Verificando o Git... ja instalado.");
             return new PassoResultado(true);
         }
 
-        status("Verificando o Git... não encontrado, instalando via winget...");
+        status("Verificando o Git... nao encontrado, instalando via winget...");
         if (Processos.ComandoExiste("winget"))
         {
             Processos.Executar("winget",
@@ -68,13 +68,13 @@ static class Instalador
 
         if (Processos.ComandoExiste("git")) { status("Verificando o Git... instalado."); return new PassoResultado(true); }
 
-        status("Verificando o Git... winget indisponível, baixando o instalador oficial...");
+        status("Verificando o Git... winget indisponivel, baixando o instalador oficial...");
         var tempInstalador = Path.Combine(Path.GetTempPath(), "git-installer.exe");
         var download = Processos.Executar("powershell",
             $"-NoProfile -Command \"Invoke-WebRequest -Uri https://github.com/git-for-windows/git/releases/latest/download/Git-64-bit.exe -OutFile '{tempInstalador}'\"",
             timeoutSegundos: 120);
         if (!download.Sucesso)
-            return new PassoResultado(false, "Não foi possível baixar o instalador do Git. Instale manualmente em https://git-scm.com/download/win e rode de novo.");
+            return new PassoResultado(false, "Nao foi possivel baixar o instalador do Git. Instale manualmente em https://git-scm.com/download/win e rode de novo.");
 
         Processos.Executar(tempInstalador,
             "/VERYSILENT /NORESTART /NOCANCEL /SP- /CLOSEAPPLICATIONS /RESTARTAPPLICATIONS /COMPONENTS=\"icons,ext\\reg\\shellhere,assoc,assoc_sh\"",
@@ -85,7 +85,7 @@ static class Instalador
         Environment.SetEnvironmentVariable("PATH", Environment.GetEnvironmentVariable("PATH") + ";" + pastaGit);
 
         if (!Processos.ComandoExiste("git"))
-            return new PassoResultado(false, "Não foi possível instalar o Git automaticamente. Instale manualmente em https://git-scm.com/download/win e rode de novo.");
+            return new PassoResultado(false, "Nao foi possivel instalar o Git automaticamente. Instale manualmente em https://git-scm.com/download/win e rode de novo.");
 
         status("Verificando o Git... instalado.");
         return new PassoResultado(true);
@@ -96,7 +96,7 @@ static class Instalador
         var existe = Processos.Executar("sc", $"query \"{Config.NomeServico}\"", timeoutSegundos: 10).Sucesso;
         if (existe)
         {
-            status("Parando o serviço atual...");
+            status("Parando o servico atual...");
             Processos.Executar("net", $"stop \"{Config.NomeServico}\"", timeoutSegundos: 30);
         }
         Directory.CreateDirectory(Config.PastaBase);
@@ -115,21 +115,21 @@ static class Instalador
         {
             if (Directory.Exists(Config.PastaCodigo))
             {
-                status("Encontrei uma cópia incompleta de instalação anterior, refazendo...");
+                status("Encontrei uma copia incompleta de instalacao anterior, refazendo...");
                 Directory.Delete(Config.PastaCodigo, recursive: true);
             }
 
-            status("Primeira instalação: clonando o repositório...");
+            status("Primeira instalacao: clonando o repositorio...");
             var clone = Processos.Executar("git", $"clone --quiet \"{Config.RepoUrl}\" \"{Config.PastaCodigo}\"", timeoutSegundos: 180);
             if (!clone.Sucesso)
-                return new PassoResultado(false, "Não foi possível baixar o sistema. Confira sua conexão com a internet.");
+                return new PassoResultado(false, "Nao foi possivel baixar o sistema. Confira sua conexao com a internet.");
         }
         else
         {
-            status("Buscando novidades no repositório...");
+            status("Buscando novidades no repositorio...");
             var fetch = Processos.Executar("git", $"-C \"{Config.PastaCodigo}\" fetch --quiet --tags origin", timeoutSegundos: 60);
             if (!fetch.Sucesso)
-                return new PassoResultado(false, "Não foi possível buscar atualizações. Confira sua conexão com a internet.");
+                return new PassoResultado(false, "Nao foi possivel buscar atualizacoes. Confira sua conexao com a internet.");
         }
 
         var tags = Processos.Executar("git", $"-C \"{Config.PastaCodigo}\" tag --sort=-creatordate", timeoutSegundos: 15);
@@ -139,18 +139,18 @@ static class Instalador
 
         if (!string.IsNullOrEmpty(ultimaTag))
         {
-            status($"Instalando a versão {ultimaTag}...");
+            status($"Instalando a versao {ultimaTag}...");
             Processos.Executar("git", $"-C \"{Config.PastaCodigo}\" checkout --quiet \"{ultimaTag}\"", timeoutSegundos: 30);
         }
         else
         {
-            status("Nenhuma versão marcada ainda; usando a mais recente do repositório.");
+            status("Nenhuma versao marcada ainda; usando a mais recente do repositorio.");
             Processos.Executar("git", $"-C \"{Config.PastaCodigo}\" checkout --quiet main", timeoutSegundos: 30);
             Processos.Executar("git", $"-C \"{Config.PastaCodigo}\" pull --quiet origin main", timeoutSegundos: 60);
         }
 
         if (!File.Exists(Path.Combine(Config.PastaProjeto, "ListasCompras.csproj")))
-            return new PassoResultado(false, "O repositório baixado não tem ListasCompras\\ListasCompras.csproj.");
+            return new PassoResultado(false, "O repositorio baixado nao tem ListasCompras\\ListasCompras.csproj.");
 
         // Limpa obj/bin antes de publicar: evita "Access to the path is denied" quando
         // esses arquivos foram criados por outro usuário/contexto de permissão antes
@@ -190,7 +190,7 @@ static class Instalador
             File.Delete(backupDb);
         }
 
-        status("Registrando o serviço do Windows...");
+        status("Registrando o servico do Windows...");
         var servicoExiste = Processos.Executar("sc", $"query \"{Config.NomeServico}\"", timeoutSegundos: 10).Sucesso;
         if (servicoExiste)
         {

@@ -42,7 +42,7 @@ static class Menu
     // a opção realçada, setas alternam entre as duas.
     public static bool PerguntarSimNao(int coluna, int linha, string pergunta, bool padraoSim = true)
     {
-        var opcoes = new[] { new OpcaoMenu("Sim", ConsoleColor.Green), new OpcaoMenu("Não", ConsoleColor.Red) };
+        var opcoes = new[] { new OpcaoMenu("Sim", ConsoleColor.Green), new OpcaoMenu("Nao", ConsoleColor.Red) };
         var selecionado = padraoSim ? 0 : 1;
 
         Tela.Escrever(coluna, linha, pergunta, ConsoleColor.White);
@@ -85,7 +85,7 @@ static class Menu
         for (var i = 0; i < opcoes.Count; i++)
         {
             var marcado = i == selecionado;
-            var seta = marcado ? "▶ " : "  ";
+            var seta = marcado ? "> " : "  ";
             var texto = $"{seta}{i + 1}. {opcoes[i].Rotulo}".PadRight(40);
 
             Console.SetCursorPosition(coluna, linhaTopo + i);

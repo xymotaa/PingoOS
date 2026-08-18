@@ -9,10 +9,10 @@ static class AcoesServico
     public static void Reiniciar()
     {
         Console.WriteLine();
-        Console.WriteLine("  Reiniciando o serviço PingoOS...");
+        Console.WriteLine("  Reiniciando o servico PingoOS...");
         Processos.Executar("net", $"stop \"{Config.NomeServico}\"", timeoutSegundos: 30);
         var resultado = Processos.Executar("net", $"start \"{Config.NomeServico}\"", timeoutSegundos: 30);
-        Console.WriteLine(resultado.Sucesso ? "  Serviço reiniciado." : "  Não foi possível reiniciar: " + resultado.Erro);
+        Console.WriteLine(resultado.Sucesso ? "  Servico reiniciado." : "  Nao foi possivel reiniciar: " + resultado.Erro);
         Console.WriteLine();
         Console.WriteLine("  Pressione qualquer tecla para voltar...");
         Tela.AguardarTecla();
@@ -21,9 +21,9 @@ static class AcoesServico
     public static void Desligar()
     {
         Console.WriteLine();
-        Console.WriteLine("  Desligando o serviço PingoOS...");
+        Console.WriteLine("  Desligando o servico PingoOS...");
         var resultado = Processos.Executar("net", $"stop \"{Config.NomeServico}\"", timeoutSegundos: 30);
-        Console.WriteLine(resultado.Sucesso ? "  Serviço parado." : "  Não foi possível parar: " + resultado.Erro);
+        Console.WriteLine(resultado.Sucesso ? "  Servico parado." : "  Nao foi possivel parar: " + resultado.Erro);
         Console.WriteLine();
         Console.WriteLine("  Pressione qualquer tecla para voltar...");
         Tela.AguardarTecla();
@@ -37,7 +37,7 @@ static class AcoesServico
 
         if (!File.Exists(Config.ExecutavelApp))
         {
-            Console.WriteLine("  PingoOS ainda não está instalado nesta máquina.");
+            Console.WriteLine("  PingoOS ainda nao esta instalado nesta maquina.");
             Console.WriteLine();
             Console.WriteLine("  Pressione qualquer tecla para voltar...");
             Tela.AguardarTecla();
@@ -45,17 +45,17 @@ static class AcoesServico
         }
 
         try { Console.CursorVisible = true; } catch { /* ignorado de propósito */ }
-        Console.Write("  E-mail do usuário: ");
+        Console.Write("  E-mail do usuario: ");
         var email = Console.ReadLine()?.Trim() ?? "";
 
-        Console.Write("  Nova senha (mín. 6 caracteres): ");
+        Console.Write("  Nova senha (min. 6 caracteres): ");
         var senha = LerSenhaMascarada();
         try { Console.CursorVisible = false; } catch { /* ignorado de propósito */ }
 
         if (string.IsNullOrWhiteSpace(email) || senha.Length < 6)
         {
             Console.WriteLine();
-            Console.WriteLine("  E-mail ou senha inválidos.");
+            Console.WriteLine("  E-mail ou senha invalidos.");
         }
         else
         {

@@ -16,10 +16,4 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
 
-  <ItemGroup>
-    <!-- Embutida no próprio .exe (não como arquivo solto ao lado) — a distribuição é um
-         único binário baixado da Release do GitHub, sem pasta junto. -->
-    <EmbeddedResource Include="AsciiArt.txt" />
-  </ItemGroup>
-
 </Project>
