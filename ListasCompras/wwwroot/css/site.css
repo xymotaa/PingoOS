@@ -26,6 +26,20 @@
   box-sizing: border-box;
 }
 
+/* Setas de incremento nos campos numéricos, removidas em todo o sistema — pedido
+   explícito do usuário (Caixa, Orçamento/OS, Estoque, Pedidos e qualquer outro
+   type="number"): a digitação direta já cobre o caso de uso, as setas só ocupavam
+   espaço e nenhuma tela dependia delas. */
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 .d-none {
   display: none !important;
 }

@@ -1,5 +1,66 @@
 # Registro de Alterações
 
+## [2026-08-18] Setas de campo numérico removidas em todo o sistema (versão 1.0.0.15)
+
+### Problema
+Vários `<input type="number">` (Estoque, Pedidos, Documento/Ver) já escondiam as setas de
+incremento/decremento via `<style>` local em cada view — mas nem toda tela tinha essa regra.
+`Documento/Add.cshtml` (Orçamento/OS, campo "Validade do orçamento") não tinha, então mostrava as
+setas nativas do navegador.
+
+### Solução
+Regra movida para `site.css`, carregado por todas as telas (direto ou via partial
+`_HeadTailwind`), cobrindo Webkit (Chrome/Edge/Safari) e Firefox de uma vez: nenhum campo numérico
+do sistema mostra mais as setas, em nenhuma tela — Caixa, Orçamento/OS, Estoque, Pedidos e
+qualquer outra que use `type="number"` no futuro, sem precisar repetir a regra por view.
+
+### Arquivos Alterados
+| Arquivo | Alteração |
+|---|---|
+| `wwwroot/css/site.css` | regra global `input[type="number"]` sem setas (Webkit + Firefox) |
+| `VERSION.txt` | `1.0.0.15` |
+
+### Resultado
+Publicado e confirmado via curl que o CSS é servido com a nova regra. Mudança puramente visual,
+sem impacto em cálculo ou submit. Build sem avisos.
+
+## [2026-08-18] Caixa: campo de desconto sem nenhum efeito/borda ao focar (versão 1.0.0.14)
+
+### Ajuste
+A correção anterior trocou o outline azul do navegador pelo anel verde institucional (padrão do
+resto do sistema). O usuário preferiu não ter efeito nenhum: o campo agora fica visualmente igual
+focado ou não, sem anel, sem borda, sem sombra.
+
+### Arquivos Alterados
+| Arquivo | Alteração |
+|---|---|
+| `wwwroot/js/caixa.js` | classe do input de desconto sem `focus:ring`/`focus:shadow` |
+| `VERSION.txt` | `1.0.0.14` |
+
+### Resultado
+Mudança puramente visual (CSS). Build sem avisos.
+
+## [2026-08-18] Caixa: anel de foco azul do navegador no campo de desconto (versão 1.0.0.13)
+
+### Problema
+O campo "Desc. %" de cada item, ao ser clicado, ficava com um contorno azul — era o outline padrão
+do navegador para `<input>` em foco. Diferente dos outros campos do sistema, esse não tinha a
+classe `focus:ring` que define o anel verde institucional, então caía no comportamento default do
+Chrome/navegador.
+
+### Solução
+Adicionado `outline-none focus:ring-2 focus:ring-secondary/30 rounded`, mesmo padrão visual usado
+em todo o resto do sistema.
+
+### Arquivos Alterados
+| Arquivo | Alteração |
+|---|---|
+| `wwwroot/js/caixa.js` | classe do input de desconto ganhou o anel de foco padrão do sistema |
+| `VERSION.txt` | `1.0.0.13` |
+
+### Resultado
+Mudança puramente visual (CSS), sem impacto em cálculo ou submit. Build sem avisos.
+
 ## [2026-08-18] Caixa: removido também o placeholder "0" do desconto por item (versão 1.0.0.12)
 
 ### Problema

@@ -92,7 +92,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const valorInicial = item.desconto ? item.desconto : "";
         return '<div class="inline-flex items-center bg-surface-container-low rounded-md overflow-hidden">' +
             '<input type="number" min="0" max="' + max + '" step="' + step + '" value="' + valorInicial + '" data-index="' + index + '" ' +
-            'class="desconto-input w-14 text-center bg-transparent border-none py-1 font-body-md text-body-md [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />' +
+            'class="desconto-input w-14 text-center bg-transparent border-none outline-none focus:outline-none focus:ring-0 focus:shadow-none py-1 font-body-md text-body-md [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />' +
             '<button type="button" data-index="' + index + '" title="Alternar entre % e R$" ' +
             'class="desconto-toggle w-6 h-6 shrink-0 rounded-full hover:bg-white flex items-center justify-center font-label-sm text-label-sm font-bold text-on-surface-variant leading-none transition-colors">' +
             (item.descontoTipo === "valor" ? "R$" : "%") +
