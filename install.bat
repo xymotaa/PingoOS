@@ -16,7 +16,7 @@ REM  ultimo commit do repositorio direto. Isso existe de proposito: evita que
 REM  uma mudanca ainda em teste vire producao sozinha em todas as lojas.
 REM ============================================================================
 
-set REPO_URL=https://github.com/xymotaa/xypedidos.git
+set REPO_URL=https://github.com/xymotaa/PingoOS.git
 set PORTA=5096
 set NOME_SERVICO=PingoOS
 set PASTA_BASE=%ProgramFiles%\PingoOS

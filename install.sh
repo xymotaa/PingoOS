@@ -13,7 +13,7 @@
 # ==============================================================================
 set -euo pipefail
 
-REPO_URL="https://github.com/xymotaa/xypedidos.git"
+REPO_URL="https://github.com/xymotaa/PingoOS.git"
 PORTA=5096
 NOME_SERVICO="pingo-os"
 PASTA_BASE="/opt/pingo-os"

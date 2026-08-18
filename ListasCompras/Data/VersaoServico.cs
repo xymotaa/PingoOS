@@ -10,7 +10,7 @@ namespace ListasCompras.Data;
 /// </summary>
 public static class VersaoServico
 {
-    private const string UrlVersaoRemota = "https://raw.githubusercontent.com/xymotaa/xypedidos/main/VERSION.txt";
+    private const string UrlVersaoRemota = "https://raw.githubusercontent.com/xymotaa/PingoOS/main/VERSION.txt";
 
     public static string VersaoLocal()
     {

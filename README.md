@@ -172,8 +172,8 @@ apagar os dados**: o banco é preservado à parte durante a publicação e devol
 ### Para desenvolver ou explorar o código
 
 ```bash
-git clone https://github.com/xymotaa/xypedidos.git
-cd xypedidos/ListasCompras
+git clone https://github.com/xymotaa/PingoOS.git
+cd PingoOS/ListasCompras
 dotnet restore
 dotnet run
 ```
