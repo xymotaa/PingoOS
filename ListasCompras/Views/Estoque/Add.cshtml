@@ -350,6 +350,8 @@
             <input id="novaCategoriaNome" type="text" maxlength="60" placeholder="Ex: Capinha, Película, Cabo..."
                    class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
             <p id="novaCategoriaErro" class="hidden mt-xs font-label-sm text-label-sm text-error"></p>
+            <a asp-controller="Categoria" asp-action="Index" target="_blank"
+               class="block mt-xs font-label-sm text-label-sm text-secondary hover:underline">Gerenciar categorias (editar, excluir)</a>
             <button id="salvarNovaCategoriaBtn" type="button"
                     class="mt-md w-full py-sm rounded-lg font-label-md text-label-md font-bold bg-secondary text-white hover:bg-opacity-90 transition-all">
                 Criar categoria

@@ -1,0 +1,136 @@
+@model List<ListasCompras.Controllers.CategoriaListaItem>
+@{
+    Layout = null;
+    ViewData["Title"] = "Categorias";
+    var nomeLoja = ViewData["NomeLoja"] as string ?? "Minha Loja";
+}
+<!DOCTYPE html>
+<html class="light" lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>@nomeLoja — Categorias</title>
+    @await Html.PartialAsync("_HeadTailwind")
+</head>
+<body class="bg-surface">
+    @await Html.PartialAsync("_Navbar")
+
+    <main class="pt-24 px-lg pb-xl max-w-[1440px] mx-auto">
+
+        @if (TempData["Sucesso"] != null)
+        {
+            <div class="mb-md bg-secondary-container text-on-secondary-container px-md py-sm rounded-lg font-label-md text-label-md flex items-center gap-xs w-fit">
+                <span class="material-symbols-outlined text-[18px]">check_circle</span>
+                <span>@TempData["Sucesso"]</span>
+            </div>
+        }
+        @if (TempData["Erro"] != null)
+        {
+            <div class="mb-md bg-error-container text-error px-md py-sm rounded-lg font-label-md text-label-md flex items-center gap-xs w-fit">
+                <span class="material-symbols-outlined text-[18px]">error</span>
+                <span>@TempData["Erro"]</span>
+            </div>
+        }
+
+        <!-- Cabeçalho da página -->
+        <section class="mb-md flex flex-wrap items-end justify-between gap-md">
+            <div>
+                <h1 class="font-headline-lg text-headline-lg text-primary">Categorias</h1>
+                <p class="font-body-md text-body-md text-on-surface-variant">
+                    Usadas em Estoque e em Pedidos (reposição). Clique numa linha para editar.
+                </p>
+            </div>
+            <button type="button" data-abre-nova-categoria
+                    class="h-9 px-md rounded-lg bg-secondary text-white flex items-center justify-center gap-xs hover:bg-opacity-90 transition-colors shrink-0">
+                <span class="material-symbols-outlined text-[20px]">add</span>
+                <span class="font-label-md text-label-md font-bold">Nova categoria</span>
+            </button>
+        </section>
+
+        <!-- Tabela -->
+        <section class="bg-white rounded-xl border border-outline-variant shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-surface-container-low">
+                        <tr>
+                            <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider">Nome</th>
+                            <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider text-center">Pede marca/modelo</th>
+                            <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider text-center">Produtos</th>
+                            <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider text-center w-16">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var c in Model)
+                        {
+                            <tr class="linha-categoria border-t border-outline-variant hover:bg-surface-container-low transition-colors cursor-pointer"
+                                data-id="@c.Id" data-nome="@c.Nome" data-requer-modelo="@c.RequerModelo.ToString().ToLower()">
+                                <td class="px-md py-sm font-body-md text-body-md text-on-surface">@c.Nome</td>
+                                <td class="px-md py-sm text-center font-body-md text-body-md text-on-surface-variant">@(c.RequerModelo ? "Sim" : "Não")</td>
+                                <td class="px-md py-sm text-center font-body-md text-body-md text-on-surface-variant">@c.QtdProdutos</td>
+                                <td class="px-md py-sm">
+                                    <div class="flex items-center justify-center">
+                                        <form asp-action="Excluir" method="post" class="inline" onclick="event.stopPropagation()"
+                                              onsubmit="return confirm('Excluir a categoria @c.Nome?');">
+                                            <input type="hidden" name="id" value="@c.Id" />
+                                            <button type="submit" title="Excluir"
+                                                    class="w-8 h-8 rounded-lg hover:bg-error-container inline-flex items-center justify-center text-outline transition-colors">
+                                                <span class="material-symbols-outlined text-[18px]">delete</span>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @if (Model.Count == 0)
+            {
+                <div class="p-xl text-center">
+                    <span class="material-symbols-outlined text-[40px] text-outline">category</span>
+                    <p class="font-body-md text-body-md text-on-surface-variant">Nenhuma categoria cadastrada ainda.</p>
+                </div>
+            }
+        </section>
+    </main>
+
+    <!-- Modal: nova / editar categoria -->
+    <form id="formNovaCategoria">@Html.AntiForgeryToken()</form>
+    <form id="formEditarCategoria" asp-action="Editar" method="post" class="hidden">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="id" id="editarCategoriaId" />
+        <input type="hidden" name="nome" id="editarCategoriaNome" />
+        <input type="hidden" name="requerModelo" id="editarCategoriaRequerModelo" />
+    </form>
+    <div id="modalNovaCategoria" class="hidden fixed inset-0 z-[60] bg-[#0b1c30]/40 flex items-center justify-center p-md">
+        <div class="bg-white rounded-xl shadow-lg w-full max-w-[400px] p-lg">
+            <div class="flex justify-between items-center mb-md">
+                <h2 id="modalCategoriaTitulo" class="font-title-lg text-title-lg text-primary">Nova categoria</h2>
+                <button id="fecharNovaCategoriaBtn" type="button" class="w-8 h-8 rounded-lg hover:bg-surface-container-low flex items-center justify-center text-on-surface-variant">
+                    <span class="material-symbols-outlined text-[20px]">close</span>
+                </button>
+            </div>
+            <label class="font-label-md text-label-md text-on-surface-variant" for="novaCategoriaNome">Nome</label>
+            <input id="novaCategoriaNome" type="text" maxlength="60" placeholder="Ex: Capinha, Película, Cabo..."
+                   class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+
+            <label class="mt-md flex items-center gap-xs font-label-md text-label-md text-on-surface-variant">
+                <input id="novaCategoriaRequerModelo" type="checkbox" class="accent-secondary" />
+                Pede marca/modelo do celular (categorias de reposição, ex: Capinha, Película)
+            </label>
+
+            <p id="novaCategoriaErro" class="hidden mt-xs font-label-sm text-label-sm text-error"></p>
+            <button id="salvarNovaCategoriaBtn" type="button"
+                    class="mt-md w-full py-sm rounded-lg font-label-md text-label-md font-bold bg-secondary text-white hover:bg-opacity-90 transition-all">
+                Criar categoria
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const CATEGORIA_CRIAR_URL = "@Url.Action("Criar", "Categoria")";
+    </script>
+    <script src="~/js/categoria-modal.js" asp-append-version="true"></script>
+</body>
+</html>

@@ -1,5 +1,42 @@
 # Registro de Alterações
 
+## [2026-08-18] Tela de Categorias: editar e excluir (versão 1.0.0.7)
+
+### Problema
+A entrada anterior desta mesma data unificou a categoria de produto e deu um jeito de **criar**
+categoria sem SQL (modal "+" em Pedidos e Estoque/Add), mas não existia nenhuma forma de editar o
+nome ou excluir uma categoria — só voltando a editar direto no banco.
+
+### Solução
+Nova tela `Categoria/Index` (`GET /Categoria`): lista todas as categorias, quantos produtos (soma
+de reposição + estoque) cada uma tem, e se pede marca/modelo. Clicar numa linha abre o mesmo modal
+já usado para criar, agora em modo edição (`PUT` semântico via `POST /Categoria/Editar`) — nome
+duplicado é bloqueado com mensagem, igual à criação. Excluir (`POST /Categoria/Excluir`) verifica
+se a categoria está em uso por algum produto (reposição **ou** estoque) antes de remover — se
+estiver, bloqueia com uma mensagem explicando por quê, em vez de deixar o EF Core cascatear a
+exclusão (a FK de `Produto.CategoriaId` é obrigatória, sem `SetNull` configurado — excluir sem essa
+checagem apagaria produtos de reposição em cascata).
+
+O acesso à tela é um link "Gerenciar categorias" dentro do próprio modal de criação, nas duas telas
+que já tinham o botão "+" (Pedidos e Estoque/Add) — abre em aba nova, escolha do usuário para não
+perder o formulário em andamento.
+
+### Arquivos Alterados
+| Arquivo | Alteração |
+|---|---|
+| `Controllers/CategoriaController.cs` | `Index` (lista com contagem de uso), `Editar`, `Excluir` (bloqueia se em uso) |
+| `Views/Categoria/Index.cshtml` (novo) | listagem com linha clicável para editar, botão excluir |
+| `wwwroot/js/categoria-modal.js` | modo edição no modal compartilhado (título, botão, submit via form real em vez de fetch) |
+| `Views/Estoque/Add.cshtml`, `Views/ListaCompra/Index.cshtml` | link "Gerenciar categorias" dentro do modal |
+| `VERSION.txt` | `1.0.0.7` |
+
+### Resultado
+Testado em cópia publicada do banco de dev real: editar nome (com bloqueio de duplicata), excluir
+categoria em uso (bloqueado, categoria com produto de reposição vinculado continuou existindo) e
+excluir categoria sem uso (removida). Link "Gerenciar categorias" confirmado presente nas duas
+telas de origem. Dados de teste revertidos na cópia ao final; banco de dev real não foi alterado
+por esta rodada de testes. Build sem avisos.
+
 ## [2026-08-18] Cards clicáveis, categoria de produto unificada, faturamento crítico aos 90% (versão 1.0.0.6)
 
 ### Cards/linhas clicáveis em vez de precisar acertar o ícone
