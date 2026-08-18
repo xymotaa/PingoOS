@@ -132,14 +132,22 @@ carregadas: seria preciso um processo supervisor separado para parar o serviço,
 e subir de novo — com risco real de deixar a loja com o sistema quebrado e ninguém por perto para
 consertar. O ganho não paga o risco.
 
-**O que existe desde 2026-08-18, e é diferente disso:** um *aviso* discreto no Painel (só para
-Admin) quando há uma versão mais nova no GitHub — comparando `VERSION.txt` local contra o do
-repositório. Não baixa nem troca arquivo nenhum sozinho; só avisa. Quem atualiza continua sendo a
-pessoa, rodando `install.sh`/`install.bat` de novo — que já para o serviço, publica por cima e
-sobe de novo, preservando `loja.db`. Ver `Data/VersaoServico.cs`.
+**O que existe desde 2026-08-18:** duas peças, ambas exigindo que a pessoa rode o instalador de
+novo — nunca o app rodando sozinho troca os próprios arquivos.
 
-Sem esse aviso, atualizar seria `git pull` (ou baixar a nova versão) e rodar o instalador de novo;
-as migrations do banco são aplicadas sozinhas na inicialização.
+1. *Aviso* discreto no Painel (só para Admin) quando há uma versão mais nova no GitHub —
+   comparando `VERSION.txt` local contra o do repositório. Só avisa, não baixa nada
+   (`Data/VersaoServico.cs`).
+2. `install.sh`/`install.bat` viraram instaladores de verdade: baixam um único arquivo, e ele
+   clona o repositório sozinho (Git também é instalado automaticamente, se faltar). Rodar de novo
+   busca a **última tag publicada** no GitHub e atualiza para ela — nunca o commit mais recente do
+   `main` direto. Essa trava existe de propósito: sem ela, qualquer commit vira produção em todas
+   as lojas instantaneamente, sem chance de eu testar antes. Enquanto o repositório não tiver
+   nenhuma tag, cai no HEAD do `main` como reserva.
+
+O que continua igual: para de fato aplicar a atualização, sempre é preciso **parar o serviço,
+publicar por cima e subir de novo** — o processo em execução nunca troca os próprios arquivos.
+`loja.db` é preservado à parte durante o publish, como sempre.
 
 ### Assistente de instalação nos moldes do MapOS
 Metade do assistente deles serve para coletar host, usuário e senha do MySQL — que aqui não

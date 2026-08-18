@@ -1,77 +1,141 @@
 #!/usr/bin/env bash
-# Instala o Pingo OS como serviço do sistema (systemd) na máquina da loja.
-# Pensado para quem nunca usou terminal: cada passo avisa o que está fazendo.
+# ==============================================================================
+# Instalador do Pingo OS para Linux
+#
+# Baixe só este arquivo e rode com sudo. Ele cuida do resto: instala o que
+# faltar (.NET, Git), baixa o sistema e registra como serviço systemd. Rodar
+# de novo depois SEMPRE atualiza para a última versão publicada, sem apagar
+# os dados da loja.
+#
+# Só atualiza em versões marcadas (tags no GitHub, ex: v1.0.1) — nunca o
+# último commit do repositório direto. Isso existe de propósito: evita que
+# uma mudança ainda em teste vire produção sozinha em todas as lojas.
+# ==============================================================================
 set -euo pipefail
 
+REPO_URL="https://github.com/xymotaa/xypedidos.git"
 PORTA=5096
 NOME_SERVICO="pingo-os"
-PASTA_INSTALACAO="/opt/pingo-os"
+PASTA_BASE="/opt/pingo-os"
+PASTA_CODIGO="${PASTA_BASE}/codigo"
+PASTA_APP="${PASTA_BASE}/app"
 URL="http://localhost:${PORTA}"
 
-echo "=== Instalando o Pingo OS ==="
+echo ""
+echo "  ========================================"
+echo "   PINGO OS - Instalador para Linux"
+echo "  ========================================"
+echo ""
 
 if [ "$(id -u)" -ne 0 ]; then
-    echo "Este instalador precisa de permissão de administrador."
-    echo "Rode de novo assim: sudo ./install.sh"
+    echo "  [ERRO] Este instalador precisa de permissão de administrador."
+    echo "  Rode de novo assim: sudo ./install.sh"
     exit 1
 fi
 
-DIR_SCRIPT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PASTA_PROJETO="$DIR_SCRIPT/ListasCompras"
-
-if [ ! -f "$PASTA_PROJETO/ListasCompras.csproj" ]; then
-    echo "Não encontrei ListasCompras/ListasCompras.csproj ao lado deste script."
-    echo "Rode o install.sh de dentro da pasta onde o projeto foi baixado."
-    exit 1
-fi
-
-# 1. Runtime do .NET, só se ainda não tiver
+# --- Passo 1: .NET -----------------------------------------------------------
+echo "  [1/5] Verificando o .NET..."
 if ! command -v dotnet >/dev/null 2>&1; then
-    echo "--- Instalando o .NET (o sistema roda em cima dele) ---"
+    echo "        Não encontrado. Baixando e instalando..."
     curl -sSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh
     bash /tmp/dotnet-install.sh --channel 10.0 --install-dir /usr/share/dotnet
     ln -sf /usr/share/dotnet/dotnet /usr/local/bin/dotnet
     rm -f /tmp/dotnet-install.sh
+    echo "        .NET instalado."
 else
-    echo "--- .NET já instalado, pulando ---"
+    echo "        Já instalado, pulando."
 fi
 
-# 2. Limpa obj/ e bin/ do projeto antes de publicar. Se alguém já abriu o projeto sem
-#    ser root (rodou dotnet build/run direto) antes de rodar este instalador (que roda
-#    com sudo), esses arquivos intermediários ficam com outro dono e o dotnet publish
-#    pode falhar por permissão na build seguinte.
+# --- Passo 2: Git --------------------------------------------------------------
+echo "  [2/5] Verificando o Git..."
+if ! command -v git >/dev/null 2>&1; then
+    echo "        Não encontrado. Instalando..."
+    if command -v apt-get >/dev/null 2>&1; then
+        apt-get update -qq && apt-get install -y -qq git
+    elif command -v dnf >/dev/null 2>&1; then
+        dnf install -y -q git
+    elif command -v yum >/dev/null 2>&1; then
+        yum install -y -q git
+    elif command -v pacman >/dev/null 2>&1; then
+        pacman -Sy --noconfirm --quiet git
+    elif command -v zypper >/dev/null 2>&1; then
+        zypper --quiet install -y git
+    else
+        echo "  [ERRO] Não reconheci o gerenciador de pacotes desta distribuição."
+        echo "        Instale o git manualmente e rode este instalador de novo."
+        exit 1
+    fi
+    echo "        Git instalado."
+else
+    echo "        Já instalado, pulando."
+fi
+
+# --- Passo 3: para o serviço antes de mexer nos arquivos ---------------------
+echo "  [3/5] Preparando a atualização..."
+if systemctl is-active --quiet "$NOME_SERVICO" 2>/dev/null; then
+    echo "        Parando o serviço atual..."
+    systemctl stop "$NOME_SERVICO"
+fi
+
+mkdir -p "$PASTA_BASE"
+
+# --- Passo 4: busca só até a última TAG publicada, nunca o commit mais recente
+echo "  [4/5] Baixando a versão mais recente..."
+if [ ! -d "$PASTA_CODIGO/.git" ]; then
+    echo "        Primeira instalação: clonando o repositório..."
+    git clone --quiet "$REPO_URL" "$PASTA_CODIGO"
+else
+    echo "        Buscando novidades no repositório..."
+    git -C "$PASTA_CODIGO" fetch --quiet --tags origin
+fi
+
+# A última tag por ordem de criação é a versão publicada mais recente.
+# Sem nenhuma tag ainda no repositório, cai no HEAD do main como reserva.
+ULTIMA_TAG="$(git -C "$PASTA_CODIGO" tag --sort=-creatordate | head -n1 || true)"
+if [ -n "$ULTIMA_TAG" ]; then
+    echo "        Instalando a versão ${ULTIMA_TAG}..."
+    git -C "$PASTA_CODIGO" checkout --quiet "$ULTIMA_TAG"
+else
+    echo "        Nenhuma versão marcada ainda; usando a mais recente do repositório."
+    git -C "$PASTA_CODIGO" checkout --quiet main
+    git -C "$PASTA_CODIGO" pull --quiet origin main
+fi
+
+PASTA_PROJETO="$PASTA_CODIGO/ListasCompras"
+if [ ! -f "$PASTA_PROJETO/ListasCompras.csproj" ]; then
+    echo "  [ERRO] O repositório baixado não tem ListasCompras/ListasCompras.csproj."
+    exit 1
+fi
+
+# Limpa obj/ e bin/ antes de publicar: evita erro de permissão quando esses
+# arquivos foram criados por outro usuário antes deste instalador rodar
 rm -rf "$PASTA_PROJETO/obj" "$PASTA_PROJETO/bin"
 
-# 3. Publica o sistema numa pasta fixa, fora da pasta baixada — assim atualizar
-#    (baixar de novo e rodar o install.sh outra vez) não deixa lixo de versão antiga.
-#    O banco sai do caminho antes do publish e volta depois: dotnet publish limpa a
-#    pasta de destino, e os dados da loja não podem virar vítima de uma atualização.
-echo "--- Publicando o sistema em $PASTA_INSTALACAO ---"
+# --- Passo 5: publica preservando o banco, registra o serviço ----------------
+echo "  [5/5] Instalando o sistema..."
+mkdir -p "$PASTA_APP"
+
 BACKUP_BANCO=""
-if [ -f "$PASTA_INSTALACAO/loja.db" ]; then
-    echo "--- Guardando o banco da instalação anterior ---"
+if [ -f "$PASTA_APP/loja.db" ]; then
     BACKUP_BANCO="$(mktemp -d)/loja.db"
-    cp "$PASTA_INSTALACAO/loja.db" "$BACKUP_BANCO"
+    cp "$PASTA_APP/loja.db" "$BACKUP_BANCO"
 fi
 
-mkdir -p "$PASTA_INSTALACAO"
-dotnet publish "$PASTA_PROJETO" -c Release -o "$PASTA_INSTALACAO" --nologo
+dotnet publish "$PASTA_PROJETO" -c Release -o "$PASTA_APP" --nologo -v q
 
 if [ -n "$BACKUP_BANCO" ]; then
-    cp "$BACKUP_BANCO" "$PASTA_INSTALACAO/loja.db"
+    cp "$BACKUP_BANCO" "$PASTA_APP/loja.db"
     rm -rf "$(dirname "$BACKUP_BANCO")"
 fi
 
-# 4. Serviço systemd: sobe sozinho no boot e reinicia se cair
-echo "--- Registrando o serviço do sistema ---"
 cat > "/etc/systemd/system/${NOME_SERVICO}.service" <<EOF
 [Unit]
 Description=Pingo OS
 After=network.target
 
 [Service]
-WorkingDirectory=${PASTA_INSTALACAO}
-ExecStart=${PASTA_INSTALACAO}/ListasCompras
+WorkingDirectory=${PASTA_APP}
+ExecStart=${PASTA_APP}/ListasCompras
 Restart=on-failure
 Environment=ASPNETCORE_ENVIRONMENT=Production
 Environment=DOTNET_ROOT=/usr/share/dotnet
@@ -84,7 +148,7 @@ systemctl daemon-reload
 systemctl enable "$NOME_SERVICO" >/dev/null
 systemctl restart "$NOME_SERVICO"
 
-echo "--- Aguardando o sistema subir ---"
+echo "        Aguardando o sistema subir..."
 for _ in $(seq 1 20); do
     if curl -sf "$URL" >/dev/null 2>&1; then
         break
@@ -92,17 +156,22 @@ for _ in $(seq 1 20); do
     sleep 1
 done
 
-# 5. Abre o navegador, se houver um ambiente gráfico
 if command -v xdg-open >/dev/null 2>&1 && [ -n "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ]; then
     xdg-open "$URL" >/dev/null 2>&1 || true
 fi
 
 echo ""
-echo "=== Pronto ==="
-echo "O Pingo OS está rodando em $URL"
-echo "Ele inicia sozinho toda vez que o computador ligar."
+echo "  ========================================"
+echo "   Pronto! O Pingo OS está rodando."
+echo "  ========================================"
 echo ""
-echo "Comandos úteis:"
-echo "  sudo systemctl status ${NOME_SERVICO}   # ver se está rodando"
-echo "  sudo systemctl restart ${NOME_SERVICO}  # reiniciar"
-echo "  sudo journalctl -u ${NOME_SERVICO} -f   # ver o que está acontecendo"
+echo "  Endereço: $URL"
+echo "  Ele inicia sozinho toda vez que o computador ligar."
+echo ""
+echo "  Para atualizar no futuro, baixe este mesmo install.sh de novo"
+echo "  e rode com sudo — ele busca a versão mais recente sozinho."
+echo ""
+echo "  Comandos úteis:"
+echo "    sudo systemctl status ${NOME_SERVICO}   # ver se está rodando"
+echo "    sudo systemctl restart ${NOME_SERVICO}  # reiniciar"
+echo "    sudo journalctl -u ${NOME_SERVICO} -f   # ver o que está acontecendo"

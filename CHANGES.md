@@ -1,5 +1,62 @@
 # Registro de Alterações
 
+## [2026-08-18] Instalador vira instalador de verdade: clona e atualiza sozinho (versão 1.0.0.3)
+
+### Problema
+Dois pontos, descobertos rodando o `install.bat` numa máquina de teste:
+
+1. `dotnet publish` falhava com `Access to the path is denied` ao atualizar. Causa: o projeto já
+   tinha sido aberto/buildado por um usuário normal (VS Code) antes do instalador rodar como
+   Administrador — os arquivos intermediários em `obj\` ficaram com outro dono, e a build seguinte
+   com outro nível de permissão trombava neles.
+2. O instalador dependia de a pessoa baixar o repositório inteiro e rodar o script de dentro dele.
+   Toda vez que o sistema ganhasse uma funcionalidade nova, quem administra a loja não tinha como
+   saber, nem um jeito prático de buscar a atualização sem repetir manualmente o download.
+
+### Solução
+
+**Permissão:** os dois scripts agora apagam `obj\`/`bin\` do projeto antes de publicar, sempre —
+elimina esse conflito de permissão de uma vez.
+
+**Instalador de verdade.** `install.sh`/`install.bat` deixaram de depender de baixar o projeto
+inteiro: agora é baixar **um arquivo só** e rodar como administrador/root. Ele:
+
+- Instala .NET **e Git** automaticamente se estiverem faltando (Windows: `winget`, com fallback
+  para o instalador oficial; Linux: detecta `apt`/`dnf`/`yum`/`pacman`/`zypper`).
+- Na primeira vez, clona o repositório numa pasta fixa (`codigo/`, separada de `app/`, onde vai o
+  binário publicado — nunca mistura o clone git com o executável).
+- Rodando de novo, faz `git fetch --tags` e atualiza para a **última tag publicada**, nunca o
+  commit mais recente do `main` direto.
+
+**A trava de tags é a decisão central desta mudança.** Sem ela, "atualiza sozinho com base no meu
+repositório" significa que qualquer commit vira produção em todas as lojas instantaneamente, sem
+chance de eu testar antes de soltar. Com a trava, eu decido quando uma versão está pronta —
+criando uma tag (`git tag vX.Y.Z && git push --tags`) — e só então as máquinas que rodarem o
+instalador recebem essa versão. Enquanto o repositório não tiver nenhuma tag, o instalador cai no
+HEAD do `main` como reserva.
+
+**Continua não sendo auto-atualização do processo em execução** — decisão já registrada no
+`ROADMAP.md` e que não mudou: o app rodando nunca troca os próprios arquivos sozinho. Atualizar
+sempre passa por parar o serviço, publicar por cima e subir de novo, o que só o instalador faz.
+`loja.db` continua preservado à parte durante o publish.
+
+### Arquivos Alterados
+| Arquivo | Alteração |
+|---|---|
+| `install.bat` | reescrito — instala Git, clona/atualiza via tag, interface com passos numerados |
+| `install.sh` | idem, para Linux |
+| `VERSION.txt` | `1.0.0.3` |
+
+### Resultado
+Testado com um repositório git local fazendo o papel do GitHub: primeira instalação clonou e
+ficou na tag disponível; criada uma tag nova, uma segunda rodada do instalador buscou e trocou
+para ela corretamente (`git fetch --tags` + `--sort=-creatordate`); o banco de dados sobreviveu
+intacto ao ciclo completo de "publicar por cima". `dotnet publish` de verdade a partir do clone
+git funcionou, com `VERSION.txt` incluído no resultado. Sem tags no repositório, o comando de
+listagem não gera erro — cai no fallback do `main` como esperado.
+
+---
+
 ## [2026-08-18] Aviso de atualização disponível (versão 1.0.0.2)
 
 ### Problema
