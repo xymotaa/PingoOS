@@ -19,9 +19,6 @@
     <main class="pt-24 px-lg pb-xl max-w-[1440px] mx-auto">
 
         <section class="mb-md">
-            <a asp-action="Index" class="font-label-md text-label-md text-on-surface-variant hover:text-primary flex items-center gap-xs w-fit mb-sm">
-                <span class="material-symbols-outlined text-[18px]">arrow_back</span> Estoque
-            </a>
             <h1 class="font-headline-lg text-headline-lg text-primary">@Model.Nome</h1>
             <p class="font-body-md text-body-md text-on-surface-variant">
                 @Model.Codigo · saldo atual <strong>@Model.SaldoAtual</strong> · preço @Moeda(Model.PrecoVenda)

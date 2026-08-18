@@ -26,6 +26,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (filtroBusca) filtroBusca.addEventListener("input", filtrar);
     if (filtroStatus) filtroStatus.addEventListener("change", filtrar);
+
+    linhas.forEach(function (linha) {
+        if (!linha.dataset.href) return;
+        linha.addEventListener("click", function () { window.location.href = linha.dataset.href; });
+    });
     if (toggleFiltrosBtn && filtrosExtras) {
         toggleFiltrosBtn.addEventListener("click", function () { filtrosExtras.classList.toggle("hidden"); });
     }

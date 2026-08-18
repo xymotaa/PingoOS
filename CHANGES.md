@@ -1,5 +1,68 @@
 # Registro de Alterações
 
+## [2026-08-18] Cards clicáveis, categoria de produto unificada, faturamento crítico aos 90% (versão 1.0.0.6)
+
+### Cards/linhas clicáveis em vez de precisar acertar o ícone
+Garantia, Serviço, Estoque e Clientes exigiam clicar exatamente no ícone de olho/editar. Agora a
+linha inteira é clicável (`cursor-pointer`, navega para Ver/Editar); os controles que continuam
+precisando de um clique isolado (excluir, retorno em garantia, registrar movimentação) ganharam
+`stopPropagation` para não disparar a navegação da linha junto.
+
+### Estoque: rail lateral inerte removido, seta de voltar removida do Histórico
+O `<aside>` fixo do lado direito da listagem de Estoque (exportar, sincronizar, categorias,
+etiquetas) não tinha nenhum JS por trás — nem o próprio botão "+" de novo produto funcionava.
+Removido por completo (o cadastro de produto já tem outro botão de acesso, fora do rail). A tela
+de Histórico de movimentações perdeu a seta "← Estoque": não agrega nada que o botão do navegador
+já não resolva.
+
+### Categoria de produto deixa de precisar de SQL
+Existiam dois sistemas de categoria: a tabela `Categoria` (só usada pela tela de Pedidos/reposição,
+sem nenhuma tela de admin para criá-la — só dava pra popular direto no banco) e um campo texto livre
+`ProdutoEstoque.Categoria`, com uma lista fixa (Capinha/Película/Carregador...) hardcoded no HTML do
+Estoque. Unificados: `ProdutoEstoque` agora referencia a mesma tabela `Categoria` de Pedidos
+(`CategoriaId`, FK com `SetNull` — excluir uma categoria não apaga os produtos, só os deixa sem
+categoria). Um botão "+" ao lado do seletor de categoria, em Pedidos e em Estoque/Add, abre um modal
+("Nova categoria") que grava via `POST /Categoria/Criar` e adiciona a opção no select na hora, sem
+recarregar a página — mesmo endpoint reaproveitado nas duas telas.
+
+**Migração de dados:** produtos que já tinham uma categoria em texto livre foram migrados
+automaticamente para a tabela `Categoria` na própria migration (reaproveitando uma categoria
+existente de mesmo nome, sem duplicar, e criando uma nova só quando não havia equivalente).
+Verificado na cópia de teste e no banco de desenvolvimento real: nenhum produto ficou sem
+categoria, nenhuma categoria duplicada.
+
+### Faturamento MEI: fica vermelho aos 90%, não só ao estourar o teto
+A barra e o selo de status só ficavam vermelhos depois de ultrapassar 100% do teto; de 80% a 100%
+ficavam amarelos o tempo todo, sem sinal de que o limite estava chegando perto. Agora 90%–100%
+também é vermelho ("91% do teto — quase lá"), preservando o texto especial para quando realmente
+passa do teto. A barra ganhou uma transição suave de largura.
+
+### Arquivos Alterados
+| Arquivo | Alteração |
+|---|---|
+| `Views/Garantia/Index.cshtml`, `wwwroot/js/garantia.js` | linha clicável (`data-href`), `stopPropagation` nos ícones de ação |
+| `Views/Servico/Index.cshtml`, `wwwroot/js/servico.js` | linha clicável, `stopPropagation` no editar/excluir |
+| `Views/Estoque/Index.cshtml`, `wwwroot/js/estoque.js` | linha clicável; remoção do `<aside>`/painel de ações lateral e do script órfão `ESTOQUE_EDIT_URL` |
+| `Views/Estoque/Historico.cshtml` | remoção da seta "voltar para Estoque" |
+| `Views/Cliente/Index.cshtml`, `wwwroot/js/cliente.js` | linha clicável, `stopPropagation` no editar/excluir |
+| `Views/Faturamento/Index.cshtml` | limiar de vermelho movido para 90% (`critico`), textos e transição de largura da barra |
+| `Models/Categoria.cs`, `Models/ProdutoEstoque.cs` | `ProdutoEstoque.Categoria` (string) → `CategoriaId`/`Categoria` (FK) |
+| `Controllers/CategoriaController.cs` (novo) | `POST Criar` — usado pelo modal de nova categoria, deduplica por nome |
+| `Controllers/EstoqueController.cs` | `Salvar`/`Index`/`Historico` passam a usar `CategoriaId` |
+| `Views/Estoque/Add.cshtml`, `Views/ListaCompra/Index.cshtml` | select de categoria vindo do banco + botão/modal "nova categoria" |
+| `wwwroot/js/categoria-modal.js` (novo) | JS do modal, compartilhado pelas duas telas |
+| `Data/AppDbContext.cs` | relação `ProdutoEstoque.Categoria` com `OnDelete(SetNull)` |
+| `Migrations/20260818140828_AddCategoriaEmProdutoEstoque.cs` | migra dados da coluna texto livre para a FK antes de derrubá-la |
+| `VERSION.txt` | `1.0.0.6` |
+
+### Resultado
+Testado em cópia do banco de desenvolvimento (produto real com categoria "Película" migrado sem
+duplicar), depois aplicado no banco de dev real com backup prévio. Servidor de teste publicado e
+logado via curl: todas as 8 telas alteradas responderam 200; `POST /Categoria/Criar` testado criando
+categoria nova, reaproveitando duplicata (case-insensitive) e rejeitando nome vazio (400); percentual
+do Faturamento forçado a 91% via venda de teste confirmou a barra e o selo ficando vermelhos com o
+texto "quase lá". Build sem avisos.
+
 ## [2026-08-18] Caixa: venda não gravava, e dropdown de busca vira dropdown de verdade (versão 1.0.0.4)
 
 ### Problema 1: venda não salvava no banco, não aparecia em Vendas nem no Fechamento

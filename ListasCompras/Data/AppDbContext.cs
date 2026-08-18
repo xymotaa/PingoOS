@@ -172,6 +172,14 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<ItemVenda>().Ignore(i => i.DescontoTotal).Ignore(i => i.Total);
 
         modelBuilder.Entity<ProdutoEstoque>().HasIndex(p => p.Codigo).IsUnique();
+
+        // Excluir uma categoria não pode apagar o produto — ele só fica sem categoria
+        modelBuilder.Entity<ProdutoEstoque>()
+            .HasOne(p => p.Categoria)
+            .WithMany()
+            .HasForeignKey(p => p.CategoriaId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         modelBuilder.Entity<Venda>().HasIndex(v => v.Numero).IsUnique();
 
         // Excluir um produto não pode apagar o histórico de vendas: o item guarda

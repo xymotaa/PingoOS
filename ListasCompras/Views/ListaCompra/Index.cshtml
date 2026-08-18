@@ -87,13 +87,19 @@
             <div class="form-row">
                 <div class="form-field">
                     <label for="categoriaSelect">Categoria</label>
-                    <select id="categoriaSelect">
-                        <option value="">Selecione...</option>
-                        @foreach (var categoria in Model.Categorias)
-                        {
-                            <option value="@categoria.Id" data-requer-modelo="@categoria.RequerModelo.ToString().ToLower()">@categoria.Nome</option>
-                        }
-                    </select>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <select id="categoriaSelect" data-categoria-select style="flex: 1;">
+                            <option value="">Selecione...</option>
+                            @foreach (var categoria in Model.Categorias)
+                            {
+                                <option value="@categoria.Id" data-requer-modelo="@categoria.RequerModelo.ToString().ToLower()">@categoria.Nome</option>
+                            }
+                        </select>
+                        <button type="button" data-abre-nova-categoria title="Nova categoria" class="btn-app"
+                                style="flex-shrink: 0; padding: 8px 10px;">
+                            <span class="material-symbols-outlined" style="font-size: 20px; vertical-align: middle;">add</span>
+                        </button>
+                    </div>
                 </div>
                 <div class="form-field d-none" id="marcaField">
                     <label for="marcaSelect">Marca</label>
@@ -215,10 +221,33 @@
     Gerar PDF
 </a>
 
+<!-- Modal: nova categoria -->
+<form id="formNovaCategoria">@Html.AntiForgeryToken()</form>
+<div id="modalNovaCategoria" class="hidden fixed inset-0 z-[60] bg-[#0b1c30]/40 flex items-center justify-center p-md">
+    <div class="bg-white rounded-xl shadow-lg w-full max-w-[400px] p-lg">
+        <div class="flex justify-between items-center mb-md">
+            <h2 class="font-title-lg text-title-lg text-primary">Nova categoria</h2>
+            <button id="fecharNovaCategoriaBtn" type="button" class="w-8 h-8 rounded-lg hover:bg-surface-container-low flex items-center justify-center text-on-surface-variant">
+                <span class="material-symbols-outlined text-[20px]">close</span>
+            </button>
+        </div>
+        <label class="font-label-md text-label-md text-on-surface-variant" for="novaCategoriaNome">Nome</label>
+        <input id="novaCategoriaNome" type="text" maxlength="60" placeholder="Ex: Capinha, Película, Cabo..."
+               class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+        <p id="novaCategoriaErro" class="hidden mt-xs font-label-sm text-label-sm text-error"></p>
+        <button id="salvarNovaCategoriaBtn" type="button"
+                class="mt-md w-full py-sm rounded-lg font-label-md text-label-md font-bold bg-secondary text-white hover:bg-opacity-90 transition-all">
+            Criar categoria
+        </button>
+    </div>
+</div>
+
     <script>
         const produtos = @Html.Raw(Json.Serialize(Model.Produtos.Select(p => new { p.Id, p.Nome, p.CategoriaId })));
         const modelos = @Html.Raw(Json.Serialize(Model.Modelos.Select(m => new { m.Id, m.Nome, m.MarcaCelularId })));
+        const CATEGORIA_CRIAR_URL = "@Url.Action("Criar", "Categoria")";
     </script>
     <script src="~/js/reposicao.js" asp-append-version="true"></script>
+    <script src="~/js/categoria-modal.js" asp-append-version="true"></script>
 </body>
 </html>

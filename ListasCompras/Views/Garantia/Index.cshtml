@@ -94,9 +94,10 @@
                             var cor = Cor(os);
                             var dias = os.DiasDeGarantiaRestantes ?? 0;
                             var qtdRetornos = retornos.TryGetValue(os.Id, out var r) ? r : 0;
-                            <tr class="linha-garantia border-t border-outline-variant hover:bg-surface-container-low transition-colors"
+                            <tr class="linha-garantia border-t border-outline-variant hover:bg-surface-container-low transition-colors cursor-pointer"
                                 data-busca="@($"{os.Numero} {os.Cliente.Nome} {os.AparelhosResumo}".ToLower())"
-                                data-situacao="@os.SituacaoGarantia">
+                                data-situacao="@os.SituacaoGarantia"
+                                data-href="@Url.Action("Ver", "OrdemServico", new { id = os.Id })">
                                 <td class="px-md py-sm font-body-md text-body-md font-semibold text-primary">
                                     @os.Numero
                                     @if (os.OrdemOrigemId.HasValue)
@@ -135,12 +136,14 @@
                                 <td class="px-md py-sm">
                                     <div class="flex items-center justify-center gap-xs">
                                         <a asp-controller="OrdemServico" asp-action="Ver" asp-route-id="@os.Id" title="Ver a ordem"
+                                           onclick="event.stopPropagation()"
                                            class="w-8 h-8 rounded-lg hover:bg-surface-container-high inline-flex items-center justify-center text-on-surface-variant transition-colors">
                                             <span class="material-symbols-outlined text-[18px]">visibility</span>
                                         </a>
                                         @if (os.GarantiaVigente)
                                         {
                                             <a asp-controller="OrdemServico" asp-action="RetornoGarantia" asp-route-id="@os.Id"
+                                               onclick="event.stopPropagation()"
                                                title="Abrir retorno em garantia — cria uma OS nova com o cliente e o aparelho já preenchidos"
                                                class="w-8 h-8 rounded-lg hover:bg-secondary-container inline-flex items-center justify-center text-on-surface-variant transition-colors">
                                                 <span class="material-symbols-outlined text-[18px]">assignment_return</span>

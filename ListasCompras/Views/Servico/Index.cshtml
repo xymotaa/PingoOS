@@ -81,9 +81,10 @@
                     <tbody>
                         @foreach (var s in Model)
                         {
-                            <tr class="linha-servico border-t border-outline-variant hover:bg-surface-container-low transition-colors"
+                            <tr class="linha-servico border-t border-outline-variant hover:bg-surface-container-low transition-colors cursor-pointer"
                                 data-busca="@($"{s.Nome} {s.Categoria}".ToLower())"
-                                data-situacao="@(s.Ativo ? "ativo" : "inativo")">
+                                data-situacao="@(s.Ativo ? "ativo" : "inativo")"
+                                data-href="@Url.Action("Add", new { id = s.Id })">
                                 <td class="px-md py-sm font-body-md text-body-md text-on-surface">
                                     @s.Nome
                                     @if (!string.IsNullOrWhiteSpace(s.Descricao))
@@ -101,10 +102,11 @@
                                 <td class="px-md py-sm">
                                     <div class="flex items-center justify-center gap-xs">
                                         <a asp-action="Add" asp-route-id="@s.Id" title="Editar serviço"
+                                           onclick="event.stopPropagation()"
                                            class="w-8 h-8 rounded-lg hover:bg-surface-container-high inline-flex items-center justify-center text-on-surface-variant transition-colors">
                                             <span class="material-symbols-outlined text-[18px]">edit</span>
                                         </a>
-                                        <form asp-action="Excluir" method="post" class="inline"
+                                        <form asp-action="Excluir" method="post" class="inline" onclick="event.stopPropagation()"
                                               onsubmit="return confirm('Excluir @s.Nome do catálogo? As ordens antigas não mudam.');">
                                             <input type="hidden" name="id" value="@s.Id" />
                                             <button type="submit" title="Excluir do catálogo"

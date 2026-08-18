@@ -81,7 +81,7 @@
 <body class="bg-surface">
     @await Html.PartialAsync("_Navbar")
 
-    <main class="pt-24 pl-lg pr-16 pb-xl max-w-[1440px] mx-auto">
+    <main class="pt-24 px-lg pb-xl max-w-[1440px] mx-auto">
 
         @if (TempData["Sucesso"] != null)
         {
@@ -200,14 +200,15 @@
                         {
                             var cor = p.Situacao == "esgotado" ? "text-error"
                                     : p.Situacao == "baixo" ? "text-warning" : "text-on-surface";
-                            <tr class="linha-produto border-t border-outline-variant hover:bg-surface-container-low transition-colors"
-                                data-busca="@($"{p.Codigo} {p.Nome} {p.Categoria}".ToLower())" data-situacao="@p.Situacao">
+                            <tr class="linha-produto border-t border-outline-variant hover:bg-surface-container-low transition-colors cursor-pointer"
+                                data-busca="@($"{p.Codigo} {p.Nome} {p.Categoria?.Nome}".ToLower())" data-situacao="@p.Situacao"
+                                data-href="@Url.Action("Add", new { id = p.Id })">
                                 <td class="w-10"></td>
                                 <td class="px-md py-sm font-body-md text-body-md text-on-surface">
                                     @p.Nome
-                                    @if (!string.IsNullOrWhiteSpace(p.Categoria))
+                                    @if (p.Categoria != null)
                                     {
-                                        <span class="block font-label-sm text-label-sm text-outline">@p.Categoria</span>
+                                        <span class="block font-label-sm text-label-sm text-outline">@p.Categoria.Nome</span>
                                     }
                                 </td>
                                 <td class="px-md py-sm font-body-md text-body-md text-on-surface-variant">@p.Codigo</td>
@@ -220,7 +221,7 @@
                                     }
                                 </td>
                                 <td class="px-md py-sm">
-                                    <div class="flex items-center justify-center gap-xs">
+                                    <div class="flex items-center justify-center gap-xs" onclick="event.stopPropagation()">
                                         <button type="button" title="Registrar entrada ou saída"
                                                 onclick="abrirMovimentacao(@p.Id, '@p.Nome.Replace("'", "\\'")', @p.SaldoAtual)"
                                                 class="w-8 h-8 rounded-lg hover:bg-secondary-container inline-flex items-center justify-center text-on-surface-variant transition-colors">
@@ -254,84 +255,6 @@
             </div>
         </section>
     </main>
-
-    <!-- Trilho de ações lateral -->
-    <aside class="fixed top-16 right-0 bottom-0 w-12 border-l border-outline-variant bg-white flex flex-col items-center py-md gap-md z-40">
-        <button id="railNovoProdutoBtn" type="button" title="Cadastrar novo produto" class="w-9 h-9 rounded-lg bg-secondary text-white flex items-center justify-center hover:bg-opacity-90 transition-colors">
-            <span class="material-symbols-outlined text-[20px]">add</span>
-        </button>
-        <button type="button" data-acao="exportar" title="Exportar lista para planilha" class="rail-btn w-9 h-9 rounded-lg hover:bg-surface-container-low flex items-center justify-center text-on-surface-variant transition-colors">
-            <span class="material-symbols-outlined text-[20px]">upload</span>
-        </button>
-        <button type="button" data-acao="sincronizarEstoque" title="Sincronizar estoque na loja virtual" class="rail-btn w-9 h-9 rounded-lg hover:bg-surface-container-low flex items-center justify-center text-on-surface-variant transition-colors">
-            <span class="material-symbols-outlined text-[20px]">inventory_2</span>
-        </button>
-        <button type="button" data-acao="sincronizarPrecos" title="Sincronizar preços na loja virtual" class="rail-btn w-9 h-9 rounded-lg hover:bg-surface-container-low flex items-center justify-center text-on-surface-variant transition-colors">
-            <span class="material-symbols-outlined text-[20px]">attach_money</span>
-        </button>
-        <button type="button" data-acao="categorias" title="Incluir categorias para selecionados" class="rail-btn w-9 h-9 rounded-lg hover:bg-surface-container-low flex items-center justify-center text-on-surface-variant transition-colors">
-            <span class="material-symbols-outlined text-[20px]">account_tree</span>
-        </button>
-        <button type="button" data-acao="etiquetas" title="Imprimir etiquetas selecionadas" class="rail-btn w-9 h-9 rounded-lg hover:bg-surface-container-low flex items-center justify-center text-on-surface-variant transition-colors">
-            <span class="material-symbols-outlined text-[20px]">description</span>
-        </button>
-    </aside>
-
-    <!-- Painel de ações (expande a partir do trilho) -->
-    <div id="painelAcoes" class="hidden fixed top-16 right-12 bottom-0 w-[280px] border-l border-outline-variant bg-white shadow-lg z-40 flex flex-col overflow-y-auto custom-scrollbar">
-        <div class="p-md">
-            <a asp-controller="Estoque" asp-action="Add" class="w-full bg-secondary text-white rounded-lg py-sm font-label-md text-label-md font-bold hover:bg-opacity-90 transition-all flex items-center justify-center gap-xs">
-                <span class="material-symbols-outlined text-[18px]">add</span>
-                Incluir cadastro
-            </a>
-        </div>
-        <nav class="flex flex-col">
-            <button type="button" data-acao="movimentacao" class="painel-acao flex items-center gap-sm px-md py-sm border-t border-outline-variant text-left hover:bg-surface-container-low transition-colors">
-                <span class="material-symbols-outlined text-[18px] text-outline">sync_alt</span>
-                <span class="font-body-md text-body-md text-on-surface-variant">Registrar movimentação</span>
-            </button>
-            <button type="button" data-acao="exportar" class="painel-acao flex items-center gap-sm px-md py-sm border-t border-outline-variant text-left hover:bg-surface-container-low transition-colors">
-                <span class="material-symbols-outlined text-[18px] text-outline">upload</span>
-                <span class="font-body-md text-body-md text-on-surface-variant">Exportar produtos para planilha</span>
-            </button>
-            <button type="button" data-acao="sincronizarEstoque" class="painel-acao flex items-center gap-sm px-md py-sm border-t border-outline-variant text-left hover:bg-surface-container-low transition-colors">
-                <span class="material-symbols-outlined text-[18px] text-outline">inventory_2</span>
-                <span class="font-body-md text-body-md text-on-surface-variant">Sincronizar estoque na loja virtual</span>
-            </button>
-            <button type="button" data-acao="sincronizarPrecos" class="painel-acao flex items-center gap-sm px-md py-sm border-t border-outline-variant text-left hover:bg-surface-container-low transition-colors">
-                <span class="material-symbols-outlined text-[18px] text-outline">attach_money</span>
-                <span class="font-body-md text-body-md text-on-surface-variant">Sincronizar preços na loja virtual</span>
-            </button>
-            <button type="button" data-acao="categorias" class="painel-acao flex items-center gap-sm px-md py-sm border-t border-outline-variant text-left hover:bg-surface-container-low transition-colors">
-                <span class="material-symbols-outlined text-[18px] text-outline">account_tree</span>
-                <span class="font-body-md text-body-md text-on-surface-variant">Incluir categorias para selecionados</span>
-            </button>
-            <button type="button" data-acao="etiquetas" class="painel-acao flex items-center gap-sm px-md py-sm border-t border-b border-outline-variant text-left hover:bg-surface-container-low transition-colors">
-                <span class="material-symbols-outlined text-[18px] text-outline">description</span>
-                <span class="font-body-md text-body-md text-on-surface-variant">Imprimir etiquetas selecionadas</span>
-            </button>
-        </nav>
-
-        <button id="maisAcoesToggle" type="button" class="flex items-center gap-xs px-md py-sm font-label-md text-label-md font-bold text-secondary">
-            <span id="maisAcoesIcone" class="material-symbols-outlined text-[18px]">remove</span>
-            Mais ações
-        </button>
-        <div id="maisAcoesConteudo" class="px-md pb-md flex flex-col gap-sm">
-            <div>
-                <p class="font-label-sm text-label-sm text-outline uppercase tracking-wider mb-xs">Planilhas</p>
-                <button type="button" data-acao="exportarDados" class="painel-acao block w-full text-left py-xs font-body-md text-body-md text-on-surface hover:text-secondary transition-colors">Exportar dados para planilha</button>
-                <button type="button" data-acao="exportarEstrutura" class="painel-acao block w-full text-left py-xs font-body-md text-body-md text-on-surface hover:text-secondary transition-colors">Exportar dados de estrutura para planilha</button>
-            </div>
-            <div>
-                <p class="font-label-sm text-label-sm text-outline uppercase tracking-wider mb-xs">Edição</p>
-                <span class="block w-full text-left py-xs font-body-md text-body-md text-outline cursor-not-allowed" title="Em breve">Incluir tags para selecionados</span>
-            </div>
-        </div>
-
-        <button id="fecharPainelBtn" type="button" class="mt-auto p-sm flex items-center justify-center text-on-surface-variant hover:bg-surface-container-low transition-colors">
-            <span class="material-symbols-outlined text-[20px]">chevron_right</span>
-        </button>
-    </div>
 
     <!-- Modal: registrar movimentação -->
     <div id="modalMovimentacao" class="hidden fixed inset-0 z-[60] bg-[#0b1c30]/40 flex items-center justify-center p-md">
@@ -392,9 +315,6 @@
         </div>
     </div>
 
-    <script>
-        const ESTOQUE_EDIT_URL = "@Url.Action("Edit", "Estoque")";
-    </script>
     <script src="~/js/estoque.js" asp-append-version="true"></script>
 </body>
 </html>

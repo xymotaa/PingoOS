@@ -31,4 +31,9 @@ document.addEventListener("DOMContentLoaded", function () {
     filtroBusca.addEventListener("input", filtrar);
     filtroSituacao.addEventListener("change", filtrar);
     atualizarContagem(linhas.length);
+
+    linhas.forEach(function (linha) {
+        if (!linha.dataset.href) return;
+        linha.addEventListener("click", function () { window.location.href = linha.dataset.href; });
+    });
 });

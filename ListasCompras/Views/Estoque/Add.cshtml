@@ -177,15 +177,19 @@
                                     Categoria
                                     <span class="material-symbols-outlined text-[16px] text-secondary" title="Categoria do produto">info</span>
                                 </label>
-                                <select id="npCategoria" name="categoria" class="w-full mt-xs bg-surface-container-low border-none rounded-lg pl-md pr-10 py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30">
-                                    <option value="">Sem categoria</option>
-                                    <option value="Capinha">Capinha</option>
-                                    <option value="Película">Película</option>
-                                    <option value="Carregador">Carregador</option>
-                                    <option value="Cabo">Cabo</option>
-                                    <option value="Fone">Fone</option>
-                                    <option value="Acessório">Acessório</option>
-                                </select>
+                                <div class="flex items-center gap-xs mt-xs">
+                                    <select id="npCategoria" name="categoriaId" data-categoria-select class="w-full bg-surface-container-low border-none rounded-lg pl-md pr-10 py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30">
+                                        <option value="">Sem categoria</option>
+                                        @foreach (var c in (List<ListasCompras.Models.Categoria>)ViewBag.Categorias)
+                                        {
+                                            <option value="@c.Id" selected="@(Model.CategoriaId == c.Id)">@c.Nome</option>
+                                        }
+                                    </select>
+                                    <button type="button" data-abre-nova-categoria title="Nova categoria"
+                                            class="shrink-0 w-9 h-9 rounded-lg border border-outline-variant hover:bg-surface-container-low inline-flex items-center justify-center text-secondary transition-colors">
+                                        <span class="material-symbols-outlined text-[20px]">add</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -332,11 +336,34 @@
     <input type="hidden" name="custo" id="npCustoPost" />
     </form>
 
+    <!-- Modal: nova categoria -->
+    <form id="formNovaCategoria">@Html.AntiForgeryToken()</form>
+    <div id="modalNovaCategoria" class="hidden fixed inset-0 z-[60] bg-[#0b1c30]/40 flex items-center justify-center p-md">
+        <div class="bg-white rounded-xl shadow-lg w-full max-w-[400px] p-lg">
+            <div class="flex justify-between items-center mb-md">
+                <h2 class="font-title-lg text-title-lg text-primary">Nova categoria</h2>
+                <button id="fecharNovaCategoriaBtn" type="button" class="w-8 h-8 rounded-lg hover:bg-surface-container-low flex items-center justify-center text-on-surface-variant">
+                    <span class="material-symbols-outlined text-[20px]">close</span>
+                </button>
+            </div>
+            <label class="font-label-md text-label-md text-on-surface-variant" for="novaCategoriaNome">Nome</label>
+            <input id="novaCategoriaNome" type="text" maxlength="60" placeholder="Ex: Capinha, Película, Cabo..."
+                   class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+            <p id="novaCategoriaErro" class="hidden mt-xs font-label-sm text-label-sm text-error"></p>
+            <button id="salvarNovaCategoriaBtn" type="button"
+                    class="mt-md w-full py-sm rounded-lg font-label-md text-label-md font-bold bg-secondary text-white hover:bg-opacity-90 transition-all">
+                Criar categoria
+            </button>
+        </div>
+    </div>
+
     <script>
         const ESTOQUE_INDEX_URL = "@Url.Action("Index", "Estoque")";
         const EDITAR_CODIGO = @Html.Raw(Json.Serialize(ViewData["EditarCodigo"] as string ?? ""));
+        const CATEGORIA_CRIAR_URL = "@Url.Action("Criar", "Categoria")";
     </script>
     <script src="~/js/mascaras.js" asp-append-version="true"></script>
     <script src="~/js/estoque-add.js" asp-append-version="true"></script>
+    <script src="~/js/categoria-modal.js" asp-append-version="true"></script>
 </body>
 </html>

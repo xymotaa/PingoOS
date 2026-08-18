@@ -13,20 +13,21 @@ public class EstoqueController : LojaControllerBase
 
     public IActionResult Index()
     {
-        return View(Context.ProdutosEstoque.OrderBy(p => p.Nome).ToList());
+        return View(Context.ProdutosEstoque.Include(p => p.Categoria).OrderBy(p => p.Nome).ToList());
     }
 
     public IActionResult Add(int? id)
     {
         var produto = id.HasValue ? Context.ProdutosEstoque.Find(id.Value) : null;
         if (id.HasValue && produto == null) return NotFound();
+        ViewBag.Categorias = Context.Categorias.OrderBy(c => c.Nome).ToList();
         return View(produto ?? new ProdutoEstoque());
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
     public IActionResult Salvar(
-        int id, string nome, string? codigo, string? categoria, string? unidade,
+        int id, string nome, string? codigo, int? categoriaId, string? unidade,
         string? preco, string? custo, int estoqueInicial, int estoqueMinimo)
     {
         if (string.IsNullOrWhiteSpace(nome))
@@ -53,7 +54,7 @@ public class EstoqueController : LojaControllerBase
 
         produto.Codigo = codigoFinal;
         produto.Nome = nome.Trim();
-        produto.Categoria = Limpar(categoria);
+        produto.CategoriaId = categoriaId > 0 ? categoriaId : null;
         produto.Unidade = Limpar(unidade);
         produto.CustoUnitario = ParaDecimal(custo);
         produto.PrecoVenda = ParaDecimal(preco);
@@ -109,6 +110,7 @@ public class EstoqueController : LojaControllerBase
     public IActionResult Historico(int id)
     {
         var produto = Context.ProdutosEstoque
+            .Include(p => p.Categoria)
             .Include(p => p.Movimentacoes).ThenInclude(m => m.Usuario)
             .FirstOrDefault(p => p.Id == id);
 

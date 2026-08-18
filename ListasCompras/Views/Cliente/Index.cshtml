@@ -81,8 +81,9 @@
                             var cidadeUf = string.IsNullOrWhiteSpace(c.Cidade)
                                 ? "—"
                                 : (string.IsNullOrWhiteSpace(c.Uf) ? c.Cidade : $"{c.Cidade}/{c.Uf}");
-                            <tr class="linha-cliente border-t border-outline-variant hover:bg-surface-container-low transition-colors"
-                                data-busca="@($"{c.Nome} {c.Telefone} {c.Documento} {c.Cidade}".ToLower())">
+                            <tr class="linha-cliente border-t border-outline-variant hover:bg-surface-container-low transition-colors cursor-pointer"
+                                data-busca="@($"{c.Nome} {c.Telefone} {c.Documento} {c.Cidade}".ToLower())"
+                                data-href="@Url.Action("Add", new { id = c.Id })">
                                 <td class="px-md py-sm font-body-md text-body-md text-on-surface">@c.Nome</td>
                                 <td class="px-md py-sm font-body-md text-body-md text-on-surface-variant">@(string.IsNullOrWhiteSpace(c.Telefone) ? "—" : c.Telefone)</td>
                                 <td class="px-md py-sm font-body-md text-body-md text-on-surface-variant">@(string.IsNullOrWhiteSpace(c.Documento) ? "—" : c.Documento)</td>
@@ -90,10 +91,11 @@
                                 <td class="px-md py-sm">
                                     <div class="flex items-center justify-center gap-xs">
                                         <a asp-action="Add" asp-route-id="@c.Id" title="Editar cliente"
+                                           onclick="event.stopPropagation()"
                                            class="w-8 h-8 rounded-lg hover:bg-surface-container-high inline-flex items-center justify-center text-on-surface-variant transition-colors">
                                             <span class="material-symbols-outlined text-[18px]">edit</span>
                                         </a>
-                                        <form asp-action="Excluir" method="post" class="inline"
+                                        <form asp-action="Excluir" method="post" class="inline" onclick="event.stopPropagation()"
                                               onsubmit="return confirm('Excluir @c.Nome do cadastro?');">
                                             <input type="hidden" name="id" value="@c.Id" />
                                             <button type="submit" title="Excluir cliente"
