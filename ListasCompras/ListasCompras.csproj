@@ -20,4 +20,10 @@
     <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.0" />
   </ItemGroup>
 
+  <!-- VERSION.txt mora na raiz do repositório (ao lado de install.sh/install.bat), mas
+       precisa ir junto no publish para o aviso de atualização saber a versão instalada -->
+  <ItemGroup>
+    <Content Include="..\VERSION.txt" Link="VERSION.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

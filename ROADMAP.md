@@ -125,14 +125,21 @@ O módulo `Cobrancas` do MapOS emite cobrança bancária. Exige integração com
 e cadastro formal. Fora de escala para o projeto.
 
 ### Atualização automática pelo próprio sistema
-O MapOS tem um botão "Atualizar Mapos" que baixa e substitui os arquivos. **Não vamos fazer.**
-Em PHP funciona porque atualizar é sobrescrever arquivos de texto reinterpretados a cada
-requisição. No .NET o processo em execução mantém as DLLs carregadas: seria preciso um processo
-supervisor separado para parar o serviço, trocar os arquivos e subir de novo — com risco real de
-deixar a loja com o sistema quebrado e ninguém por perto para consertar. O ganho não paga o risco.
+O MapOS tem um botão "Atualizar Mapos" que baixa e substitui os arquivos **enquanto o processo
+está rodando**. **Isso continua não vamos fazer.** Em PHP funciona porque atualizar é sobrescrever
+arquivos de texto reinterpretados a cada requisição. No .NET o processo em execução mantém as DLLs
+carregadas: seria preciso um processo supervisor separado para parar o serviço, trocar os arquivos
+e subir de novo — com risco real de deixar a loja com o sistema quebrado e ninguém por perto para
+consertar. O ganho não paga o risco.
 
-Atualizar continua sendo `git pull` (ou baixar a nova versão) e rodar de novo; as migrations do
-banco são aplicadas sozinhas na inicialização.
+**O que existe desde 2026-08-18, e é diferente disso:** um *aviso* discreto no Painel (só para
+Admin) quando há uma versão mais nova no GitHub — comparando `VERSION.txt` local contra o do
+repositório. Não baixa nem troca arquivo nenhum sozinho; só avisa. Quem atualiza continua sendo a
+pessoa, rodando `install.sh`/`install.bat` de novo — que já para o serviço, publica por cima e
+sobe de novo, preservando `loja.db`. Ver `Data/VersaoServico.cs`.
+
+Sem esse aviso, atualizar seria `git pull` (ou baixar a nova versão) e rodar o instalador de novo;
+as migrations do banco são aplicadas sozinhas na inicialização.
 
 ### Assistente de instalação nos moldes do MapOS
 Metade do assistente deles serve para coletar host, usuário e senha do MySQL — que aqui não

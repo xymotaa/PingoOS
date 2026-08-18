@@ -1,5 +1,105 @@
 # Registro de Alterações
 
+## [2026-08-18] Aviso de atualização disponível (versão 1.0.0.2)
+
+### Problema
+O instalador (`install.sh`/`install.bat`) roda como serviço do sistema, sozinho, sem terminal
+aberto — então quando o sistema ganha uma funcionalidade nova, quem administra a loja não tem
+como saber que existe uma versão mais recente para instalar.
+
+### Solução
+**Não é atualização automática.** Isso continua descartado no `ROADMAP.md` — o .NET mantém as
+DLLs carregadas em memória enquanto o processo roda, e trocar arquivos por baixo dele sem um
+supervisor separado arrisca deixar a loja com o sistema quebrado. O que existe agora é só o
+**aviso**.
+
+Criado `VERSION.txt` na raiz do repositório, com um número que sobe a cada entrada nova neste
+CHANGES.md (formato `1.0.0.X`, decidido em conversa — o quarto número é o contador de mudanças,
+comparado numericamente e não como texto, então `1.0.0.9` reconhece corretamente que `1.0.0.12` é
+mais novo). Esse arquivo vai junto no `dotnet publish` (referência em `ListasCompras.csproj`).
+
+No Painel, um `fetch` disparado **depois** da página já ter carregado — nunca atrasa a tela
+principal — chama `/Home/VerificarVersao`, que compara a versão local contra o `VERSION.txt` da
+branch `main` no GitHub (`raw.githubusercontent.com`, público, sem token). Só administrador vê o
+aviso, porque só o admin decide rodar o instalador de novo. Sem internet ou GitHub fora do ar, a
+checagem falha em silêncio — nunca mostra erro, nunca trava nada, só não mostra o aviso.
+
+### Arquivos Alterados
+| Arquivo | Alteração |
+|---|---|
+| `VERSION.txt` | **novo**, na raiz — `1.0.0.2` |
+| `ListasCompras/Data/VersaoServico.cs` | **novo** — lê local, busca remota, compara os números |
+| `ListasCompras/Controllers/HomeController.cs` | `VerificarVersao`, restrito a Admin |
+| `ListasCompras/Program.cs` | `AddHttpClient()` |
+| `ListasCompras/Views/Home/Index.cshtml` | banner de aviso + fetch depois do carregamento |
+| `ListasCompras/ListasCompras.csproj` | inclui `VERSION.txt` no publish |
+| `ROADMAP.md` | nota na entrada "Atualização automática" distinguindo aviso de auto-update |
+
+### Resultado
+Build limpo. `VERSION.txt` confirmado dentro da pasta publicada pelo `dotnet publish`. Endpoint
+testado logado como Admin: retorna `local`, `remota` e `atualizacaoDisponivel` corretamente;
+`remota: null` quando o arquivo ainda não existe no GitHub (não fiz push ainda) — comportamento
+esperado, sem aviso até confirmar a versão remota de verdade. Comparação numérica testada
+isoladamente: `1.0.0.9` vs `1.0.0.12` reconhece a segunda como mais nova (uma comparação de texto
+erraria isso); versões iguais e remota mais antiga corretamente não disparam o aviso.
+
+---
+
+## [2026-08-18] Correção de bugs (máscaras e cadastro de produto)
+
+### Problema 1: total do item de OS calculado errado
+Digitar um valor no campo "Valor Unit." de um item da OS (ex: "150,00") fazia o total sair
+errado (R$ 15,00 em vez de R$ 150,00). A máscara de valor (`data-mascara="valor"` em
+`mascaras.js`) reformata o campo a cada tecla, mas o cálculo do total (`recalcular()` em
+`orcamento.js`) tinha seu próprio listener de `input` no mesmo campo — e como os dois escutavam
+em fase de bubble, o cálculo rodava **antes** da máscara terminar de reescrever o valor daquele
+instante, sempre um dígito atrasado.
+
+**Solução:** o listener da máscara passou a rodar em fase de captura (`capture: true`), que
+sempre dispara antes de qualquer listener nos elementos filhos — independente da ordem em que
+cada tela liga os próprios scripts.
+
+### Problema 2: valor sem limite de dígitos quebrava o layout
+A mesma máscara de valor não tinha teto de dígitos (diferente de telefone, CPF, CNPJ e CEP, que
+já cortavam no tamanho certo). Digitar uma sequência grande de zeros gerava um número gigante que
+estourava a largura da coluna "Total" e quebrava o layout da tabela de itens.
+
+**Solução:** `mascararValor` agora corta em 10 dígitos — teto de R$ 99.999.999,99, bem acima de
+qualquer item real de loja.
+
+### Problema 3: abas do cadastro de produto não trocavam de conteúdo
+Na tela **Estoque → Cadastrar novo produto**, clicar nas abas (Características, Imagens, Estoque,
+Tributação, Variações) destacava o botão clicado mas o conteúdo nunca mudava — a tela ficava presa
+em "Dados básicos" o tempo todo. O botão "Avançar" também não fazia nada.
+
+**Causa:** os painéis de cada etapa usam o atributo `data-step-panel="N"` no HTML, mas
+`estoque-add.js` procurava por uma classe `.np-painel` que não existe em lugar nenhum do arquivo —
+a lista ficava vazia e `irParaEtapa()` nunca escondia/mostrava painel nenhum. O botão "Avançar"
+nunca teve um listener ligado a ele.
+
+**Solução:** o seletor passou a usar `[data-step-panel]`; o botão "Avançar" ganhou a função de
+ir para a próxima etapa e some sozinho ao chegar na última.
+
+**Nota de escopo, não bug:** as abas Características, Imagens, Tributação e Variações continuam
+sendo só vitrine visual — o modelo `ProdutoEstoque` grava apenas nome, código, categoria, unidade,
+preço, custo e estoque (as duas primeiras abas). O texto das próprias abas já avisa isso ("estará
+na versão completa do cadastro"); persistir os campos das outras abas é trabalho futuro, a decidir
+quando entrar no roadmap.
+
+### Arquivos Alterados
+| Arquivo | Alteração |
+|---|---|
+| `wwwroot/js/mascaras.js` | listener em fase de captura + limite de 10 dígitos no valor |
+| `wwwroot/js/estoque-add.js` | seletor `[data-step-panel]` + listener do botão "Avançar" |
+
+### Resultado
+Testado: digitar "150,00" no valor de um item de OS agora calcula R$ 150,00 corretamente; uma
+sequência grande de zeros trava em R$ 99.999.999,99 sem quebrar o layout; navegar pelas 6 etapas
+do cadastro de produto — por clique nas abas e pelo botão "Avançar" — mostra o painel certo em
+cada uma, e o botão some sozinho na última etapa. Build limpo.
+
+---
+
 ## [2026-08-18] Script de instalação (item 1 do roadmap)
 
 ### Problema

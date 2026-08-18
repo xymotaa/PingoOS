@@ -77,7 +77,7 @@
     @await Html.PartialAsync("_Navbar")
 
     <!-- Menu lateral (módulos) -->
-    <aside id="sidebar" class="hidden lg:flex fixed top-16 left-0 bottom-0 w-[218px] bg-surface border-r border-outline-variant flex-col py-md px-sm gap-xs z-40 overflow-y-auto custom-scrollbar">
+    <aside id="sidebar" class="hidden lg:flex fixed top-16 left-0 bottom-0 w-[236px] bg-surface border-r border-outline-variant flex-col py-md px-sm gap-xs z-40 overflow-y-auto custom-scrollbar">
         @* Caixa é um grupo: clicar abre as duas telas, clicar de novo fecha *@
         <button id="grupoCaixaBtn" type="button" aria-expanded="false" aria-controls="grupoCaixa"
                 class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors text-left">
@@ -139,6 +139,12 @@
 
     <!-- Conteúdo -->
     <main class="pt-24 px-lg pb-xl lg:pl-[276px]">
+        <!-- Aviso de atualização: só aparece se o VerificarVersao encontrar algo mais novo -->
+        <div id="avisoAtualizacao" class="hidden mb-md bg-warning-container text-on-surface px-md py-sm rounded-lg font-label-md text-label-md flex items-center gap-xs w-fit">
+            <span class="material-symbols-outlined text-[18px]">system_update</span>
+            <span>Há uma versão mais nova do Pingo OS. Baixe o projeto atualizado e rode o instalador de novo para atualizar sem perder os dados.</span>
+        </div>
+
         <!-- Boas-vindas -->
         <section class="mb-xl">
             <div class="flex flex-wrap items-center gap-md mb-xs">
@@ -255,6 +261,20 @@
                 grupo.classList.toggle("flex", !aberto);
                 botao.setAttribute("aria-expanded", String(!aberto));
             });
+        })();
+
+        // Checa a versão depois que o Painel já carregou — nunca atrasa a tela esperando
+        // o GitHub responder. Técnico recebe 403 do endpoint (só Admin decide atualizar) e
+        // o catch engole isso em silêncio, sem mostrar erro nenhum na tela.
+        (function () {
+            fetch("/Home/VerificarVersao")
+                .then(function (r) { return r.ok ? r.json() : null; })
+                .then(function (dados) {
+                    if (dados && dados.atualizacaoDisponivel) {
+                        document.getElementById("avisoAtualizacao").classList.remove("hidden");
+                    }
+                })
+                .catch(function () { /* sem internet ou GitHub fora do ar: sem aviso, sem erro */ });
         })();
     </script>
 </body>

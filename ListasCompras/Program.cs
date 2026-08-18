@@ -36,6 +36,10 @@ if (builder.Environment.IsProduction()
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite($"Data Source={dbPath}"));
 
+// Usado só para checar se há uma versão mais nova no GitHub (aviso no Painel, nunca
+// atualiza sozinho — ver VersaoServico.cs)
+builder.Services.AddHttpClient();
+
 // Login por cookie. Usamos só o PasswordHasher do Identity (PBKDF2), sem o pacote inteiro.
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
