@@ -47,7 +47,14 @@ if %errorlevel% equ 0 (
     net stop "%NOME_SERVICO%" >nul 2>&1
 )
 
-REM 3. Publica numa pasta fixa. O banco sai do caminho antes e volta depois: dotnet
+REM 3. Limpa obj\ e bin\ do projeto antes de publicar. Se alguem ja abriu o projeto no
+REM    Visual Studio/VS Code sem ser Administrador antes de rodar este instalador (que
+REM    roda elevado), esses arquivos intermediarios ficam com permissao de outro contexto
+REM    e o dotnet publish falha com "Access to the path is denied" na build seguinte.
+if exist "%PASTA_PROJETO%\obj" rmdir /s /q "%PASTA_PROJETO%\obj"
+if exist "%PASTA_PROJETO%\bin" rmdir /s /q "%PASTA_PROJETO%\bin"
+
+REM 4. Publica numa pasta fixa. O banco sai do caminho antes e volta depois: dotnet
 REM    publish limpa a pasta de destino, e os dados da loja nao podem virar vitima
 REM    de uma atualizacao.
 echo --- Publicando o sistema em %PASTA_INSTALACAO% ---
@@ -60,6 +67,9 @@ if not exist "%PASTA_INSTALACAO%" mkdir "%PASTA_INSTALACAO%"
 dotnet publish "%PASTA_PROJETO%" -c Release -o "%PASTA_INSTALACAO%" --nologo
 if %errorlevel% neq 0 (
     echo Falha ao publicar o sistema. Confira a mensagem acima.
+    echo.
+    echo Se o erro falar em "Access to the path is denied", tente apagar as pastas
+    echo obj e bin dentro de ListasCompras e rodar o instalador de novo.
     pause
     exit /b 1
 )
@@ -69,7 +79,7 @@ if exist "%TEMP%\loja.db.bak" (
     del "%TEMP%\loja.db.bak"
 )
 
-REM 4. Servico do Windows: sobe sozinho no boot e reinicia se cair.
+REM 5. Servico do Windows: sobe sozinho no boot e reinicia se cair.
 REM    O executavel roda como servico de verdade (Microsoft.Extensions.Hosting.WindowsServices
 REM    no Program.cs), nao um processo solto tentando se passar por um.
 sc query "%NOME_SERVICO%" >nul 2>&1

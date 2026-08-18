@@ -36,7 +36,13 @@ else
     echo "--- .NET já instalado, pulando ---"
 fi
 
-# 2. Publica o sistema numa pasta fixa, fora da pasta baixada — assim atualizar
+# 2. Limpa obj/ e bin/ do projeto antes de publicar. Se alguém já abriu o projeto sem
+#    ser root (rodou dotnet build/run direto) antes de rodar este instalador (que roda
+#    com sudo), esses arquivos intermediários ficam com outro dono e o dotnet publish
+#    pode falhar por permissão na build seguinte.
+rm -rf "$PASTA_PROJETO/obj" "$PASTA_PROJETO/bin"
+
+# 3. Publica o sistema numa pasta fixa, fora da pasta baixada — assim atualizar
 #    (baixar de novo e rodar o install.sh outra vez) não deixa lixo de versão antiga.
 #    O banco sai do caminho antes do publish e volta depois: dotnet publish limpa a
 #    pasta de destino, e os dados da loja não podem virar vítima de uma atualização.
