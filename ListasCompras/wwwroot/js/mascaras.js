@@ -55,8 +55,11 @@
     }
 
     // Dígitos entram da direita: "1" -> 0,01 · "12" -> 0,12 · "1250" -> 12,50
+    // Sem limite de dígitos, o campo aceitava qualquer quantidade de zeros e o total
+    // calculado explodia a ponto de quebrar o layout da tela — teto em R$ 99.999.999,99,
+    // bem acima de qualquer item real de loja.
     function mascararValor(valor) {
-        var d = soDigitos(valor).replace(/^0+(?=\d)/, "");
+        var d = soDigitos(valor).replace(/^0+(?=\d)/, "").slice(0, 10);
         d = d.padStart(3, "0");
         var inteiro = d.slice(0, -2).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
         return inteiro + "," + d.slice(-2);
