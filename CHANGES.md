@@ -1,5 +1,38 @@
 # Registro de Alterações
 
+## [2026-08-18] Painel: barra de venda pequena ficava indistinguível de dia sem venda (versão 1.0.0.18)
+
+### Problema
+No gráfico "Desempenho Semanal" do Painel, a altura de cada barra é proporcional ao maior valor da
+semana (`Total / maiorValorSemana * 100`), com um piso mínimo de 2% para a barra nunca desaparecer
+de vez. O piso valia tanto para dias sem nenhuma venda quanto para dias com venda real, mas pequena
+frente ao maior dia — usuário reportou um dia com R$ 50,00 de venda com a barra do tamanho de um
+dia zerado (a proporção real, `50 / valor_do_maior_dia * 100`, ficava abaixo de 2% sempre que o
+maior dia passava de ~R$ 2.500, o que é comum). O valor em si estava certo (visível no tooltip/
+rótulo ao passar o mouse); só a barra não refletia a diferença entre "teve venda" e "não teve".
+
+### Solução
+Separado o piso mínimo por caso: dia sem nenhuma venda continua com 2% de altura, numa cor neutra
+(cinza); dia com qualquer valor positivo tem piso de 8%, na cor de destaque já usada — mesmo que a
+proporção real calculada seja menor que isso. Diferença agora perceptível tanto na altura quanto na
+cor, independente de quão discrepante o maior dia da semana seja.
+
+### Arquivos Alterados
+| Arquivo | Alteração |
+|---|---|
+| `Views/Home/Index.cshtml` | piso de altura e cor da barra dependem de `ponto.Total > 0`, não só do piso fixo de 2% |
+| `VERSION.txt` | `1.0.0.18` |
+
+### Resultado
+Testado em cópia do banco de dev: venda de R$ 100,00 (soma de duas vendas de teste) numa sexta e
+R$ 3.572,50 numa terça — sexta renderizou com 8% de altura e cor de destaque, dias sem venda com 2%
+e cor neutra, terça com 100%. Diferença visualmente clara entre os três casos. Dados de teste
+removidos ao final; banco de dev real não foi tocado. Build sem avisos.
+
+**Nota**: por acordo com o usuário nesta sessão, mudanças de código passam a ficar só no `main` —
+nenhuma tag/Release é criada ou atualizada automaticamente; isso só acontece quando o usuário pedir
+explicitamente.
+
 ## [2026-08-18] PingoInstaller: arte ASCII removida (virava "????" no Windows 10) (versão 1.0.0.17)
 
 ### Problema

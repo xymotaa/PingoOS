@@ -219,10 +219,16 @@
                         @foreach (var ponto in Model.DesempenhoSemanal)
                         {
                             var alturaPct = maiorValorSemana > 0 ? (double)(ponto.Total / maiorValorSemana) * 100 : 0;
+                            // Dia sem nenhuma venda vira uma pastilha baixa e neutra (2%); dia com
+                            // valor real, por menor que seja frente ao maior dia da semana, tem um
+                            // piso bem mais alto (8%) para nunca parecer "zerado" por engano —
+                            // antes os dois casos caíam no mesmo piso e ficavam indistinguíveis.
+                            var temVenda = ponto.Total > 0;
+                            var altura = temVenda ? Math.Max(alturaPct, 8) : 2;
                             <div class="flex-1 flex flex-col items-center gap-xs h-full justify-end group">
                                 <span class="font-label-sm text-label-sm text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity">@Moeda(ponto.Total)</span>
-                                <div class="w-full bg-secondary-container rounded-t-md transition-all hover:bg-secondary"
-                                     style="height: @(Math.Max(alturaPct, 2))%"
+                                <div class="w-full rounded-t-md transition-all hover:bg-secondary @(temVenda ? "bg-secondary-container" : "bg-surface-container-high")"
+                                     style="height: @altura%"
                                      title="@ponto.Dia.ToString("dd/MM") — @Moeda(ponto.Total)"></div>
                                 <span class="font-label-sm text-label-sm text-outline">@diasSemana[(int)ponto.Dia.DayOfWeek]</span>
                             </div>
