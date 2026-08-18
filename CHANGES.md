@@ -1,5 +1,63 @@
 # Registro de Alterações
 
+## [2026-08-18] Novo instalador Windows com interface de terminal (versão 1.0.0.16)
+
+### Motivação
+O `install.bat` funciona, mas é um `.bat` puro: verde monocromático, sem arte, sem menu — só
+`echo`s sequenciais. Pedido explícito: uma tela de boas-vindas com arte ASCII, painel de
+informações da máquina (IP, usuário, data/hora) e um menu de verdade (Instalar y/n na primeira
+vez; Atualizar/Reiniciar/Resetar senha/Desligar depois de instalado), navegável por seta ou tecla
+numérica.
+
+### Solução
+Novo projeto `PingoInstaller/` — console app .NET, publicado como single-file self-contained
+(`win-x64`), com manifesto pedindo elevação (UAC) automática. Faz exatamente os mesmos passos do
+`install.bat` (verificar/instalar .NET e Git, clonar a última tag publicada, publicar preservando
+o `loja.db`, registrar como Serviço do Windows), só que orquestrados em C# com uma TUI de verdade:
+
+- Arte ASCII (embutida no binário, não como arquivo solto) à esquerda; "PingoOS" grande e o painel
+  de máquina/IP/usuário/data-hora à direita.
+- Detecta se já está instalado (`codigo\.git` válido + `ListasCompras.exe` presente): se não,
+  pergunta "Instalar PingoOS?" (Sim/Não, navegável por seta ou tecla Y/N/Enter); se já está,
+  pula direto para o menu de 5 opções (Atualizar/reinstalar, Reiniciar servidor, Resetar senha
+  admin, Desligar servidor, Sair), navegável por seta ↑↓ ou pela tecla numérica da opção.
+- "Resetar senha admin" chama a rotina que já existe no sistema (`ListasCompras.exe
+  redefinir-senha`), sem duplicar lógica.
+- Janela estreita demais para a arte + painel lado a lado mostra um aviso pedindo para maximizar,
+  em vez de desenhar sobreposto.
+
+### Decisões e por quê
+- **.exe em vez de .bat melhorado**: cores, navegação por seta e composição de arte + texto lado a
+  lado não são confiáveis em `.bat` puro entre versões diferentes do Windows — decisão do usuário
+  ao comparar as duas opções.
+- **Distribuído como GitHub Release** (binário anexado a uma tag), não como texto direto do repo:
+  um `.exe` precisa existir compilado antes de ser baixado, diferente do `.bat`, que é lido direto
+  do repositório. Isso também significa que criar/atualizar a Release passa a ser manual (ou via
+  CI, se algum dia for automatizado) — diferente do `.bat`, que sempre reflete o `main` na hora.
+- **install.bat continua existindo em paralelo** — decisão do usuário, para não depender só do
+  `.exe` novo até ele ser validado numa loja de verdade.
+- **Arte ASCII fornecida pelo próprio usuário** (caracteres em blocos Unicode/braille) — não usei a
+  arte do anexo original de personagem de anime por ser recorte de imagem de terceiro com direitos
+  autorais; o usuário forneceu uma alternativa própria em blocos Unicode.
+
+### Arquivos Alterados
+| Arquivo | Alteração |
+|---|---|
+| `PingoInstaller/` (novo projeto) | console app .NET: `Program.cs`, `Tela.cs`, `Menu.cs`, `Instalador.cs`, `AcoesServico.cs`, `Processos.cs`, `Config.cs`, `InfoMaquina.cs`, `AsciiArt.txt`, `app.manifest` |
+| `README.md` | instrução de instalação Windows atualizada para citar o `.exe` como opção recomendada |
+| `ROADMAP.md` | nota na seção "Atualização automática" sobre a nova via de instalação |
+| `VERSION.txt` | `1.0.0.16` |
+
+### Resultado
+Testado neste ambiente via Wine + pty simulado (não há máquina Windows real disponível aqui):
+renderização da arte + painel confirmada visualmente (script de captura ANSI → grade de texto),
+navegação por seta e por tecla numérica testadas isoladamente no menu de 5 opções e na pergunta
+Sim/Não, ambas funcionando corretamente. Corrigido um bug real encontrado nessa revisão: `setx
+PATH "%PATH%;..."` não expande `%PATH%` quando chamado via `Process.Start` (só funciona dentro de
+um `.bat` interpretado pelo `cmd.exe`) — corrigido para ler o PATH de máquina real antes de
+escrever. Build sem avisos. **Ainda não testado numa máquina Windows real** — pendência anotada
+para quando o `.exe` for publicado e alguém rodar de verdade.
+
 ## [2026-08-18] Setas de campo numérico removidas em todo o sistema (versão 1.0.0.15)
 
 ### Problema

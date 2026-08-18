@@ -147,6 +147,15 @@ novo — nunca o app rodando sozinho troca os próprios arquivos.
    `main` direto. Essa trava existe de propósito: sem ela, qualquer commit vira produção em todas
    as lojas instantaneamente, sem chance de eu testar antes. Enquanto o repositório não tiver
    nenhuma tag, cai no HEAD do `main` como reserva.
+3. **Desde 2026-08-18:** o Windows ganhou uma terceira via, `PingoInstaller.exe` (projeto
+   `PingoInstaller/`), que faz o mesmo que o `install.bat` mas com uma interface de terminal de
+   verdade — arte ASCII, painel com IP/usuário/data-hora da máquina, e um menu navegável por seta
+   ou tecla numérica (Instalar, Atualizar/reinstalar, Reiniciar servidor, Resetar senha admin,
+   Desligar servidor). Pede elevação (UAC) sozinho via manifesto, sem precisar que a pessoa lembre
+   de "Executar como Administrador". Publicado como binário anexado a uma Release do GitHub — só
+   pode ser baixado depois de compilado, diferente do `.bat`/`.sh` que são texto puro direto do
+   repositório. `install.bat` continua existindo em paralelo como alternativa mais simples; a
+   remoção dele fica para quando o `.exe` estiver validado numa loja de verdade.
 
 O que continua igual: para de fato aplicar a atualização, sempre é preciso **parar o serviço,
 publicar por cima e subir de novo** — o processo em execução nunca troca os próprios arquivos.

@@ -148,6 +148,14 @@ Não precisa instalar servidor de banco: o SQLite é um arquivo, criado automati
 
 ### Para usar na loja (não precisa saber programar)
 
+**Windows (recomendado):** baixe `PingoInstaller.exe` da
+[última versão publicada](https://github.com/xymotaa/PingoOS/releases/latest) e dê dois cliques —
+ele já pede elevação (UAC) sozinho. Uma tela de terminal abre perguntando **Instalar PingoOS?**;
+confirme e aguarde. Rodar de novo mostra um menu (atualizar, reiniciar, resetar senha de admin,
+desligar) em vez da pergunta, porque já detecta a instalação existente.
+
+**Windows (alternativa em .bat) / Linux:**
+
 1. Baixe o projeto (botão verde **Code → Download ZIP** no GitHub, ou `git clone`) e extraia.
 2. Abra a pasta extraída.
 3. **Linux:** clique com o botão direito, abra um terminal ali, e rode:
@@ -157,10 +165,11 @@ Não precisa instalar servidor de banco: o SQLite é um arquivo, criado automati
    **Windows:** clique com o botão direito em `install.bat` e escolha **Executar como
    administrador**.
 
-O instalador confere se o .NET já está presente e instala sozinho se faltar, publica o sistema
-numa pasta fixa (`/opt/pingo-os` no Linux, `Arquivos de Programa\PingoOS` no Windows), registra
-como **serviço do sistema** — sobe sozinho quando o computador liga, sem precisar abrir terminal
-todo dia — e abre o navegador em `http://localhost:5096` quando termina.
+Qualquer um dos três (`.exe`, `.bat`, `.sh`) confere se o .NET já está presente e instala sozinho
+se faltar, publica o sistema numa pasta fixa (`/opt/pingo-os` no Linux,
+`Arquivos de Programa\PingoOS` no Windows), registra como **serviço do sistema** — sobe sozinho
+quando o computador liga, sem precisar abrir terminal todo dia — e abre o navegador em
+`http://localhost:5096` quando termina.
 
 Rodar o instalador de novo (depois de baixar uma versão mais nova do sistema) **atualiza sem
 apagar os dados**: o banco é preservado à parte durante a publicação e devolvido no lugar.
@@ -216,8 +225,9 @@ dá para descobrir qual era.
   (com ou sem hífen, maiúscula ou minúscula) e defina a nova senha. O código usado é queimado e um
   novo é entregue na hora.
 - **Gerar um código novo:** menu do usuário → Usuários → "Novo código". O anterior deixa de valer.
-- **Esqueci a senha E o código:** quem tem acesso ao computador da loja redefine pelo terminal.
-  Instalado pelo `install.sh`/`install.bat`, o comando é o executável direto (sem `dotnet run`,
+- **Esqueci a senha E o código:** quem tem acesso ao computador da loja redefine.
+  No Windows instalado via `PingoInstaller.exe`, abra-o de novo e escolha **Resetar senha admin**
+  no menu. Nas demais formas de instalação, o comando é o executável direto (sem `dotnet run`,
   que só existe rodando a partir do código-fonte):
 
   ```bash
