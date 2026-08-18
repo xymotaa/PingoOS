@@ -8,9 +8,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Etapas do cadastro
     const steps = Array.prototype.slice.call(document.querySelectorAll(".np-step"));
-    const paineis = Array.prototype.slice.call(document.querySelectorAll(".np-painel"));
+    const paineis = Array.prototype.slice.call(document.querySelectorAll("[data-step-panel]"));
+    const avancarBtn = document.getElementById("npAvancarEtapaBtn");
+    let etapaAtual = 1;
 
     function irParaEtapa(n) {
+        etapaAtual = n;
         steps.forEach(function (s, i) {
             const ativo = i === n - 1;
             s.classList.toggle("border-secondary", ativo);
@@ -19,11 +22,19 @@ document.addEventListener("DOMContentLoaded", function () {
             s.classList.toggle("text-on-surface-variant", !ativo);
         });
         paineis.forEach(function (p, i) { p.classList.toggle("hidden", i !== n - 1); });
+        // Na última etapa não tem para onde avançar
+        if (avancarBtn) avancarBtn.classList.toggle("hidden", n >= steps.length);
     }
 
     steps.forEach(function (s, i) {
         s.addEventListener("click", function () { irParaEtapa(i + 1); });
     });
+
+    if (avancarBtn) {
+        avancarBtn.addEventListener("click", function () {
+            if (etapaAtual < steps.length) irParaEtapa(etapaAtual + 1);
+        });
+    }
 
     function parseDecimal(valor) {
         return parseFloat(String(valor).replace(/\./g, "").replace(",", ".")) || 0;
