@@ -38,9 +38,7 @@ if %errorlevel% neq 0 (
     echo.
     echo   Clique com o botao direito neste arquivo e escolha
     echo   "Executar como administrador", depois rode de novo.
-    echo.
-    pause
-    exit /b 1
+    goto :erro_final
 )
 
 REM --- Passo 1: .NET ----------------------------------------------------------
@@ -81,8 +79,7 @@ if %errorlevel% neq 0 (
     if %errorlevel% neq 0 (
         echo   [ERRO] Nao foi possivel instalar o Git automaticamente.
         echo         Instale manualmente em https://git-scm.com/download/win e rode este instalador de novo.
-        pause
-        exit /b 1
+        goto :erro_final
     )
     echo         Git instalado.
 ) else (
@@ -101,21 +98,34 @@ if not exist "%PASTA_BASE%" mkdir "%PASTA_BASE%"
 
 REM --- Passo 4: busca so ate a ultima TAG publicada, nunca o commit mais recente
 echo   [4/5] Baixando a versao mais recente...
-if not exist "%PASTA_CODIGO%\.git" (
+
+REM Um clone anterior interrompido (energia, antivirus, cancelamento) deixa a pasta
+REM .git pela metade: existe mas nao responde a comandos git. "git rev-parse" confere
+REM se o clone e valido de verdade, nao so se a pasta existe; se nao for, comeca do
+REM zero em vez de tentar consertar um clone quebrado.
+set CLONE_VALIDO=0
+if exist "%PASTA_CODIGO%\.git" (
+    git -C "%PASTA_CODIGO%" rev-parse --is-inside-work-tree >nul 2>&1
+    if !errorlevel! equ 0 set CLONE_VALIDO=1
+)
+
+if "!CLONE_VALIDO!"=="0" (
+    if exist "%PASTA_CODIGO%" (
+        echo         Encontrei uma copia incompleta de instalacao anterior, refazendo...
+        rmdir /s /q "%PASTA_CODIGO%"
+    )
     echo         Primeira instalacao: clonando o repositorio...
     git clone --quiet "%REPO_URL%" "%PASTA_CODIGO%"
-    if %errorlevel% neq 0 (
+    if !errorlevel! neq 0 (
         echo   [ERRO] Nao foi possivel baixar o sistema. Confira sua conexao com a internet.
-        pause
-        exit /b 1
+        goto :erro_final
     )
 ) else (
     echo         Buscando novidades no repositorio...
     git -C "%PASTA_CODIGO%" fetch --quiet --tags origin
-    if %errorlevel% neq 0 (
+    if !errorlevel! neq 0 (
         echo   [ERRO] Nao foi possivel buscar atualizacoes. Confira sua conexao com a internet.
-        pause
-        exit /b 1
+        goto :erro_final
     )
 )
 
@@ -138,8 +148,7 @@ if defined ULTIMA_TAG (
 set PASTA_PROJETO=%PASTA_CODIGO%\ListasCompras
 if not exist "%PASTA_PROJETO%\ListasCompras.csproj" (
     echo   [ERRO] O repositorio baixado nao tem ListasCompras\ListasCompras.csproj.
-    pause
-    exit /b 1
+    goto :erro_final
 )
 
 REM Limpa obj\ e bin\ antes de publicar: evita "Access to the path is denied"
@@ -161,8 +170,7 @@ if %errorlevel% neq 0 (
     echo.
     echo   Se o erro falar em "Access to the path is denied", apague as pastas
     echo   obj e bin em "%PASTA_PROJETO%" e rode o instalador de novo.
-    pause
-    exit /b 1
+    goto :erro_final
 )
 
 if exist "%TEMP%\loja.db.bak" (
@@ -210,3 +218,15 @@ echo     net stop %NOME_SERVICO%     - parar
 echo     net start %NOME_SERVICO%    - iniciar
 echo.
 pause
+exit /b 0
+
+:erro_final
+echo.
+echo   ========================================
+echo    A instalacao parou por causa de um erro
+echo   ========================================
+echo.
+echo   Revise a mensagem acima. Esta janela so fecha quando voce apertar uma tecla.
+echo.
+pause
+exit /b 1

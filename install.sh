@@ -81,7 +81,21 @@ mkdir -p "$PASTA_BASE"
 
 # --- Passo 4: busca só até a última TAG publicada, nunca o commit mais recente
 echo "  [4/5] Baixando a versão mais recente..."
-if [ ! -d "$PASTA_CODIGO/.git" ]; then
+
+# Um clone anterior interrompido (queda de energia, ctrl+c, disco cheio) deixa a
+# pasta .git pela metade: existe mas não responde a comandos git. Confere se o
+# clone é válido de verdade antes de tentar atualizar; se não for, começa do
+# zero em vez de tentar consertar um clone quebrado.
+CLONE_VALIDO=0
+if [ -d "$PASTA_CODIGO/.git" ] && git -C "$PASTA_CODIGO" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    CLONE_VALIDO=1
+fi
+
+if [ "$CLONE_VALIDO" -eq 0 ]; then
+    if [ -d "$PASTA_CODIGO" ]; then
+        echo "        Encontrei uma cópia incompleta de instalação anterior, refazendo..."
+        rm -rf "$PASTA_CODIGO"
+    fi
     echo "        Primeira instalação: clonando o repositório..."
     git clone --quiet "$REPO_URL" "$PASTA_CODIGO"
 else
