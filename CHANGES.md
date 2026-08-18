@@ -1,5 +1,102 @@
 # Registro de Alterações
 
+## [2026-08-18] Caixa: removido também o placeholder "0" do desconto por item (versão 1.0.0.12)
+
+### Problema
+A correção anterior deixou o campo "Desc. %" vazio quando o item não tem desconto, mas manteve
+`placeholder="0"` como dica visual. O usuário viu esse "0" (cinza, de marca d'água) e achou que
+ainda era o mesmo bug de campo pré-preenchido.
+
+### Solução
+Removido o `placeholder="0"` também — o campo fica só vazio, sem nenhum texto de fundo.
+
+### Arquivos Alterados
+| Arquivo | Alteração |
+|---|---|
+| `wwwroot/js/caixa.js` | `descontoCelulaHtml` não define mais `placeholder` no input de desconto |
+| `VERSION.txt` | `1.0.0.12` |
+
+### Resultado
+Mudança client-side isolada (renderização de linha), sem impacto no cálculo ou no submit. Build
+sem avisos.
+
+## [2026-08-18] Caixa: desconto por item também não nasce mais com "0" (versão 1.0.0.11)
+
+### Problema
+No Caixa, o campo "Desc. %" de cada item da venda (`<input type="number">`, já protegido pelo
+próprio navegador contra zeros repetidos) ainda nascia com `value="0"` quando o item era
+adicionado sem desconto — mesmo padrão de confusão já corrigido em outros campos: usuário digita
+por cima do "0" já ali em vez de partir de um campo limpo.
+
+### Solução
+Sem desconto, o campo agora nasce vazio (com `placeholder="0"` só como dica visual). O cálculo do
+preço do item já tratava `desconto = 0`/vazio como "sem desconto", então não muda nada na conta —
+só a experiência de digitar.
+
+### Arquivos Alterados
+| Arquivo | Alteração |
+|---|---|
+| `wwwroot/js/caixa.js` | `descontoCelulaHtml` só imprime `value` quando o item já tem desconto |
+| `VERSION.txt` | `1.0.0.11` |
+
+### Resultado
+Lógica simulada (Node): item novo gera campo vazio; preço sem desconto continua correto; campo
+vazio ao recalcular é interpretado como 0 (comportamento já existente, não mudou). App testado
+subindo e a tela do Caixa carregando normalmente. Build sem avisos.
+
+## [2026-08-18] Zero à esquerda também restrito no desconto (%) e na quantidade de item (versão 1.0.0.10)
+
+### Problema
+A entrada anterior liberou o campo de desconto em modo "%" para aceitar dígitos livres (sem a
+máscara monetária), mas sem cortar zeros à esquerda — dava pra digitar "00000000" nesse campo e na
+quantidade de item do orçamento/OS (`itemQuantidade`), os únicos dois campos de texto livre restrito
+a números do sistema que ainda não tinham essa proteção.
+
+### Solução
+Mesma regra já usada em `mascararValor` (telefone/CPF/CNPJ/CEP/valor): zero à esquerda é cortado
+enquanto vier seguido de outro dígito (`00005` → `5`, mas um `0` isolado continua `0` — dá pra
+apagar o campo e ele fica vazio de novo). Aplicado nos dois campos que faltavam.
+
+### Arquivos Alterados
+| Arquivo | Alteração |
+|---|---|
+| `wwwroot/js/orcamento.js` | filtro de zero à esquerda no desconto (modo %) e na quantidade de item |
+| `VERSION.txt` | `1.0.0.10` |
+
+### Resultado
+Lógica simulada isoladamente (Node): `"00000"` → `"0"`, `"010"` → `"10"`, `"100"` permanece
+`"100"` — nos dois campos. Build sem avisos; app testado subindo normalmente após a mudança.
+
+## [2026-08-18] Campo de desconto aplicava máscara de reais mesmo em modo percentual (versão 1.0.0.9)
+
+### Problema
+O campo "Desconto" (Orçamento/OS) tinha `data-mascara="valor"` fixo no HTML, independente do tipo
+selecionado no `<select>` ao lado (% ou R$). Como "%" é o padrão ao abrir a tela, o campo sempre
+nascia formatando como dinheiro — digitar "10" (querendo dizer 10%) virava "0,10", e o usuário via
+isso como um "0" fixo/bugado logo ao clicar, porque a máscara monta o valor da direita pra esquerda
+(comportamento correto só faz sentido em R$, não em %).
+
+### Solução
+O campo agora alterna a máscara de acordo com o tipo escolhido: em "%" fica sem máscara (só
+restringe a dígitos, até 3 caracteres — 100% é o teto do cálculo), com placeholder "0"; em "R$"
+usa a mesma máscara monetária de sempre, com placeholder "0,00". Trocar o tipo no `<select>` limpa
+o campo — um "10" digitado em % não tem o mesmo sentido que "10" em R$ (seria 0,10), então manter
+o texto ao trocar confundiria o valor.
+
+### Arquivos Alterados
+| Arquivo | Alteração |
+|---|---|
+| `Views/Documento/Add.cshtml` | `data-mascara`/`inputmode`/`placeholder`/`value` do campo de desconto passam a depender de `Model.DescontoTipo` |
+| `wwwroot/js/orcamento.js` | `atualizarMascaraDesconto()` no `change` do tipo; restrição a dígitos quando sem máscara |
+| `VERSION.txt` | `1.0.0.9` |
+
+### Resultado
+Simulado o comportamento das duas máscaras isoladamente (Node): digitar "1" depois "0" em modo %
+resulta em "10" (não "0,10"); modo R$ preserva o comportamento monetário já existente. Testado via
+POST direto simulando o submit com desconto percentual — `Desconto=10.0`, `DescontoTipo=percentual`
+persistidos corretamente no banco de teste. Registro de teste removido ao final; banco de dev real
+não foi tocado por esta rodada. Build sem avisos.
+
 ## [2026-08-18] Campo de estoque mínimo não nasce com "0", garantia vira botões de opção (versão 1.0.0.8)
 
 ### Problema 1: campo "Estoque mínimo" nascia preenchido com "0"

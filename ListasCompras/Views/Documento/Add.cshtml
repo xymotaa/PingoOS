@@ -265,8 +265,10 @@
                     <div class="md:col-span-4">
                         <label class="font-label-md text-label-md text-on-surface-variant" for="descontoVisivel">Desconto</label>
                         <div class="mt-xs flex gap-sm">
-                            <input id="descontoVisivel" type="text" inputmode="decimal" placeholder="0,00" data-mascara="valor"
-                                   value="@(Model.Desconto > 0 ? Decimal(Model.Desconto) : "")"
+                            <input id="descontoVisivel" type="text" inputmode="@(Model.DescontoTipo == "valor" ? "decimal" : "numeric")"
+                                   placeholder="@(Model.DescontoTipo == "valor" ? "0,00" : "0")"
+                                   data-mascara="@(Model.DescontoTipo == "valor" ? "valor" : "")"
+                                   value="@(Model.Desconto > 0 ? (Model.DescontoTipo == "valor" ? Decimal(Model.Desconto) : Model.Desconto.ToString("0")) : "")"
                                    class="flex-1 min-w-0 bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
                             <select id="descontoTipo" name="descontoTipo"
                                     class="bg-surface-container-low border-none rounded-lg pl-md pr-10 py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30">

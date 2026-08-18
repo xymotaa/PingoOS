@@ -86,6 +86,11 @@ document.addEventListener("DOMContentLoaded", function () {
     adicionarItemBtn.addEventListener("click", function () { adicionarItem(true); });
 
     itensBody.addEventListener("input", function (e) {
+        if (e.target.matches(".item-qtd")) {
+            // Só dígitos, sem zero à esquerda — "00005" não é uma quantidade, é "5"
+            const digitos = e.target.value.replace(/\D/g, "").replace(/^0+(?=\d)/, "").slice(0, 4);
+            if (digitos !== e.target.value) e.target.value = digitos;
+        }
         if (e.target.matches(".item-qtd") || e.target.matches(".item-valor")) recalcular();
     });
 
@@ -356,6 +361,28 @@ document.addEventListener("DOMContentLoaded", function () {
     const parcelado = document.getElementById("parcelado");
     const parcelas = document.getElementById("parcelas");
     const valorParcela = document.getElementById("valorParcela");
+
+    // Desconto em % é número livre (sem vírgula forçada); em R$ usa a mesma máscara de
+    // valor monetário dos outros campos. Trocar o tipo limpa o campo — "10" em % não tem
+    // o mesmo sentido que "10" (= 0,10) em R$, então preservar o texto confundiria o valor.
+    function atualizarMascaraDesconto() {
+        const emReais = descontoTipo.value === "valor";
+        descontoVisivel.value = "";
+        descontoVisivel.dataset.mascara = emReais ? "valor" : "";
+        descontoVisivel.placeholder = emReais ? "0,00" : "0";
+        descontoVisivel.inputMode = emReais ? "decimal" : "numeric";
+    }
+    descontoTipo.addEventListener("change", atualizarMascaraDesconto);
+
+    // Sem data-mascara (modo %), ainda restringe a dígitos — sem isso o campo aceitaria
+    // qualquer texto, já que mascaras.js só age em campos com data-mascara="valor". Zeros à
+    // esquerda também são cortados aqui pelo mesmo motivo do resto do sistema: "00000" não
+    // é um número, é o mesmo "0" digitado várias vezes.
+    descontoVisivel.addEventListener("input", function () {
+        if (descontoTipo.value === "valor") return;
+        const digitos = descontoVisivel.value.replace(/\D/g, "").replace(/^0+(?=\d)/, "").slice(0, 3);
+        if (digitos !== descontoVisivel.value) descontoVisivel.value = digitos;
+    });
 
     function recalcularPagamento() {
         const subtotal = somaItens();

@@ -86,8 +86,12 @@ document.addEventListener("DOMContentLoaded", function () {
     function descontoCelulaHtml(item, index) {
         const max = item.descontoTipo === "valor" ? item.precoUnitario : 100;
         const step = item.descontoTipo === "valor" ? "0.01" : "1";
+        // Sem desconto, o campo nasce vazio em vez de mostrar "0" — digitar por cima de um
+        // "0" já ali gera confusão (mesmo motivo do resto do sistema). Sem placeholder "0"
+        // também: o usuário achou que essa dica visual parecia o próprio valor no campo.
+        const valorInicial = item.desconto ? item.desconto : "";
         return '<div class="inline-flex items-center bg-surface-container-low rounded-md overflow-hidden">' +
-            '<input type="number" min="0" max="' + max + '" step="' + step + '" value="' + item.desconto + '" data-index="' + index + '" ' +
+            '<input type="number" min="0" max="' + max + '" step="' + step + '" value="' + valorInicial + '" data-index="' + index + '" ' +
             'class="desconto-input w-14 text-center bg-transparent border-none py-1 font-body-md text-body-md [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />' +
             '<button type="button" data-index="' + index + '" title="Alternar entre % e R$" ' +
             'class="desconto-toggle w-6 h-6 shrink-0 rounded-full hover:bg-white flex items-center justify-center font-label-sm text-label-sm font-bold text-on-surface-variant leading-none transition-colors">' +
