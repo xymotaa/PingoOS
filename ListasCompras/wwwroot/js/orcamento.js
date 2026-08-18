@@ -327,6 +327,24 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
 
+    // ===== Garantia: botões de prazo fixo em vez de spinner numérico =====
+
+    const prazoGarantiaInput = document.getElementById("prazoGarantiaDias");
+    const botoesGarantia = Array.prototype.slice.call(document.querySelectorAll("[data-prazo-garantia-btn]"));
+
+    botoesGarantia.forEach(function (botao) {
+        botao.addEventListener("click", function () {
+            prazoGarantiaInput.value = botao.dataset.dias;
+            botoesGarantia.forEach(function (b) {
+                b.classList.toggle("border-secondary", b === botao);
+                b.classList.toggle("bg-secondary", b === botao);
+                b.classList.toggle("text-white", b === botao);
+                b.classList.toggle("border-outline-variant", b !== botao);
+                b.classList.toggle("text-on-surface-variant", b !== botao);
+            });
+        });
+    });
+
     // ===== Pagamento: haver, desconto e parcelamento =====
 
     const temSinal = document.getElementById("temSinal");

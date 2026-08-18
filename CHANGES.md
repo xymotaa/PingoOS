@@ -1,5 +1,47 @@
 # Registro de Alterações
 
+## [2026-08-18] Campo de estoque mínimo não nasce com "0", garantia vira botões de opção (versão 1.0.0.8)
+
+### Problema 1: campo "Estoque mínimo" nascia preenchido com "0"
+Diferente dos outros campos numéricos da mesma tela (Estoque inicial, Estoque máximo, Custo
+unitário), o campo "Estoque mínimo" não tinha a guarda condicional "só mostra valor se for um
+cadastro existente com valor > 0" — como `EstoqueMinimo` é `int` (não nullable), um cadastro novo
+sempre tem valor `0` em C#, e a view imprimia isso literalmente como `value="0"`. Resultado: o
+usuário abre a tela para cadastrar um produto novo, o campo já mostra "0", e digitar por cima (ex:
+querendo "10") sem apagar primeiro o "0" que já estava lá gera confusão.
+
+**Solução:** mesma guarda que os campos vizinhos já usavam — só imprime o valor quando
+`Model.EstoqueMinimo > 0`, senão o campo nasce vazio (com `placeholder="0"` só como dica visual,
+que não é um valor real).
+
+### Problema 2: "Garantia do serviço" era um spinner numérico com setas
+O campo de dias de garantia (na tela de Orçamento/Ordem de Serviço) era um `<input type="number">`
+com `min="90" step="30"` — setas incrementam de 30 em 30, mas a digitação livre continuava aberta,
+e o campo já nascia preenchido com "90" (o padrão legal do CDC art. 26, II), com o mesmo problema
+de UX do item 1: usuário precisa perceber que já tem um valor ali antes de trocar.
+
+**Solução:** trocado por 4 botões de opção fixos (90 / 120 / 180 / 365 dias) — clicar num deles
+marca visualmente e atualiza um campo oculto que vai para o servidor no lugar do spinner. "90 dias"
+já vem marcado por padrão (mesmo comportamento de antes, só que agora visível como escolha, não
+como número para editar). Sem campo de valor livre — fora dessas 4 opções, o ajuste continua
+possível editando o registro depois.
+
+### Arquivos Alterados
+| Arquivo | Alteração |
+|---|---|
+| `Views/Estoque/Add.cshtml` | guarda condicional no valor inicial de `npEstoqueMinimo` |
+| `Views/Documento/Add.cshtml` | campo de garantia trocado de `<input type="number">` para 4 botões + hidden |
+| `wwwroot/js/orcamento.js` | clique nos botões de garantia atualiza o hidden e o destaque visual |
+| `VERSION.txt` | `1.0.0.8` |
+
+### Resultado
+Testado em cópia publicada do banco de dev: cadastro novo de produto mostra o campo de estoque
+mínimo vazio; edição de produto existente continua mostrando o valor real salvo. Botões de
+garantia renderizam corretamente com "90 dias" pré-selecionado; submit simulando o clique em
+"180 dias" (POST direto com `prazoGarantiaDias=180`) confirmou o valor persistido no banco.
+Registro de teste removido ao final; banco de dev real não foi tocado por esta rodada. Build sem
+avisos.
+
 ## [2026-08-18] Tela de Categorias: editar e excluir (versão 1.0.0.7)
 
 ### Problema

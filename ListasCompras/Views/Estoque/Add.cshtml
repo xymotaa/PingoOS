@@ -255,7 +255,7 @@
                             </div>
                             <div class="md:col-span-3">
                                 <label class="font-label-md text-label-md text-on-surface-variant" for="npEstoqueMinimo">Estoque mínimo</label>
-                                <input id="npEstoqueMinimo" name="estoqueMinimo" value="@Model.EstoqueMinimo" type="number" min="0" step="1" placeholder="0" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                                <input id="npEstoqueMinimo" name="estoqueMinimo" value="@(Model.EstoqueMinimo > 0 ? Model.EstoqueMinimo.ToString() : "")" type="number" min="0" step="1" placeholder="0" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
                             </div>
                             <div class="md:col-span-3">
                                 <label class="font-label-md text-label-md text-on-surface-variant" for="npEstoqueMaximo">Estoque máximo</label>
