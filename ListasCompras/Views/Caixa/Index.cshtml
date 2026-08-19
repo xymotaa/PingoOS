@@ -6,6 +6,7 @@
     var nomeLoja = ViewData["NomeLoja"] as string ?? "Minha Loja";
     var logo = ViewData["LogoLoja"] as string;
     var inicial = string.IsNullOrWhiteSpace(nomeLoja) ? "L" : nomeLoja.Trim()[0].ToString().ToUpper();
+    var vendaEmEdicaoId = ViewBag.VendaEmEdicaoId is int idEdicao ? idEdicao : 0;
 }
 <!DOCTYPE html>
 <html class="light" lang="pt-BR">
@@ -82,6 +83,17 @@
 
             <!-- Coluna principal: busca + itens -->
             <div class="flex-1 flex flex-col p-lg gap-md overflow-hidden min-w-0">
+
+                @if (vendaEmEdicaoId > 0)
+                {
+                    <div class="shrink-0 bg-warning-container text-on-surface px-md py-sm rounded-lg font-label-md text-label-md flex items-center justify-between gap-xs w-full">
+                        <span class="flex items-center gap-xs">
+                            <span class="material-symbols-outlined text-[18px]">edit</span>
+                            Editando a venda @ViewBag.VendaEmEdicaoNumero
+                        </span>
+                        <a asp-action="Vendas" class="font-label-md text-label-md underline hover:no-underline">Cancelar edição</a>
+                    </div>
+                }
 
                 @if (TempData["Sucesso"] != null)
                 {
@@ -203,13 +215,17 @@
 
                 <div class="flex-1"></div>
 
-                <form asp-action="Finalizar" method="post" class="p-lg">
+                <form asp-action="@(vendaEmEdicaoId > 0 ? "SalvarEdicao" : "Finalizar")" method="post" class="p-lg">
+                    @if (vendaEmEdicaoId > 0)
+                    {
+                        <input type="hidden" name="vendaId" value="@vendaEmEdicaoId" />
+                    }
                     <input type="hidden" name="formaPagamento" id="formaPagamentoPost" value="dinheiro" />
                         <input type="hidden" name="valorRecebido" id="valorRecebidoPost" value="0" />
                         <div id="itensPost"></div>
                         <button id="finalizarBtn" type="submit" disabled
                             class="w-full py-md rounded-lg font-title-lg text-title-lg flex items-center justify-center gap-xs transition-all bg-outline-variant text-outline cursor-not-allowed">
-                        Finalizar Venda
+                        @(vendaEmEdicaoId > 0 ? "Salvar Edição" : "Finalizar Venda")
                         <span class="material-symbols-outlined">check_circle</span>
                     </button>
                 </form>
@@ -219,6 +235,11 @@
 
     <script>
         const PRODUTOS = @Html.Raw(Json.Serialize(Model.Select(p => new { p.Id, p.Codigo, p.Nome, PrecoUnitario = p.PrecoVenda, p.SaldoAtual })));
+        // Presente só na tela de edição de venda (ver CaixaController.EditarVenda) — o
+        // carrinho nasce com esses itens em vez de vazio.
+        const ITENS_EM_EDICAO = @Html.Raw(Json.Serialize(ViewBag.ItensEmEdicao ?? new List<object>()));
+        const FORMA_PAGAMENTO_EM_EDICAO = @Html.Raw(Json.Serialize(ViewBag.FormaPagamentoEmEdicao ?? ""));
+        const VALOR_RECEBIDO_EM_EDICAO = @Html.Raw(Json.Serialize(ViewBag.ValorRecebidoEmEdicao ?? 0m));
     </script>
     <script src="~/js/caixa.js" asp-append-version="true"></script>
 </body>

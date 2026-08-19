@@ -12,7 +12,15 @@ public class Venda
     public int? UsuarioId { get; set; }
     public Usuario? Usuario { get; set; }
 
+    // Exclusão nunca apaga a linha — só marca, para o rastro (HistoricoVenda) continuar
+    // íntegro e o registro poder ser consultado depois se precisar.
+    public bool Excluida { get; set; }
+    public int? ExcluidaPorId { get; set; }
+    public Usuario? ExcluidaPor { get; set; }
+    public DateTime? DataExclusao { get; set; }
+
     public ICollection<ItemVenda> Itens { get; set; } = new List<ItemVenda>();
+    public ICollection<HistoricoVenda> Historico { get; set; } = new List<HistoricoVenda>();
 
     public decimal Subtotal => Itens.Sum(i => i.Quantidade * i.PrecoUnitario);
     public decimal Desconto => Itens.Sum(i => i.DescontoTotal);
@@ -43,6 +51,31 @@ public class ItemVenda
 
     public decimal DescontoTotal => Quantidade * PrecoUnitario * (DescontoPercentual / 100m);
     public decimal Total => Quantidade * PrecoUnitario - DescontoTotal;
+}
+
+// Trilha de auditoria da venda: nunca edita/apaga um evento antigo, só acrescenta um
+// novo — mesmo espírito do histórico de movimentações do Estoque, aplicado aqui porque
+// vendas passaram a poder ser editadas/excluídas depois de finalizadas.
+public class HistoricoVenda
+{
+    public int Id { get; set; }
+
+    public int VendaId { get; set; }
+    public Venda Venda { get; set; } = null!;
+
+    public string Tipo { get; set; } = TiposEventoVenda.Criada;
+    public string? Descricao { get; set; }
+    public DateTime Data { get; set; } = DateTime.Now;
+
+    public int? UsuarioId { get; set; }
+    public Usuario? Usuario { get; set; }
+}
+
+public static class TiposEventoVenda
+{
+    public const string Criada = "criada";
+    public const string Editada = "editada";
+    public const string Excluida = "excluida";
 }
 
 public static class FormasPagamento

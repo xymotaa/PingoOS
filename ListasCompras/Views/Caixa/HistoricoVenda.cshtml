@@ -1,0 +1,106 @@
+@model ListasCompras.Models.Venda
+@{
+    Layout = null;
+    ViewData["Title"] = "Histórico — " + Model.Numero;
+    var nomeLoja = ViewData["NomeLoja"] as string ?? "Minha Loja";
+    string Moeda(decimal v) => v.ToString("C2", new System.Globalization.CultureInfo("pt-BR"));
+
+    string Rotulo(string tipo) => tipo switch
+    {
+        ListasCompras.Models.TiposEventoVenda.Criada => "Venda registrada",
+        ListasCompras.Models.TiposEventoVenda.Editada => "Venda editada",
+        ListasCompras.Models.TiposEventoVenda.Excluida => "Venda excluída",
+        _ => tipo,
+    };
+
+    string Icone(string tipo) => tipo switch
+    {
+        ListasCompras.Models.TiposEventoVenda.Criada => "point_of_sale",
+        ListasCompras.Models.TiposEventoVenda.Editada => "edit",
+        ListasCompras.Models.TiposEventoVenda.Excluida => "delete",
+        _ => "history",
+    };
+
+    string Cor(string tipo) => tipo switch
+    {
+        ListasCompras.Models.TiposEventoVenda.Excluida => "text-error",
+        ListasCompras.Models.TiposEventoVenda.Editada => "text-warning",
+        _ => "text-secondary",
+    };
+}
+<!DOCTYPE html>
+<html class="light" lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>@nomeLoja — @ViewData["Title"]</title>
+    @await Html.PartialAsync("_HeadTailwind")
+</head>
+<body class="bg-surface">
+    @await Html.PartialAsync("_Navbar")
+
+    <main class="pt-24 px-lg pb-xl max-w-[1440px] mx-auto">
+
+        <section class="mb-md flex items-center justify-between gap-md">
+            <div>
+                <h1 class="font-headline-lg text-headline-lg text-primary">
+                    @Model.Numero
+                    @if (Model.Excluida)
+                    {
+                        <span class="ml-sm px-sm py-xs rounded-full font-label-sm text-label-sm bg-error-container text-error">Excluída</span>
+                    }
+                </h1>
+                <p class="font-body-md text-body-md text-on-surface-variant">
+                    @Model.Data.ToString("dd/MM/yyyy HH:mm") · @Moeda(Model.Total)
+                </p>
+            </div>
+            @if (!Model.Excluida)
+            {
+                <a asp-action="EditarVenda" asp-route-id="@Model.Id"
+                   class="border border-outline text-on-surface-variant rounded-lg px-lg py-sm font-label-md text-label-md font-bold hover:bg-surface-container-low transition-colors">
+                    Editar venda
+                </a>
+            }
+        </section>
+
+        <section class="bg-white rounded-xl border border-outline-variant shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-surface-container-low">
+                        <tr>
+                            <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider">Data</th>
+                            <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider">Evento</th>
+                            <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider">Detalhe</th>
+                            <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider">Quem</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var h in Model.Historico)
+                        {
+                            <tr class="border-t border-outline-variant">
+                                <td class="px-md py-sm font-body-md text-body-md text-on-surface-variant">@h.Data.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td class="px-md py-sm">
+                                    <span class="inline-flex items-center gap-xs font-label-md text-label-md @Cor(h.Tipo)">
+                                        <span class="material-symbols-outlined text-[16px]">@Icone(h.Tipo)</span>
+                                        @Rotulo(h.Tipo)
+                                    </span>
+                                </td>
+                                <td class="px-md py-sm font-body-md text-body-md text-on-surface-variant">@(string.IsNullOrWhiteSpace(h.Descricao) ? "—" : h.Descricao)</td>
+                                <td class="px-md py-sm font-body-md text-body-md text-on-surface-variant">@(h.Usuario?.Nome ?? "—")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @if (Model.Historico.Count == 0)
+            {
+                <div class="p-xl text-center">
+                    <span class="material-symbols-outlined text-[40px] text-outline">history</span>
+                    <p class="font-body-md text-body-md text-on-surface-variant">Nenhum evento registrado.</p>
+                </div>
+            }
+        </section>
+    </main>
+</body>
+</html>

@@ -23,7 +23,7 @@ public class HomeController : LojaControllerBase
         var seteDiasAtras = hoje.AddDays(-6); // hoje + 6 dias anteriores = 7 pontos
 
         var vendasHoje = Context.Vendas
-            .Where(v => v.Data >= hoje && v.Data < amanha)
+            .Where(v => v.Data >= hoje && v.Data < amanha && !v.Excluida)
             .Include(v => v.Itens)
             .AsEnumerable()
             .Sum(v => v.Total);
@@ -64,7 +64,7 @@ public class HomeController : LojaControllerBase
     private List<PontoDesempenho> DesempenhoUltimos7Dias(DateTime inicio, DateTime fim)
     {
         var vendas = Context.Vendas
-            .Where(v => v.Data >= inicio && v.Data < fim)
+            .Where(v => v.Data >= inicio && v.Data < fim && !v.Excluida)
             .Include(v => v.Itens)
             .AsEnumerable()
             .GroupBy(v => v.Data.Date)
@@ -92,6 +92,7 @@ public class HomeController : LojaControllerBase
         var atividades = new List<AtividadeRecente>();
 
         atividades.AddRange(Context.Vendas
+            .Where(v => !v.Excluida)
             .OrderByDescending(v => v.Id).Take(5)
             .Select(v => new { v.Id, v.Numero, v.Data })
             .AsEnumerable()

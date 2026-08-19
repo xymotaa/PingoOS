@@ -22,7 +22,7 @@ public class FaturamentoController : LojaControllerBase
         // Regime de caixa: conta quando o dinheiro entrou, não quando o serviço foi aberto.
         // Na venda é a data da venda; na OS é a entrega, que é quando o saldo é cobrado.
         var totalVendas = Context.Vendas
-            .Where(v => v.Data.Year == anoConsultado)
+            .Where(v => v.Data.Year == anoConsultado && !v.Excluida)
             .Include(v => v.Itens)
             .AsEnumerable()
             .Sum(v => v.Total);

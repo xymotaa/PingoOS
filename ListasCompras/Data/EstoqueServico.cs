@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using ListasCompras.Models;
 
 namespace ListasCompras.Data;
@@ -29,6 +30,25 @@ public static class EstoqueServico
 
         produto.Movimentacoes.Add(movimento);
         return movimento;
+    }
+
+    // Devolve ao estoque tudo que uma venda tinha baixado — usado ao editar (antes de
+    // relançar os itens novos) ou excluir uma venda. Nunca edita a MovimentacaoEstoque
+    // original: lança uma entrada nova de estorno, preservando o rastro de que a saída
+    // aconteceu (mesmo que a venda tenha sido desfeita depois).
+    public static void EstornarItensVenda(AppDbContext context, Venda venda, string motivo, int? usuarioId)
+    {
+        foreach (var item in venda.Itens)
+        {
+            if (item.ProdutoEstoqueId == null) continue; // produto já foi excluído do estoque
+
+            var produto = context.ProdutosEstoque
+                .Include(p => p.Movimentacoes)
+                .FirstOrDefault(p => p.Id == item.ProdutoEstoqueId);
+            if (produto == null) continue;
+
+            Movimentar(produto, TiposMovimentacao.Entrada, item.Quantidade, motivo, usuarioId, venda);
+        }
     }
 
     // P-000001, P-000002... o anterior vinha do relógio no navegador

@@ -21,7 +21,7 @@ public class FechamentoCaixaController : LojaControllerBase
         var proximoDia = dia.AddDays(1);
 
         var vendas = Context.Vendas
-            .Where(v => v.Data >= dia && v.Data < proximoDia)
+            .Where(v => v.Data >= dia && v.Data < proximoDia && !v.Excluida)
             .Include(v => v.Itens)
             .AsEnumerable()
             .ToList();

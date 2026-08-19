@@ -27,6 +27,7 @@ public class AppDbContext : DbContext
     public DbSet<MovimentacaoEstoque> MovimentacoesEstoque { get; set; }
     public DbSet<Venda> Vendas { get; set; }
     public DbSet<ItemVenda> ItensVenda { get; set; }
+    public DbSet<HistoricoVenda> HistoricoVendas { get; set; }
     public DbSet<LancamentoFinanceiro> LancamentosFinanceiros { get; set; }
     public DbSet<ContaAPagar> ContasAPagar { get; set; }
 
@@ -214,6 +215,23 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<Venda>()
             .HasOne(v => v.Usuario).WithMany().HasForeignKey(v => v.UsuarioId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Venda>()
+            .HasOne(v => v.ExcluidaPor).WithMany().HasForeignKey(v => v.ExcluidaPorId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // O histórico é a prova de quem editou/excluiu — excluir a venda (soft-delete)
+        // nunca pode arrastar o histórico junto; ele é o registro que existe justamente
+        // para sobreviver a essas ações.
+        modelBuilder.Entity<HistoricoVenda>()
+            .HasOne(h => h.Venda)
+            .WithMany(v => v.Historico)
+            .HasForeignKey(h => h.VendaId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<HistoricoVenda>()
+            .HasOne(h => h.Usuario).WithMany().HasForeignKey(h => h.UsuarioId)
             .OnDelete(DeleteBehavior.SetNull);
     }
 }

@@ -1,5 +1,9 @@
 document.addEventListener("DOMContentLoaded", function () {
-    const cart = [];
+    // Tela de edição de venda (ver CaixaController.EditarVenda): o carrinho nasce
+    // preenchido em vez de vazio; nas demais telas essa constante não existe.
+    const cart = (typeof ITENS_EM_EDICAO !== "undefined" ? ITENS_EM_EDICAO : []).map(function (i) {
+        return { id: i.id, codigo: i.codigo, nome: i.nome, precoUnitario: i.precoUnitario, qtd: i.qtd, desconto: i.desconto, descontoTipo: i.descontoTipo };
+    });
 
     const buscaForm = document.getElementById("buscaForm");
     const buscaInput = document.getElementById("buscaInput");
@@ -368,6 +372,15 @@ document.addEventListener("DOMContentLoaded", function () {
             buscaInput.focus();
         }
     });
+
+    // Pré-seleciona a forma de pagamento e o valor recebido da venda original (edição)
+    if (typeof FORMA_PAGAMENTO_EM_EDICAO !== "undefined" && FORMA_PAGAMENTO_EM_EDICAO) {
+        var radioEdicao = document.querySelector('input[name="metodo"][value="' + FORMA_PAGAMENTO_EM_EDICAO + '"]');
+        if (radioEdicao) radioEdicao.checked = true;
+    }
+    if (typeof VALOR_RECEBIDO_EM_EDICAO !== "undefined" && VALOR_RECEBIDO_EM_EDICAO > 0) {
+        valorRecebido.value = Number(VALOR_RECEBIDO_EM_EDICAO).toFixed(2);
+    }
 
     atualizarSelecaoPagamento();
     renderTabela();

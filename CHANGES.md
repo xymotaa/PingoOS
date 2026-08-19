@@ -1,5 +1,101 @@
 # Registro de Alterações
 
+## [2026-08-18] Painel: barra do gráfico sumia com o servidor em cultura pt-BR (versão 1.0.0.20)
+
+### Problema
+Depois da correção anterior (piso de altura diferenciado entre dia com/sem venda), o usuário
+continuou vendo uma barra sumir — mas só em certos casos, dependendo de qual dia tinha o maior
+valor da semana. A causa: `height: @altura%` interpola um `double` usando a cultura da thread do
+servidor. Com o servidor em `pt-BR`, um valor como `55.555...` vira o texto `"55,555..."` — CSS não
+aceita vírgula como separador decimal, então `style="height: 55,55%"` é uma declaração **inválida**
+que o navegador descarta por inteiro, e a barra fica sem altura nenhuma (0px, visualmente "sumida").
+
+Isso só acontecia quando a proporção calculada dava um número com casas decimais — daí parecer
+"depender de qual dia é maior": quando o maior valor da semana e o valor do dia menor formavam uma
+razão redonda (ex: exatamente 100% ou o piso fixo de 2%/8%), o texto não tinha vírgula e funcionava
+por acaso; qualquer proporção fracionária (ex: 50/90 = 55,55...%) quebrava.
+
+### Solução
+`altura` agora é formatado explicitamente com `CultureInfo.InvariantCulture` antes de entrar no
+`style`, garantindo ponto decimal sempre, independente da cultura configurada no servidor. Conferido
+que o resto do projeto não tem o mesmo padrão de risco (só um outro lugar interpola número em CSS
+inline, `Faturamento/Index.cshtml`, e já usava `InvariantCulture` corretamente).
+
+### Arquivos Alterados
+| Arquivo | Alteração |
+|---|---|
+| `Views/Home/Index.cshtml` | `altura` formatado com `InvariantCulture` antes de entrar no `style="height: ...%"` |
+| `VERSION.txt` | `1.0.0.20` |
+
+### Resultado
+Reproduzido o bug exato relatado pelo usuário (venda de R$90 hoje, pagamento de OS de R$50 numa
+sexta anterior) em cópia do banco: antes da correção, o HTML gerado tinha `style="height:
+55,55555555555556%"` (vírgula, CSS inválido); depois, `style="height: 55.55555555555556%"` (ponto,
+válido). Build sem avisos.
+
+**Nota**: por acordo com o usuário, esta entrega fica só no `main` — nenhuma tag/Release
+criada/atualizada.
+
+## [2026-08-18] Editar/excluir venda com rastro de auditoria; link removido da tela de senha (versão 1.0.0.19)
+
+### Esqueci minha senha
+Removido o link/ícone "Voltar para o login" do topo da tela — pedido do usuário.
+
+### Editar e excluir vendas
+Até agora, uma venda finalizada era definitiva — erro de digitação (produto errado, quantidade
+errada, forma de pagamento errada) não tinha conserto sem editar o banco direto. Adicionado:
+
+- **Editar venda**: reaproveita a mesma tela/JS do PDV (Caixa/Index + caixa.js) — o carrinho nasce
+  preenchido com os itens da venda, forma de pagamento e valor recebido já marcados; pode adicionar,
+  remover ou ajustar itens livremente, igual a uma venda nova. Salvar devolve ao estoque tudo que a
+  venda original tinha baixado (como uma entrada de estorno, nunca editando a movimentação
+  original) e dá baixa de novo com os itens da edição.
+- **Excluir venda**: soft-delete (`Venda.Excluida`) — nunca um DELETE físico. Devolve o estoque da
+  mesma forma que a edição. A venda some da listagem e de qualquer soma (Fechamento de Caixa,
+  Painel, Faturamento), mas o registro continua existindo e consultável pelo histórico.
+- **Histórico por venda**: tela nova (ícone ao lado de editar/excluir) mostrando cada evento
+  (criada, editada, excluída) com data/hora e quem fez — nunca reescreve um evento antigo, só
+  acrescenta. Mesmo espírito do histórico de movimentações do Estoque, mas essa é a primeira vez
+  que o projeto tem uma trilha de auditoria de edição (não existia esse padrão antes).
+- Linha da lista de Vendas ficou clicável (vai para editar), com os três ícones — editar, histórico,
+  excluir — ao lado do total, seguindo o mesmo padrão visual das outras telas do sistema.
+
+Sem trava de prazo: qualquer venda pode ser editada/excluída, independente da data — decisão do
+usuário, por simplicidade.
+
+### Bug encontrado durante a implementação
+`FechamentoCaixaController` e outros dois pontos (`HomeController`: vendas de hoje, desempenho
+semanal, atividades recentes; `FaturamentoController`: total do ano) somavam `Context.Vendas` sem
+filtrar `Excluida` — uma venda soft-deleted continuaria contando nesses totais até esta correção.
+Não chegou a ser um problema em produção (a funcionalidade de excluir venda é nova nesta mesma
+entrega), mas seria um bug real assim que a primeira exclusão acontecesse.
+
+### Arquivos Alterados
+| Arquivo | Alteração |
+|---|---|
+| `Views/Conta/EsqueciSenha.cshtml` | remove o link "Voltar para o login" |
+| `Models/Venda.cs` | `Excluida`, `ExcluidaPorId`, `DataExclusao`; novo `HistoricoVenda` + `TiposEventoVenda` |
+| `Data/AppDbContext.cs` | `DbSet<HistoricoVenda>`, relações e `OnDelete` |
+| `Migrations/20260818201625_AddEdicaoExclusaoVendas.cs` | migration nova, só adiciona (sem impacto em dados existentes) |
+| `Data/EstoqueServico.cs` | `EstornarItensVenda` — devolve estoque via entrada nova, nunca edita movimentação antiga |
+| `Controllers/CaixaController.cs` | `EditarVenda`, `SalvarEdicao`, `ExcluirVenda`, `HistoricoVenda`; `Vendas()`/`Finalizar` passam a registrar/filtrar `HistoricoVenda`/`Excluida` |
+| `Controllers/HomeController.cs`, `Controllers/FaturamentoController.cs`, `Controllers/FechamentoCaixaController.cs` | somas de `Vendas` passam a excluir `Excluida` |
+| `Views/Caixa/Vendas.cshtml`, `Views/Caixa/Index.cshtml`, `Views/Caixa/HistoricoVenda.cshtml` (novo) | linha clicável + ícones de ação; modo de edição na tela de PDV; tela de histórico |
+| `wwwroot/js/caixa.js`, `wwwroot/js/vendas.js` (novo) | carrinho pré-carregado em modo edição; linha clicável |
+| `VERSION.txt` | `1.0.0.19` |
+
+### Resultado
+Testado em cópia do banco de dev: editei uma venda (quantidade 1→3, pagamento dinheiro→PIX) e
+confirmei no banco que a movimentação de estoque original permaneceu intacta, um estorno (entrada)
+e uma nova saída foram lançados, e o histórico registrou o total antes/depois com o usuário. Excluí
+outra venda e confirmei o estorno do estoque, o desaparecimento da listagem e do Fechamento de
+Caixa daquele dia, e que o histórico continua acessível com o motivo informado. Confirmado 404 ao
+tentar reabrir edição de venda já excluída. Migration aplicada no banco de dev real (com backup
+prévio) sem alterar as 3 vendas reais existentes. Build sem avisos.
+
+**Nota**: por acordo com o usuário, esta entrega fica só no `main` — nenhuma tag/Release
+criada/atualizada, isso só acontece quando o usuário pedir.
+
 ## [2026-08-18] Painel: barra de venda pequena ficava indistinguível de dia sem venda (versão 1.0.0.18)
 
 ### Problema
