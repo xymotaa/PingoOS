@@ -103,6 +103,20 @@ static class Instalador
         return new PassoResultado(true);
     }
 
+    // Reinstalar sempre apaga a pasta codigo/ (mesmo que o clone atual seja válido) e clona
+    // do zero — para quando algo no clone local está corrompido de um jeito que o "git
+    // rev-parse" de BaixarUltimaVersao não detecta. Só usado pelo fluxo de Reinstalar;
+    // Atualizar nunca chega aqui.
+    public static PassoResultado ForcarCloneLimpo(Action<string> status)
+    {
+        if (Directory.Exists(Config.PastaCodigo))
+        {
+            status("Apagando a copia local para reinstalar do zero...");
+            Directory.Delete(Config.PastaCodigo, recursive: true);
+        }
+        return new PassoResultado(true);
+    }
+
     // Só busca até a última tag publicada, nunca o commit mais recente direto — mesma
     // trava de propósito do install.bat: sem ela, um commit ainda em teste viraria
     // produção em todas as lojas assim que alguém rodasse o instalador de novo.

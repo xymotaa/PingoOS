@@ -1,5 +1,39 @@
 # Registro de Alterações
 
+## [2026-08-19] PingoInstaller: Ligar servidor, Atualizar separado de Reinstalar (versão 1.0.0.21)
+
+### Pedido
+O menu do instalador tinha "Atualizar / reinstalar" como uma opção só, sempre rodando o pipeline
+completo (checar .NET/Git, parar o serviço, clonar/atualizar, publicar). Faltava também uma opção
+para religar o serviço quando ele estava desligado — só existiam Reiniciar e Desligar.
+
+### Solução
+- **Ligar servidor**: nova opção no menu, chama `net start` — cobre o caso de o serviço estar
+  parado (por ter sido desligado antes, ou não ter subido sozinho).
+- **Atualizar** e **Reinstalar** viraram duas opções separadas:
+  - *Atualizar* pressupõe que .NET e Git já estão instalados e o serviço já existe — pula direto
+    para parar o serviço (necessário: publicar por cima do `.exe` em execução falha), buscar a
+    última versão marcada e republicar. Mais rápido que o fluxo completo.
+  - *Reinstalar* mantém o pipeline de sempre (checa .NET/Git, para o serviço) e agora também apaga
+    e clona o código do zero, mesmo que o clone atual pareça válido — para quando algo no clone
+    local está corrompido de um jeito que a checagem normal (`git rev-parse`) não detecta.
+  - A primeira instalação (ainda não instalado) sempre segue pelo fluxo de Reinstalar.
+
+### Arquivos Alterados
+| Arquivo | Alteração |
+|---|---|
+| `PingoInstaller/AcoesServico.cs` | novo método `Ligar()` |
+| `PingoInstaller/Instalador.cs` | novo passo `ForcarCloneLimpo` (só no fluxo de Reinstalar) |
+| `PingoInstaller/Program.cs` | menu com 7 opções; `RodarInstalacao(bool reinstalar)` monta pipelines diferentes |
+| `VERSION.txt` | `1.0.0.21` |
+
+### Resultado
+Testado neste ambiente via Wine + pty simulado: menu de 7 opções navega corretamente por seta
+(testado até a 5ª opção) e por tecla numérica (testado a tecla "3" selecionando "Ligar servidor"
+diretamente). O pipeline em si (parar/iniciar serviço Windows real, clonar/publicar de verdade)
+não pôde ser testado neste ambiente Linux — validação final depende de rodar numa máquina Windows
+real. Build sem avisos.
+
 ## [2026-08-18] Painel: barra do gráfico sumia com o servidor em cultura pt-BR (versão 1.0.0.20)
 
 ### Problema

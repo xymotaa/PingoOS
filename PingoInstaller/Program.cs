@@ -23,7 +23,9 @@ while (true)
     {
         var opcoes = new[]
         {
-            new OpcaoMenu("Atualizar / reinstalar"),
+            new OpcaoMenu("Atualizar"),
+            new OpcaoMenu("Reinstalar"),
+            new OpcaoMenu("Ligar servidor"),
             new OpcaoMenu("Reiniciar servidor"),
             new OpcaoMenu("Resetar senha admin"),
             new OpcaoMenu("Desligar servidor"),
@@ -34,11 +36,13 @@ while (true)
 
         switch (escolha)
         {
-            case 0: RodarInstalacao(); break;
-            case 1: AcoesServico.Reiniciar(); break;
-            case 2: AcoesServico.ResetarSenhaAdmin(); break;
-            case 3: AcoesServico.Desligar(); break;
-            case 4: return 0;
+            case 0: RodarInstalacao(reinstalar: false); break;
+            case 1: RodarInstalacao(reinstalar: true); break;
+            case 2: AcoesServico.Ligar(); break;
+            case 3: AcoesServico.Reiniciar(); break;
+            case 4: AcoesServico.ResetarSenhaAdmin(); break;
+            case 5: AcoesServico.Desligar(); break;
+            case 6: return 0;
         }
     }
     else
@@ -46,17 +50,21 @@ while (true)
         var colunaPergunta = ColunaCentralizada(20);
         var instalar = Menu.PerguntarSimNao(colunaPergunta, linhaMenu, "Instalar PingoOS?", padraoSim: true);
         if (!instalar) return 0;
-        RodarInstalacao();
+        RodarInstalacao(reinstalar: true);
     }
 }
 
-void RodarInstalacao()
+// Atualizar pressupõe que .NET/Git já estão presentes e o serviço já existe — pula direto
+// para buscar a versão mais nova e republicar (mais rápido). Reinstalar roda o pipeline
+// completo: checa .NET/Git, para o serviço, apaga e reclona o código do zero. A primeira
+// instalação (Config.JaInstalado() == false) sempre é tratada como reinstalar.
+void RodarInstalacao(bool reinstalar)
 {
     Console.Clear();
     Console.ResetColor();
     Console.WriteLine();
     Console.WriteLine("  ======================================");
-    Console.WriteLine("   Instalando PingoOS");
+    Console.WriteLine("   " + (reinstalar ? "Reinstalando PingoOS" : "Atualizando PingoOS"));
     Console.WriteLine("  ======================================");
     Console.WriteLine();
 
@@ -69,14 +77,25 @@ void RodarInstalacao()
         Console.Write("  " + mensagem);
     }
 
-    var passos = new Func<Action<string>, PassoResultado>[]
-    {
-        Instalador.GarantirDotnet,
-        Instalador.GarantirGit,
-        Instalador.PararServicoSeExistir,
-        Instalador.BaixarUltimaVersao,
-        Instalador.PublicarERegistrarServico,
-    };
+    var passos = reinstalar
+        ? new Func<Action<string>, PassoResultado>[]
+        {
+            Instalador.GarantirDotnet,
+            Instalador.GarantirGit,
+            Instalador.PararServicoSeExistir,
+            Instalador.ForcarCloneLimpo,
+            Instalador.BaixarUltimaVersao,
+            Instalador.PublicarERegistrarServico,
+        }
+        : new Func<Action<string>, PassoResultado>[]
+        {
+            // Sem GarantirDotnet/GarantirGit (pressupõe que já estão instalados), mas
+            // ainda precisa parar o serviço: publicar por cima do .exe em execução falha
+            // com "Access to the path is denied".
+            Instalador.PararServicoSeExistir,
+            Instalador.BaixarUltimaVersao,
+            Instalador.PublicarERegistrarServico,
+        };
 
     foreach (var passo in passos)
     {

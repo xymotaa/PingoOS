@@ -6,6 +6,17 @@ namespace PingoInstaller;
 // ListasCompras via "redefinir-senha", esta tela só chama).
 static class AcoesServico
 {
+    public static void Ligar()
+    {
+        Console.WriteLine();
+        Console.WriteLine("  Ligando o servico PingoOS...");
+        var resultado = Processos.Executar("net", $"start \"{Config.NomeServico}\"", timeoutSegundos: 30);
+        Console.WriteLine(resultado.Sucesso ? "  Servico ligado." : "  Nao foi possivel ligar: " + resultado.Erro);
+        Console.WriteLine();
+        Console.WriteLine("  Pressione qualquer tecla para voltar...");
+        Tela.AguardarTecla();
+    }
+
     public static void Reiniciar()
     {
         Console.WriteLine();
