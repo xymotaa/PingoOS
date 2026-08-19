@@ -29,6 +29,7 @@ while (true)
             new OpcaoMenu("Reiniciar servidor"),
             new OpcaoMenu("Resetar senha admin"),
             new OpcaoMenu("Desligar servidor"),
+            new OpcaoMenu("Desinstalar", ConsoleColor.Red),
             new OpcaoMenu("Sair", ConsoleColor.DarkGray),
         };
         var colunaMenu = ColunaCentralizada(opcoes.Max(o => o.Rotulo.Length) + 4);
@@ -42,7 +43,8 @@ while (true)
             case 3: AcoesServico.Reiniciar(); break;
             case 4: AcoesServico.ResetarSenhaAdmin(); break;
             case 5: AcoesServico.Desligar(); break;
-            case 6: return 0;
+            case 6: AcoesServico.DesinstalarInterativo(); break;
+            case 7: return 0;
         }
     }
     else

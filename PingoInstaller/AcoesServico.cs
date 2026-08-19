@@ -84,6 +84,72 @@ static class AcoesServico
         Tela.AguardarTecla();
     }
 
+    public static void DesinstalarInterativo()
+    {
+        Console.WriteLine();
+        Console.WriteLine("  === Desinstalar PingoOS ===");
+        Console.WriteLine();
+        Console.WriteLine("  Isso para o servico, remove o registro dele no Windows e apaga o codigo");
+        Console.WriteLine("  e o programa publicado desta maquina.");
+        Console.WriteLine();
+
+        try { Console.CursorVisible = true; } catch { /* ignorado de propósito */ }
+
+        var temBanco = File.Exists(Path.Combine(Config.PastaApp, "loja.db"));
+        var manterBanco = true;
+        if (temBanco)
+        {
+            Console.WriteLine("  O banco de dados (clientes, vendas, ordens de servico) sera mantido");
+            Console.WriteLine("  a menos que voce peca para apagar tambem.");
+            Console.Write("  Apagar o banco de dados tambem? Digite APAGAR para confirmar (ou deixe em branco para manter): ");
+            var respostaBanco = Console.ReadLine()?.Trim() ?? "";
+            manterBanco = !string.Equals(respostaBanco, "APAGAR", StringComparison.OrdinalIgnoreCase);
+            Console.WriteLine();
+        }
+
+        Console.Write("  Digite DESINSTALAR para confirmar: ");
+        var confirmacao = Console.ReadLine()?.Trim() ?? "";
+        try { Console.CursorVisible = false; } catch { /* ignorado de propósito */ }
+
+        if (!string.Equals(confirmacao, "DESINSTALAR", StringComparison.OrdinalIgnoreCase))
+        {
+            Console.WriteLine();
+            Console.WriteLine("  Cancelado — nada foi alterado.");
+            Console.WriteLine();
+            Console.WriteLine("  Pressione qualquer tecla para voltar...");
+            Tela.AguardarTecla();
+            return;
+        }
+
+        Console.WriteLine();
+        var linhaStatus = Console.CursorTop;
+        void Status(string mensagem)
+        {
+            Console.SetCursorPosition(0, linhaStatus);
+            Console.Write(new string(' ', Console.WindowWidth - 1));
+            Console.SetCursorPosition(0, linhaStatus);
+            Console.Write("  " + mensagem);
+        }
+
+        var resultado = Instalador.Desinstalar(Status, manterBanco);
+        Console.WriteLine();
+        Console.WriteLine();
+        if (resultado.Sucesso)
+        {
+            Console.WriteLine("  PingoOS desinstalado.");
+            if (manterBanco && temBanco)
+                Console.WriteLine("  O loja.db foi preservado em " + Config.PastaBase + ".");
+        }
+        else
+        {
+            Console.WriteLine("  Falha ao desinstalar: " + resultado.MensagemErro);
+        }
+
+        Console.WriteLine();
+        Console.WriteLine("  Pressione qualquer tecla para voltar...");
+        Tela.AguardarTecla();
+    }
+
     private static string LerSenhaMascarada()
     {
         var senha = "";

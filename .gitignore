@@ -5,3 +5,7 @@ skills-lock.json
 
 # Fotos enviadas pelos usuários — dados da loja, não fazem parte do código
 ListasCompras/wwwroot/uploads/
+
+# Material-fonte de logo/design — o resultado final usado no projeto (ex: icone.ico
+# do PingoInstaller) fica versionado; os arquivos originais/brutos, não.
+docs/logos/

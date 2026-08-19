@@ -14,6 +14,7 @@
     <InvariantGlobalization>true</InvariantGlobalization>
     <!-- Precisa de admin (net stop/start do serviço, sc.exe, publicar em Program Files) -->
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>icone.ico</ApplicationIcon>
   </PropertyGroup>
 
 </Project>

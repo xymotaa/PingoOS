@@ -48,4 +48,16 @@ static class Tela
     {
         Console.ReadKey(intercept: true);
     }
+
+    // Barra "10% #####-----" em ASCII puro (sem bloco Unicode, mesmo motivo do logo).
+    // largura fixa de 20 caracteres de barra, então a linha inteira sempre tem o mesmo
+    // tamanho — sobrescreve sozinha a cada chamada, sem deixar lixo de uma leitura mais
+    // longa que a anterior.
+    public static string BarraProgresso(double percentual)
+    {
+        var pct = Math.Clamp(percentual, 0, 100);
+        var preenchidos = (int)Math.Round(pct / 100 * 20);
+        var barra = new string('#', preenchidos) + new string('-', 20 - preenchidos);
+        return $"{pct,3:F0}% [{barra}]";
+    }
 }

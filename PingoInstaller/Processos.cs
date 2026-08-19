@@ -61,4 +61,40 @@ static class Processos
         }
         catch { /* sem navegador padrão configurado — não é motivo pra falhar a instalação */ }
     }
+
+    // Download em C# puro (não via PowerShell/Invoke-WebRequest) para poder reportar
+    // progresso em tempo real — o Invoke-WebRequest só devolve controle quando termina,
+    // então a TUI ficava travada em "Baixando..." sem nenhum feedback do quanto faltava.
+    public static bool BaixarArquivo(string url, string destino, Action<double> progresso, int timeoutSegundos = 300)
+    {
+        try
+        {
+            using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(timeoutSegundos) };
+            using var resposta = http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead).GetAwaiter().GetResult();
+            resposta.EnsureSuccessStatusCode();
+
+            var total = resposta.Content.Headers.ContentLength;
+            using var stream = resposta.Content.ReadAsStream();
+            using var arquivo = File.Create(destino);
+
+            var buffer = new byte[81920];
+            long lidos = 0;
+            int n;
+            while ((n = stream.Read(buffer, 0, buffer.Length)) > 0)
+            {
+                arquivo.Write(buffer, 0, n);
+                lidos += n;
+                if (total is > 0)
+                    progresso(Math.Min(100.0, lidos * 100.0 / total.Value));
+            }
+
+            if (total is null or 0) progresso(100);
+            return true;
+        }
+        catch
+        {
+            try { if (File.Exists(destino)) File.Delete(destino); } catch { /* melhor esforço */ }
+            return false;
+        }
+    }
 }

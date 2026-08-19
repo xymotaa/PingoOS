@@ -1,5 +1,63 @@
 # Registro de Alterações
 
+## [2026-08-19] PingoInstaller: Git corrigido, Desinstalar, barra de progresso, ícone (versão 1.0.0.22)
+
+### Bug real: instalação do Git sempre falhava
+Testado numa máquina Windows real: o .NET instalava certo, mas o Git nunca instalava —
+terminava sempre na mensagem "instale manualmente pelo site". Duas causas encontradas:
+
+1. **A URL do instalador estava quebrada.** O link fixo
+   `.../releases/latest/download/Git-64-bit.exe` dava 404 — o Git for Windows nomeia o arquivo
+   com o número da versão (ex: `Git-2.55.0.4-64-bit.exe`), então um link fixo sem versão só
+   funcionava por coincidência em versões antigas. Corrigido: a URL real é resolvida na hora,
+   perguntando pra API do GitHub qual é o arquivo da última release.
+2. **A checagem "Git já instalado?" dependia só do PATH do processo**, que não reflete de forma
+   confiável uma instalação feita nesta mesma execução (via winget ou pelo instalador oficial) —
+   o processo continuava achando que o Git não existia mesmo depois de instalado. Corrigido:
+   agora checa também se `git.exe` existe no caminho padrão (`Program Files\Git\cmd\git.exe`)
+   direto no disco, sem depender só do PATH. O mesmo problema (menos grave, porque o .NET
+   instalava certo) também existia na checagem do .NET — corrigido do mesmo jeito.
+
+### Barra de progresso no download
+Os downloads (script do .NET, instalador do Git) rodavam via `Invoke-WebRequest` do PowerShell,
+que só devolve o controle quando termina — a tela ficava parada em "Baixando..." sem indicar
+quanto faltava. Reescrito para baixar em C# puro (streaming com `HttpClient`), o que permite
+mostrar uma barra `NN% [####------]` atualizada em tempo real durante o download.
+
+### Desinstalar
+Nova opção no menu: para o serviço, remove o registro dele no Windows, apaga o código clonado e
+o programa publicado. Pede confirmação digitando "DESINSTALAR" (mesmo padrão da restauração de
+backup do sistema principal). Se existir um `loja.db` na máquina, pergunta separadamente se deve
+ser apagado também (mantém por padrão — só apaga se a pessoa digitar "APAGAR" explicitamente),
+já que ali ficam clientes, vendas e ordens de serviço reais.
+
+### Ícone do instalador
+`PingoInstaller.exe` agora tem um ícone próprio (a partir da logo fornecida), em vez do ícone
+padrão genérico do .NET — aparece no Explorer, na barra de tarefas e em atalhos. Em tamanhos
+muito pequenos (16×16, barra de tarefas) o texto fica pouco legível — limitação do próprio
+desenho (wordmark fina), não do processo de conversão.
+
+### Arquivos Alterados
+| Arquivo | Alteração |
+|---|---|
+| `PingoInstaller/Processos.cs` | novo `BaixarArquivo` — download via `HttpClient` com callback de progresso |
+| `PingoInstaller/Tela.cs` | novo `BarraProgresso` — formata `NN% [####------]` em ASCII puro |
+| `PingoInstaller/Instalador.cs` | `GarantirGit`/`GarantirDotnet` reescritos: checagem por caminho real, resolução dinâmica da URL do Git via API do GitHub, barra de progresso; novo `Desinstalar` |
+| `PingoInstaller/AcoesServico.cs` | novo `DesinstalarInterativo` — confirmação dupla (banco + "DESINSTALAR") |
+| `PingoInstaller/Program.cs` | nova opção "Desinstalar" no menu (8 opções agora) |
+| `PingoInstaller/PingoInstaller.csproj`, `PingoInstaller/icone.ico` (novo) | ícone do executável |
+| `VERSION.txt` | `1.0.0.22` |
+
+### Resultado
+Testado neste ambiente: resolução da URL real do Git via API do GitHub confirmada (JSON
+verdadeiro, não mockado); download com progresso testado contra a URL real do Git for Windows
+(baixados os primeiros 5MB de 65MB, progresso incremental correto: 7,3%→8,0%); navegação do menu
+de 8 opções (seta e tecla numérica); app completo publicado e rodando de ponta a ponta (tela
+inicial, pergunta Instalar y/n). O fluxo completo de instalação de verdade (baixar+instalar Git
+de fato, `sc.exe`/`net` reais, `ReadLine` interativo no console do Windows) não pôde ser testado
+neste ambiente Linux — validação final depende da máquina Windows real que reportou o bug
+original. Build sem avisos.
+
 ## [2026-08-19] PingoInstaller: Ligar servidor, Atualizar separado de Reinstalar (versão 1.0.0.21)
 
 ### Pedido
