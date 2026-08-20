@@ -1,30 +1,25 @@
 # Pingo OS
 
-ERP para lojas de assistência técnica e acessórios de celular: clientes, estoque, caixa,
-garantias e faturamento em um sistema só, rodando local na loja.
-
 ![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet&logoColor=white)
 ![ASP.NET Core MVC](https://img.shields.io/badge/ASP.NET%20Core-MVC-5C2D91)
 ![EF Core](https://img.shields.io/badge/EF%20Core-10.0.9-512BD4)
 ![SQLite](https://img.shields.io/badge/SQLite-loja.db-003B57?logo=sqlite&logoColor=white)
+![Licença](https://img.shields.io/badge/Licença-Apache%202.0-informational)
+
+Pingo OS é um sistema de gestão (ERP) para lojas de assistência técnica e acessórios de celular,
+pensado para rodar direto no computador do estabelecimento — sem mensalidade, sem depender de
+internet e sem enviar dados para servidor de terceiros.
 
 ![Painel do Pingo OS](docs/screenshots/painel.png)
 
----
+## Sobre o projeto
 
-## Stack
+O projeto nasceu para resolver um problema concreto: pequenas assistências técnicas costumam
+gerenciar clientes, estoque e vendas em papel, planilhas soltas ou sistemas pagos caros demais
+para o porte do negócio. O Pingo OS reúne isso em um único sistema, instalado localmente, com o
+dono dos dados sendo sempre o dono da loja.
 
-| Camada | Tecnologia |
-|---|---|
-| Backend | ASP.NET Core MVC, .NET 10 |
-| ORM | Entity Framework Core |
-| Banco de dados | SQLite (arquivo único, sem servidor) |
-| Front-end | Tailwind CSS, sem build step |
-
-## Requisitos
-
-- [.NET SDK 10.0](https://dotnet.microsoft.com/download) ou superior
-- Windows ou Linux
+É software livre, aberto para uso, estudo e contribuição.
 
 ## Instalação
 
@@ -59,6 +54,29 @@ dotnet run
 
 Acesse **http://localhost:5096**. Na primeira execução o sistema cria o banco `loja.db` e aplica
 as migrations automaticamente.
+
+## Requisitos
+
+- [.NET SDK 10.0](https://dotnet.microsoft.com/download) ou superior
+- Windows ou Linux
+
+## Stack
+
+| Camada | Tecnologia |
+|---|---|
+| Backend | ASP.NET Core MVC, .NET 10 |
+| ORM | Entity Framework Core |
+| Banco de dados | SQLite (arquivo único, sem servidor) |
+| Front-end | Tailwind CSS, sem build step |
+
+## Contribuindo
+
+Contribuições são bem-vindas. Abra uma [issue](https://github.com/xymotaa/PingoOS/issues) para
+relatar bugs ou sugerir melhorias, ou envie um pull request.
+
+## Contato
+
+Desenvolvido por [Lucas Barros Mota](https://github.com/xymotaa).
 
 ## Licença
 
