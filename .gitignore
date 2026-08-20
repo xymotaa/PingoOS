@@ -9,3 +9,8 @@ ListasCompras/wwwroot/uploads/
 # Material-fonte de logo/design — o resultado final usado no projeto (ex: icone.ico
 # do PingoInstaller) fica versionado; os arquivos originais/brutos, não.
 docs/logos/
+
+# Log de mudanças e roteiro — ferramentas de acompanhamento interno, não fazem
+# parte do que o repositório expõe publicamente.
+CHANGES.md
+ROADMAP.md
