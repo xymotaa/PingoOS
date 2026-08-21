@@ -189,7 +189,7 @@ static class Instalador
         if (Directory.Exists(Config.PastaCodigo))
         {
             status("Apagando a copia local para reinstalar do zero...");
-            Directory.Delete(Config.PastaCodigo, recursive: true);
+            Processos.ApagarPastaForcado(Config.PastaCodigo);
         }
         return new PassoResultado(true);
     }
@@ -207,7 +207,7 @@ static class Instalador
             if (Directory.Exists(Config.PastaCodigo))
             {
                 status("Encontrei uma copia incompleta de instalacao anterior, refazendo...");
-                Directory.Delete(Config.PastaCodigo, recursive: true);
+                Processos.ApagarPastaForcado(Config.PastaCodigo);
             }
 
             status("Primeira instalacao: clonando o repositorio...");
@@ -247,8 +247,8 @@ static class Instalador
         // esses arquivos foram criados por outro usuário/contexto de permissão antes
         var pastaObj = Path.Combine(Config.PastaProjeto, "obj");
         var pastaBin = Path.Combine(Config.PastaProjeto, "bin");
-        if (Directory.Exists(pastaObj)) Directory.Delete(pastaObj, recursive: true);
-        if (Directory.Exists(pastaBin)) Directory.Delete(pastaBin, recursive: true);
+        if (Directory.Exists(pastaObj)) Processos.ApagarPastaForcado(pastaObj);
+        if (Directory.Exists(pastaBin)) Processos.ApagarPastaForcado(pastaBin);
 
         return new PassoResultado(true);
     }
@@ -344,8 +344,8 @@ static class Instalador
         }
 
         status("Apagando os arquivos...");
-        if (Directory.Exists(Config.PastaCodigo)) Directory.Delete(Config.PastaCodigo, recursive: true);
-        if (Directory.Exists(Config.PastaApp)) Directory.Delete(Config.PastaApp, recursive: true);
+        if (Directory.Exists(Config.PastaCodigo)) Processos.ApagarPastaForcado(Config.PastaCodigo);
+        if (Directory.Exists(Config.PastaApp)) Processos.ApagarPastaForcado(Config.PastaApp);
 
         if (backupDb != null)
         {

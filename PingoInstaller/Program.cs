@@ -101,7 +101,19 @@ void RodarInstalacao(bool reinstalar)
 
     foreach (var passo in passos)
     {
-        var resultado = passo(Status);
+        PassoResultado resultado;
+        try
+        {
+            resultado = passo(Status);
+        }
+        catch (Exception ex)
+        {
+            // Qualquer exceção não prevista aqui (ex: arquivo travado, permissão negada)
+            // não pode derrubar o processo cru com stack trace — vira uma falha de passo
+            // normal, com a mesma tela de erro amigável das falhas esperadas.
+            resultado = new PassoResultado(false, "Erro inesperado: " + ex.Message);
+        }
+
         if (!resultado.Sucesso)
         {
             Console.WriteLine();

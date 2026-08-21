@@ -131,7 +131,15 @@ static class AcoesServico
             Console.Write("  " + mensagem);
         }
 
-        var resultado = Instalador.Desinstalar(Status, manterBanco);
+        PassoResultado resultado;
+        try
+        {
+            resultado = Instalador.Desinstalar(Status, manterBanco);
+        }
+        catch (Exception ex)
+        {
+            resultado = new PassoResultado(false, "Erro inesperado: " + ex.Message);
+        }
         Console.WriteLine();
         Console.WriteLine();
         if (resultado.Sucesso)

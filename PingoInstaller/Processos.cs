@@ -53,6 +53,28 @@ static class Processos
         return resultado.Sucesso;
     }
 
+    // Directory.Delete(recursive: true) falha com "Access to the path is denied" dentro
+    // de qualquer pasta .git — o próprio Git grava os objetos em .git/objects como
+    // somente-leitura, e o .NET (diferente do "rmdir /s /q" do cmd ou do próprio git)
+    // não limpa esse atributo sozinho antes de tentar apagar. Precisa limpar primeiro.
+    public static void ApagarPastaForcado(string caminho)
+    {
+        var raiz = new DirectoryInfo(caminho);
+
+        foreach (var pasta in raiz.EnumerateDirectories("*", SearchOption.AllDirectories))
+        {
+            if (pasta.Attributes.HasFlag(FileAttributes.ReadOnly))
+                pasta.Attributes &= ~FileAttributes.ReadOnly;
+        }
+        foreach (var arquivo in raiz.EnumerateFiles("*", SearchOption.AllDirectories))
+        {
+            if (arquivo.Attributes.HasFlag(FileAttributes.ReadOnly))
+                arquivo.Attributes &= ~FileAttributes.ReadOnly;
+        }
+
+        Directory.Delete(caminho, recursive: true);
+    }
+
     public static void AbrirNoNavegador(string url)
     {
         try
