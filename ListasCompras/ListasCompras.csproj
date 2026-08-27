@@ -8,6 +8,14 @@
     <AllowMissingPrunePackageData>true</AllowMissingPrunePackageData>
   </PropertyGroup>
 
+  <!-- O SDK inclui **/*.cs por padrão, o que arrastaria o projeto de testes (subpasta)
+       pra dentro da compilação do site — exclui explicitamente. -->
+  <ItemGroup>
+    <Compile Remove="ListasCompras.Tests/**/*.cs" />
+    <Content Remove="ListasCompras.Tests/**/*" />
+    <None Remove="ListasCompras.Tests/**/*" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.9">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
