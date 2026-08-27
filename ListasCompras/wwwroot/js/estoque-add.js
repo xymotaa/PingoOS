@@ -97,17 +97,18 @@ document.addEventListener("DOMContentLoaded", function () {
         variacaoSeq++;
         const precoStr = v.preco != null ? Number(v.preco).toFixed(2).replace(".", ",") : "";
         const temId = v.id ? v.id : 0;
+        const campo = "w-full bg-surface-container-low border-none rounded-lg px-sm py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30";
         return '<tr>' +
-            '<td><input type="hidden" name="variacaoId" value="' + temId + '" />' +
-                '<input type="text" name="variacaoDescricao" value="' + escapeAtributo(v.descricao) + '" maxlength="80" placeholder="Ex: Preta, 64GB" class="w-full bg-surface-container-low border-none rounded-lg px-sm py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" /></td>' +
-            '<td><input type="text" name="variacaoCodigo" value="' + escapeAtributo(v.codigo) + '" maxlength="40" placeholder="Auto" class="w-24 bg-surface-container-low border-none rounded-lg px-sm py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" /></td>' +
-            '<td><input type="text" name="variacaoPreco" value="' + escapeAtributo(precoStr) + '" inputmode="decimal" data-mascara="valor" placeholder="Herda do produto" class="w-24 bg-surface-container-low border-none rounded-lg px-sm py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" /></td>' +
-            '<td><input type="number" name="variacaoEstoqueAtual" value="' + (v.estoqueAtual || 0) + '" min="0" class="w-20 bg-surface-container-low border-none rounded-lg px-sm py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" /></td>' +
-            '<td><input type="number" name="variacaoEstoqueMinimo" value="' + (v.estoqueMinimo || "") + '" min="0" class="w-20 bg-surface-container-low border-none rounded-lg px-sm py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" /></td>' +
-            '<td><input type="number" name="variacaoEstoqueMaximo" value="' + (v.estoqueMaximo || "") + '" min="0" class="w-20 bg-surface-container-low border-none rounded-lg px-sm py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" /></td>' +
-            '<td>' + (temId
-                ? '<button type="button" class="npExcluirVariacaoBtn text-error" data-id="' + temId + '" title="Excluir variação"><span class="material-symbols-outlined text-[18px]">delete</span></button>'
-                : '<button type="button" class="npRemoverLinhaVariacaoBtn text-error" title="Remover linha"><span class="material-symbols-outlined text-[18px]">close</span></button>') +
+            '<td class="px-sm py-sm align-top"><input type="hidden" name="variacaoId" value="' + temId + '" />' +
+                '<input type="text" name="variacaoDescricao" value="' + escapeAtributo(v.descricao) + '" maxlength="80" placeholder="Ex: Preta, 64GB" class="' + campo + '" /></td>' +
+            '<td class="px-sm py-sm align-top"><input type="text" name="variacaoCodigo" value="' + escapeAtributo(v.codigo) + '" maxlength="40" placeholder="Auto" class="' + campo + '" /></td>' +
+            '<td class="px-sm py-sm align-top"><input type="text" name="variacaoPreco" value="' + escapeAtributo(precoStr) + '" inputmode="decimal" data-mascara="valor" placeholder="Herdar" class="' + campo + '" /></td>' +
+            '<td class="px-sm py-sm align-top"><input type="number" name="variacaoEstoqueAtual" value="' + escapeAtributo(v.estoqueAtual) + '" min="0" class="' + campo + '" /></td>' +
+            '<td class="px-sm py-sm align-top"><input type="number" name="variacaoEstoqueMinimo" value="' + escapeAtributo(v.estoqueMinimo) + '" min="0" class="' + campo + '" /></td>' +
+            '<td class="px-sm py-sm align-top"><input type="number" name="variacaoEstoqueMaximo" value="' + escapeAtributo(v.estoqueMaximo) + '" min="0" class="' + campo + '" /></td>' +
+            '<td class="px-sm py-sm align-top text-center">' + (temId
+                ? '<button type="button" class="npExcluirVariacaoBtn w-8 h-8 rounded-lg hover:bg-error-container inline-flex items-center justify-center text-outline hover:text-error transition-colors" data-id="' + temId + '" title="Excluir variação"><span class="material-symbols-outlined text-[18px]">delete</span></button>'
+                : '<button type="button" class="npRemoverLinhaVariacaoBtn w-8 h-8 rounded-lg hover:bg-surface-container-high inline-flex items-center justify-center text-outline hover:text-error transition-colors" title="Remover linha"><span class="material-symbols-outlined text-[18px]">close</span></button>') +
             '</td></tr>';
     }
 

@@ -355,29 +355,30 @@
                         </div>
 
                         <div id="npVariacoesWrap" class="hidden">
-                            <div class="flex items-end justify-between mb-md">
-                                <p class="font-label-sm text-label-sm text-outline">
-                                    Ex: "Preta, 64GB". Deixe o código em branco para gerar automaticamente. Preço em branco herda o preço do produto principal.
+                            <div class="flex items-start justify-between gap-md mb-md">
+                                <p class="font-label-sm text-label-sm text-outline max-w-[420px]">
+                                    Deixe o código em branco para gerar automaticamente. Deixe o preço em
+                                    branco para herdar o preço do produto principal.
                                 </p>
                                 <button id="npAddVariacaoBtn" type="button"
                                         class="shrink-0 border border-outline text-secondary rounded-lg px-md py-xs font-label-md text-label-md font-bold hover:bg-surface-container-low transition-colors flex items-center gap-xs">
                                     <span class="material-symbols-outlined text-[18px]">add</span> Adicionar variação
                                 </button>
                             </div>
-                            <div class="overflow-x-auto">
-                                <table class="w-full text-left">
+                            <div class="overflow-x-auto rounded-xl border border-outline-variant">
+                                <table class="w-full text-left border-collapse min-w-[760px]">
                                     <thead>
-                                        <tr class="border-b border-outline-variant">
-                                            <th class="px-sm py-xs font-label-sm text-label-sm text-outline">Descrição</th>
-                                            <th class="px-sm py-xs font-label-sm text-label-sm text-outline">Código</th>
-                                            <th class="px-sm py-xs font-label-sm text-label-sm text-outline">Preço</th>
-                                            <th class="px-sm py-xs font-label-sm text-label-sm text-outline">Estoque atual</th>
-                                            <th class="px-sm py-xs font-label-sm text-label-sm text-outline">Mínimo</th>
-                                            <th class="px-sm py-xs font-label-sm text-label-sm text-outline">Máximo</th>
-                                            <th class="px-sm py-xs"></th>
+                                        <tr class="bg-surface-container-low border-b border-outline-variant">
+                                            <th class="w-[30%] px-sm py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider">Descrição</th>
+                                            <th class="w-[16%] px-sm py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider">Código</th>
+                                            <th class="w-[14%] px-sm py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider">Preço</th>
+                                            <th class="w-[13%] px-sm py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider">Estoque</th>
+                                            <th class="w-[13%] px-sm py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider">Mínimo</th>
+                                            <th class="w-[13%] px-sm py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider">Máximo</th>
+                                            <th class="w-9 px-sm py-sm"></th>
                                         </tr>
                                     </thead>
-                                    <tbody id="npVariacoesBody"></tbody>
+                                    <tbody id="npVariacoesBody" class="divide-y divide-outline-variant"></tbody>
                                 </table>
                             </div>
                         </div>
