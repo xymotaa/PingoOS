@@ -12,6 +12,28 @@ public class ProdutoEstoque
     public string? Unidade { get; set; }
     public string? Imagem { get; set; } // nome do arquivo em wwwroot/uploads/produtos, sem caminho
 
+    // "simples" | "variacao" — "variacao" ainda não tem a etapa de cadastro implementada,
+    // então o formulário bloqueia essa opção por enquanto (ver EstoqueController.Salvar).
+    public string Formato { get; set; } = TiposFormatoProduto.Simples;
+    public string Tipo { get; set; } = TiposProduto.Produto; // "produto" | "servico"
+    public string Condicao { get; set; } = CondicoesProduto.NaoEspecificado; // "nao_especificado" | "novo" | "usado"
+
+    public string? Descricao { get; set; }
+    public string? Marca { get; set; }
+    public string? ModeloRef { get; set; }
+    public string? Gtin { get; set; }
+    public decimal? Peso { get; set; }
+    public decimal? Largura { get; set; }
+    public decimal? Altura { get; set; }
+    public decimal? Profundidade { get; set; }
+    public string? Localizacao { get; set; }
+
+    // Tributação — só dado de referência por enquanto, o sistema não emite NF-e ainda
+    public int OrigemFiscal { get; set; } // 0 Nacional | 1 Estrangeira (importação direta) | 2 Estrangeira (mercado interno)
+    public string? Ncm { get; set; }
+    public string? Cest { get; set; }
+    public string? Cfop { get; set; }
+
     public int SaldoAtual { get; set; }
     public int EstoqueMinimo { get; set; }
     public int EstoqueMaximo { get; set; } // 0 = sem máximo definido
@@ -72,4 +94,23 @@ public static class TiposMovimentacao
 {
     public const string Entrada = "entrada";
     public const string Saida = "saida";
+}
+
+public static class TiposFormatoProduto
+{
+    public const string Simples = "simples";
+    public const string ComVariacao = "variacao";
+}
+
+public static class TiposProduto
+{
+    public const string Produto = "produto";
+    public const string Servico = "servico";
+}
+
+public static class CondicoesProduto
+{
+    public const string NaoEspecificado = "nao_especificado";
+    public const string Novo = "novo";
+    public const string Usado = "usado";
 }

@@ -36,7 +36,12 @@ public class EstoqueController : LojaControllerBase
     public async Task<IActionResult> Salvar(
         int id, string nome, string? codigo, int? categoriaId, string? unidade,
         string? preco, string? custo, int estoqueInicial, int estoqueMinimo, int estoqueMaximo,
-        int[]? modelosCelularIds, IFormFile? foto, bool removerFoto = false)
+        int[]? modelosCelularIds, IFormFile? foto, bool removerFoto = false,
+        string? formato = TiposFormatoProduto.Simples, string? tipo = TiposProduto.Produto,
+        string? condicao = CondicoesProduto.NaoEspecificado, string? descricao = null,
+        string? marca = null, string? modeloRef = null, string? gtin = null,
+        string? peso = null, string? largura = null, string? altura = null, string? profundidade = null,
+        string? localizacao = null, int origemFiscal = 0, string? ncm = null, string? cest = null, string? cfop = null)
     {
         if (string.IsNullOrWhiteSpace(nome))
         {
@@ -56,6 +61,14 @@ public class EstoqueController : LojaControllerBase
             (!ProdutoImagemServico.TipoValido(foto.ContentType) || !ProdutoImagemServico.TamanhoValido(foto.Length)))
         {
             TempData["Erro"] = "Envie uma imagem em JPEG, PNG ou WEBP de até 8 MB.";
+            return RedirectToAction(nameof(Add), new { id = id > 0 ? id : (int?)null });
+        }
+
+        // "Com variação" ainda não tem a etapa de cadastro implementada — bloqueia aqui
+        // pra não deixar o produto num estado que a tela não sabe editar depois.
+        if (formato == TiposFormatoProduto.ComVariacao)
+        {
+            TempData["Erro"] = "Produtos com variação ainda não são suportados. Cadastre como \"Simples\" por enquanto.";
             return RedirectToAction(nameof(Add), new { id = id > 0 ? id : (int?)null });
         }
 
@@ -85,6 +98,23 @@ public class EstoqueController : LojaControllerBase
         produto.PrecoVenda = ParaDecimal(preco);
         produto.EstoqueMinimo = estoqueMinimo;
         produto.EstoqueMaximo = estoqueMaximo;
+
+        produto.Formato = formato == TiposFormatoProduto.ComVariacao ? TiposFormatoProduto.ComVariacao : TiposFormatoProduto.Simples;
+        produto.Tipo = tipo == TiposProduto.Servico ? TiposProduto.Servico : TiposProduto.Produto;
+        produto.Condicao = condicao is CondicoesProduto.Novo or CondicoesProduto.Usado ? condicao : CondicoesProduto.NaoEspecificado;
+        produto.Descricao = Limpar(descricao);
+        produto.Marca = Limpar(marca);
+        produto.ModeloRef = Limpar(modeloRef);
+        produto.Gtin = Limpar(gtin);
+        produto.Peso = ParaDecimalNullable(peso);
+        produto.Largura = ParaDecimalNullable(largura);
+        produto.Altura = ParaDecimalNullable(altura);
+        produto.Profundidade = ParaDecimalNullable(profundidade);
+        produto.Localizacao = Limpar(localizacao);
+        produto.OrigemFiscal = origemFiscal is 1 or 2 ? origemFiscal : 0;
+        produto.Ncm = Limpar(ncm);
+        produto.Cest = Limpar(cest);
+        produto.Cfop = Limpar(cfop);
 
         if (novo)
         {
@@ -223,6 +253,18 @@ public class EstoqueController : LojaControllerBase
     // Cultura invariante de propósito: o formulário manda ponto decimal
     private static decimal ParaDecimal(string? valor)
         => decimal.TryParse(valor, NumberStyles.Number, CultureInfo.InvariantCulture, out var d) ? d : 0m;
+
+    // Peso/dimensões são opcionais e, diferente de Preço/Custo, não têm máscara de
+    // digitação — o usuário digita "1,5" à mão (natural em pt-BR). NumberStyles.Number
+    // na cultura invariante trataria a vírgula como separador de milhar ("1,5" -> 15),
+    // então a vírgula é normalizada para ponto antes do parse. "Não preenchido" vira
+    // null (sem valor), não 0 (que pareceria um peso real de zero).
+    private static decimal? ParaDecimalNullable(string? valor)
+    {
+        if (string.IsNullOrWhiteSpace(valor)) return null;
+        var normalizado = valor.Trim().Replace(",", ".");
+        return decimal.TryParse(normalizado, NumberStyles.Number, CultureInfo.InvariantCulture, out var d) ? d : null;
+    }
 
     private static string? Limpar(string? v) => string.IsNullOrWhiteSpace(v) ? null : v.Trim();
 }

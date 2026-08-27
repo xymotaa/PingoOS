@@ -148,16 +148,16 @@
                                     Formato
                                     <span class="material-symbols-outlined text-[16px] text-secondary" title="Produto simples ou com variações">info</span>
                                 </label>
-                                <select id="npFormato" class="w-full mt-xs bg-surface-container-low border-none rounded-lg pl-md pr-10 py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30">
-                                    <option value="simples">Simples ou com variação</option>
-                                    <option value="variacao">Com variação</option>
+                                <select id="npFormato" name="formato" class="w-full mt-xs bg-surface-container-low border-none rounded-lg pl-md pr-10 py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30">
+                                    <option value="simples" selected="@(Model.Formato != "variacao")">Simples</option>
+                                    <option value="variacao" selected="@(Model.Formato == "variacao")">Com variação (em breve)</option>
                                 </select>
                             </div>
                             <div class="md:col-span-3">
                                 <label class="font-label-md text-label-md text-on-surface-variant" for="npTipo">Tipo</label>
-                                <select id="npTipo" class="w-full mt-xs bg-surface-container-low border-none rounded-lg pl-md pr-10 py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30">
-                                    <option value="produto">Produto</option>
-                                    <option value="servico">Serviço</option>
+                                <select id="npTipo" name="tipo" class="w-full mt-xs bg-surface-container-low border-none rounded-lg pl-md pr-10 py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30">
+                                    <option value="produto" selected="@(Model.Tipo != "servico")">Produto</option>
+                                    <option value="servico" selected="@(Model.Tipo == "servico")">Serviço</option>
                                 </select>
                             </div>
                             <div class="md:col-span-3">
@@ -165,10 +165,10 @@
                                     Condição
                                     <span class="material-symbols-outlined text-[16px] text-secondary" title="Condição do produto">info</span>
                                 </label>
-                                <select id="npCondicao" class="w-full mt-xs bg-surface-container-low border-none rounded-lg pl-md pr-10 py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30">
-                                    <option value="nao_especificado">Não Especificado</option>
-                                    <option value="novo">Novo</option>
-                                    <option value="usado">Usado</option>
+                                <select id="npCondicao" name="condicao" class="w-full mt-xs bg-surface-container-low border-none rounded-lg pl-md pr-10 py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30">
+                                    <option value="nao_especificado" selected="@(Model.Condicao == "nao_especificado")">Não Especificado</option>
+                                    <option value="novo" selected="@(Model.Condicao == "novo")">Novo</option>
+                                    <option value="usado" selected="@(Model.Condicao == "usado")">Usado</option>
                                 </select>
                             </div>
 
@@ -200,36 +200,36 @@
                         <div class="grid grid-cols-1 md:grid-cols-12 gap-md">
                             <div class="md:col-span-12">
                                 <label class="font-label-md text-label-md text-on-surface-variant" for="npDescricao">Descrição complementar</label>
-                                <textarea id="npDescricao" rows="3" placeholder="Detalhes do produto, especificações, observações..."
-                                          class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30"></textarea>
+                                <textarea id="npDescricao" name="descricao" rows="3" placeholder="Detalhes do produto, especificações, observações..."
+                                          class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30">@Model.Descricao</textarea>
                             </div>
                             <div class="md:col-span-4">
                                 <label class="font-label-md text-label-md text-on-surface-variant" for="npMarca">Marca</label>
-                                <input id="npMarca" type="text" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                                <input id="npMarca" name="marca" value="@Model.Marca" type="text" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
                             </div>
                             <div class="md:col-span-4">
                                 <label class="font-label-md text-label-md text-on-surface-variant" for="npModeloRef">Modelo / Referência</label>
-                                <input id="npModeloRef" type="text" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                                <input id="npModeloRef" name="modeloRef" value="@Model.ModeloRef" type="text" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
                             </div>
                             <div class="md:col-span-4">
                                 <label class="font-label-md text-label-md text-on-surface-variant" for="npGtin">GTIN / EAN</label>
-                                <input id="npGtin" type="text" inputmode="numeric" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                                <input id="npGtin" name="gtin" value="@Model.Gtin" type="text" inputmode="numeric" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
                             </div>
                             <div class="md:col-span-3">
                                 <label class="font-label-md text-label-md text-on-surface-variant" for="npPeso">Peso (kg)</label>
-                                <input id="npPeso" type="text" inputmode="decimal" placeholder="0,000" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                                <input id="npPeso" name="peso" value="@Model.Peso?.ToString(System.Globalization.CultureInfo.GetCultureInfo("pt-BR"))" type="text" inputmode="decimal" placeholder="0,000" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
                             </div>
                             <div class="md:col-span-3">
                                 <label class="font-label-md text-label-md text-on-surface-variant" for="npLargura">Largura (cm)</label>
-                                <input id="npLargura" type="text" inputmode="decimal" placeholder="0" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                                <input id="npLargura" name="largura" value="@Model.Largura?.ToString(System.Globalization.CultureInfo.GetCultureInfo("pt-BR"))" type="text" inputmode="decimal" placeholder="0" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
                             </div>
                             <div class="md:col-span-3">
                                 <label class="font-label-md text-label-md text-on-surface-variant" for="npAltura">Altura (cm)</label>
-                                <input id="npAltura" type="text" inputmode="decimal" placeholder="0" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                                <input id="npAltura" name="altura" value="@Model.Altura?.ToString(System.Globalization.CultureInfo.GetCultureInfo("pt-BR"))" type="text" inputmode="decimal" placeholder="0" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
                             </div>
                             <div class="md:col-span-3">
                                 <label class="font-label-md text-label-md text-on-surface-variant" for="npProfundidade">Profundidade (cm)</label>
-                                <input id="npProfundidade" type="text" inputmode="decimal" placeholder="0" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                                <input id="npProfundidade" name="profundidade" value="@Model.Profundidade?.ToString(System.Globalization.CultureInfo.GetCultureInfo("pt-BR"))" type="text" inputmode="decimal" placeholder="0" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
                             </div>
                             <div class="md:col-span-12">
                                 <label class="font-label-md text-label-md text-on-surface-variant">Modelos de celular compatíveis</label>
@@ -291,7 +291,7 @@
                             </div>
                             <div class="md:col-span-6">
                                 <label class="font-label-md text-label-md text-on-surface-variant" for="npLocalizacao">Localização no estoque</label>
-                                <input id="npLocalizacao" type="text" placeholder="Ex: Prateleira A3, Gaveta 2..." class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                                <input id="npLocalizacao" name="localizacao" value="@Model.Localizacao" type="text" placeholder="Ex: Prateleira A3, Gaveta 2..." class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
                             </div>
                         </div>
                     </div>
@@ -302,23 +302,23 @@
                         <div class="grid grid-cols-1 md:grid-cols-12 gap-md">
                             <div class="md:col-span-6">
                                 <label class="font-label-md text-label-md text-on-surface-variant" for="npOrigem">Origem</label>
-                                <select id="npOrigem" class="w-full mt-xs bg-surface-container-low border-none rounded-lg pl-md pr-10 py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30">
-                                    <option value="0">0 - Nacional</option>
-                                    <option value="1">1 - Estrangeira (importação direta)</option>
-                                    <option value="2">2 - Estrangeira (adquirida no mercado interno)</option>
+                                <select id="npOrigem" name="origemFiscal" class="w-full mt-xs bg-surface-container-low border-none rounded-lg pl-md pr-10 py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30">
+                                    <option value="0" selected="@(Model.OrigemFiscal == 0)">0 - Nacional</option>
+                                    <option value="1" selected="@(Model.OrigemFiscal == 1)">1 - Estrangeira (importação direta)</option>
+                                    <option value="2" selected="@(Model.OrigemFiscal == 2)">2 - Estrangeira (adquirida no mercado interno)</option>
                                 </select>
                             </div>
                             <div class="md:col-span-3">
                                 <label class="font-label-md text-label-md text-on-surface-variant" for="npNcm">NCM</label>
-                                <input id="npNcm" type="text" inputmode="numeric" placeholder="0000.00.00" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                                <input id="npNcm" name="ncm" value="@Model.Ncm" type="text" inputmode="numeric" placeholder="0000.00.00" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
                             </div>
                             <div class="md:col-span-3">
                                 <label class="font-label-md text-label-md text-on-surface-variant" for="npCest">CEST</label>
-                                <input id="npCest" type="text" inputmode="numeric" placeholder="00.000.00" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                                <input id="npCest" name="cest" value="@Model.Cest" type="text" inputmode="numeric" placeholder="00.000.00" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
                             </div>
                             <div class="md:col-span-3">
                                 <label class="font-label-md text-label-md text-on-surface-variant" for="npCfop">CFOP</label>
-                                <input id="npCfop" type="text" inputmode="numeric" placeholder="5102" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                                <input id="npCfop" name="cfop" value="@Model.Cfop" type="text" inputmode="numeric" placeholder="5102" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
                             </div>
                         </div>
                     </div>
