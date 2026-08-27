@@ -45,6 +45,15 @@ public class ConfiguracaoController : LojaControllerBase
 
         if (logo != null && logo.Length > 0)
         {
+            // Mesma whitelist de tipo/tamanho usada em imagem de produto e foto de
+            // aparelho — sem isso, qualquer arquivo (não necessariamente uma imagem)
+            // acabaria gravado como se fosse a logo, sem checagem nenhuma.
+            if (!ProdutoImagemServico.TipoValido(logo.ContentType) || !ProdutoImagemServico.TamanhoValido(logo.Length))
+            {
+                TempData["Erro"] = "Envie uma imagem em JPEG, PNG ou WEBP de até 8 MB.";
+                return RedirectToAction(nameof(Index));
+            }
+
             using var stream = new MemoryStream();
             await logo.CopyToAsync(stream);
             var base64 = Convert.ToBase64String(stream.ToArray());

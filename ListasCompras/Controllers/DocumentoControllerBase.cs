@@ -230,9 +230,13 @@ public abstract class DocumentoControllerBase : LojaControllerBase
         }
 
         if (novo) Context.OrdensServico.Add(documento);
+
+        // Dois SaveChanges (o pagamento só pode ser criado depois que o documento tem Id,
+        // que numa OS nova só existe após o primeiro salvamento) — sem transação, um erro
+        // entre os dois deixaria a OS salva sem o pagamento do sinal correspondente.
+        using var transacao = Context.Database.BeginTransaction();
         Context.SaveChanges();
 
-        // Só agora o Id existe (numa OS nova, o SaveChanges acima é o que o gera)
         if (haverRecebidoAgora > 0)
         {
             Context.PagamentosOrdemServico.Add(new PagamentoOrdemServico
@@ -244,6 +248,8 @@ public abstract class DocumentoControllerBase : LojaControllerBase
             });
             Context.SaveChanges();
         }
+
+        transacao.Commit();
 
         TempData["Sucesso"] = $"{documento.Rotulo} {documento.Numero} {(novo ? "salvo" : "atualizado")}.";
 
