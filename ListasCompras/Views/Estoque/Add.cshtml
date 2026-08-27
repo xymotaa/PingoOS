@@ -274,8 +274,8 @@
                         <h3 class="font-title-lg text-title-lg text-primary mb-lg">Estoque</h3>
                         <div class="grid grid-cols-1 md:grid-cols-12 gap-md">
                             <div class="md:col-span-3">
-                                <label class="font-label-md text-label-md text-on-surface-variant" for="npEstoqueInicial">Estoque inicial@(Model.Id > 0 ? " (use Movimentação para alterar)" : "")</label>
-                                <input id="npEstoqueInicial" name="estoqueInicial" @(Model.Id > 0 ? "disabled" : "") type="number" min="0" step="1" placeholder="0" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                                <label class="font-label-md text-label-md text-on-surface-variant" for="npEstoqueInicial">@(Model.Id > 0 ? "Estoque atual" : "Estoque inicial")</label>
+                                <input id="npEstoqueInicial" name="estoqueInicial" value="@(Model.Id > 0 ? Model.SaldoAtual.ToString() : "")" type="number" min="0" step="1" placeholder="0" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
                             </div>
                             <div class="md:col-span-3">
                                 <label class="font-label-md text-label-md text-on-surface-variant" for="npEstoqueMinimo">Estoque mínimo</label>

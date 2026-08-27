@@ -94,6 +94,19 @@ public class EstoqueController : LojaControllerBase
                 EstoqueServico.Movimentar(produto, TiposMovimentacao.Entrada, estoqueInicial,
                     "Saldo inicial do cadastro", IdDoUsuarioLogado());
         }
+        else
+        {
+            // Editar o estoque aqui não pula a auditoria: a diferença vira uma
+            // movimentação normal, igual a ajustar pela tela de Movimentação — só
+            // evita o usuário ter que abrir outra tela pra corrigir um número.
+            var diferenca = Math.Max(0, estoqueInicial) - produto.SaldoAtual;
+            if (diferenca > 0)
+                EstoqueServico.Movimentar(produto, TiposMovimentacao.Entrada, diferenca,
+                    "Ajuste via cadastro", IdDoUsuarioLogado());
+            else if (diferenca < 0)
+                EstoqueServico.Movimentar(produto, TiposMovimentacao.Saida, -diferenca,
+                    "Ajuste via cadastro", IdDoUsuarioLogado());
+        }
 
         SincronizarModelosCompativeis(produto, modelosCelularIds);
 
