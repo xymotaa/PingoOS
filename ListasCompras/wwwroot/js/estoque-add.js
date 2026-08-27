@@ -73,6 +73,94 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    // ===== Formato: simples vs. com variação =====
+    const npFormato = document.getElementById("npFormato");
+    const npEstoqueSimplesWrap = document.getElementById("npEstoqueSimplesWrap");
+    const npEstoqueVariacaoAviso = document.getElementById("npEstoqueVariacaoAviso");
+    const npVariacoesAviso = document.getElementById("npVariacoesAviso");
+    const npVariacoesWrap = document.getElementById("npVariacoesWrap");
+    const npVariacoesBody = document.getElementById("npVariacoesBody");
+    const npAddVariacaoBtn = document.getElementById("npAddVariacaoBtn");
+    const npEstoqueInicialInput = document.getElementById("npEstoqueInicial");
+    const npEstoqueMinimoInput = document.getElementById("npEstoqueMinimo");
+    const npEstoqueMaximoInput = document.getElementById("npEstoqueMaximo");
+
+    const variacoesIniciais = typeof VARIACOES_EXISTENTES !== "undefined" ? VARIACOES_EXISTENTES : [];
+    let variacaoSeq = 0;
+
+    function escapeAtributo(v) {
+        return String(v == null ? "" : v).replace(/"/g, "&quot;");
+    }
+
+    function linhaVariacaoHtml(v) {
+        v = v || {};
+        variacaoSeq++;
+        const precoStr = v.preco != null ? Number(v.preco).toFixed(2).replace(".", ",") : "";
+        const temId = v.id ? v.id : 0;
+        return '<tr>' +
+            '<td><input type="hidden" name="variacaoId" value="' + temId + '" />' +
+                '<input type="text" name="variacaoDescricao" value="' + escapeAtributo(v.descricao) + '" maxlength="80" placeholder="Ex: Preta, 64GB" class="w-full bg-surface-container-low border-none rounded-lg px-sm py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" /></td>' +
+            '<td><input type="text" name="variacaoCodigo" value="' + escapeAtributo(v.codigo) + '" maxlength="40" placeholder="Auto" class="w-24 bg-surface-container-low border-none rounded-lg px-sm py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" /></td>' +
+            '<td><input type="text" name="variacaoPreco" value="' + escapeAtributo(precoStr) + '" inputmode="decimal" data-mascara="valor" placeholder="Herda do produto" class="w-24 bg-surface-container-low border-none rounded-lg px-sm py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" /></td>' +
+            '<td><input type="number" name="variacaoEstoqueAtual" value="' + (v.estoqueAtual || 0) + '" min="0" class="w-20 bg-surface-container-low border-none rounded-lg px-sm py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" /></td>' +
+            '<td><input type="number" name="variacaoEstoqueMinimo" value="' + (v.estoqueMinimo || "") + '" min="0" class="w-20 bg-surface-container-low border-none rounded-lg px-sm py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" /></td>' +
+            '<td><input type="number" name="variacaoEstoqueMaximo" value="' + (v.estoqueMaximo || "") + '" min="0" class="w-20 bg-surface-container-low border-none rounded-lg px-sm py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" /></td>' +
+            '<td>' + (temId
+                ? '<button type="button" class="npExcluirVariacaoBtn text-error" data-id="' + temId + '" title="Excluir variação"><span class="material-symbols-outlined text-[18px]">delete</span></button>'
+                : '<button type="button" class="npRemoverLinhaVariacaoBtn text-error" title="Remover linha"><span class="material-symbols-outlined text-[18px]">close</span></button>') +
+            '</td></tr>';
+    }
+
+    function adicionarLinhaVariacao(v) {
+        if (npVariacoesBody) npVariacoesBody.insertAdjacentHTML("beforeend", linhaVariacaoHtml(v));
+    }
+
+    if (npAddVariacaoBtn) {
+        npAddVariacaoBtn.addEventListener("click", function () { adicionarLinhaVariacao(); });
+    }
+
+    if (npVariacoesBody) {
+        npVariacoesBody.addEventListener("click", function (e) {
+            const removerLinha = e.target.closest(".npRemoverLinhaVariacaoBtn");
+            if (removerLinha) { removerLinha.closest("tr").remove(); return; }
+
+            const excluirBtn = e.target.closest(".npExcluirVariacaoBtn");
+            if (excluirBtn) {
+                if (!confirm("Excluir esta variação? Só é possível se o saldo dela estiver zerado.")) return;
+                const idVariacao = excluirBtn.dataset.id;
+                const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+                const fd = new FormData();
+                fd.append("id", idVariacao);
+                if (tokenInput) fd.append("__RequestVerificationToken", tokenInput.value);
+                fetch(EXCLUIR_VARIACAO_URL, { method: "POST", body: fd })
+                    .then(function () { location.reload(); });
+            }
+        });
+    }
+
+    function atualizarVisibilidadePorFormato() {
+        if (!npFormato) return;
+        const comVariacao = npFormato.value === "variacao";
+        if (npEstoqueSimplesWrap) npEstoqueSimplesWrap.classList.toggle("hidden", comVariacao);
+        if (npEstoqueVariacaoAviso) npEstoqueVariacaoAviso.classList.toggle("hidden", !comVariacao);
+        if (npVariacoesAviso) npVariacoesAviso.classList.toggle("hidden", comVariacao);
+        if (npVariacoesWrap) npVariacoesWrap.classList.toggle("hidden", !comVariacao);
+
+        // Campo disabled não é enviado no submit — evita mandar um valor antigo
+        // escondido que reative um saldo indevido no servidor para o pai.
+        if (npEstoqueInicialInput) npEstoqueInicialInput.disabled = comVariacao;
+        if (npEstoqueMinimoInput) npEstoqueMinimoInput.disabled = comVariacao;
+        if (npEstoqueMaximoInput) npEstoqueMaximoInput.disabled = comVariacao;
+    }
+
+    if (npFormato) {
+        npFormato.addEventListener("change", atualizarVisibilidadePorFormato);
+
+        variacoesIniciais.forEach(function (v) { adicionarLinhaVariacao(v); });
+        if (variacoesIniciais.length === 0 && npFormato.value === "variacao") adicionarLinhaVariacao();
+        atualizarVisibilidadePorFormato();
+    }
+
     // O visível aceita vírgula; o que vai ao servidor usa ponto, senão a cultura
     // do sistema converteria "620,00" errado
     form.addEventListener("submit", function (e) {

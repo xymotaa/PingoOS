@@ -54,14 +54,27 @@ public static class EstoqueServico
     // P-000001, P-000002... o anterior vinha do relógio no navegador
     public static string ProximoCodigo(AppDbContext context)
     {
-        var ultimo = context.ProdutosEstoque
+        var maiorSalvo = context.ProdutosEstoque
             .Where(p => p.Codigo.StartsWith("P-"))
             .OrderByDescending(p => p.Id)
             .Select(p => p.Codigo)
             .FirstOrDefault();
 
         var sequencia = 0;
-        if (ultimo != null && int.TryParse(ultimo[2..], out var n)) sequencia = n;
+        if (maiorSalvo != null && int.TryParse(maiorSalvo[2..], out var n)) sequencia = n;
+
+        // Cadastrar várias variações de um produto novo na mesma requisição gera vários
+        // ProdutoEstoque no ChangeTracker antes de qualquer SaveChanges — sem considerar
+        // esses códigos já reservados (mas ainda não persistidos), duas variações sem
+        // código informado receberiam o mesmo "próximo código" e o SaveChanges falharia
+        // com violação de unicidade.
+        foreach (var entrada in context.ChangeTracker.Entries<ProdutoEstoque>())
+        {
+            if (entrada.State != EntityState.Added) continue;
+            var codigo = entrada.Entity.Codigo;
+            if (codigo != null && codigo.StartsWith("P-") && int.TryParse(codigo.AsSpan(2), out var pendente) && pendente > sequencia)
+                sequencia = pendente;
+        }
 
         return $"P-{sequencia + 1:D6}";
     }

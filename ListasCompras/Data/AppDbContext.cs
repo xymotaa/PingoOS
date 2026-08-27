@@ -167,7 +167,9 @@ public class AppDbContext : DbContext
 
         // ===== Estoque e Caixa =====
 
-        modelBuilder.Entity<ProdutoEstoque>().Ignore(p => p.ValorEmEstoque).Ignore(p => p.Situacao);
+        modelBuilder.Entity<ProdutoEstoque>()
+            .Ignore(p => p.ValorEmEstoque).Ignore(p => p.Situacao)
+            .Ignore(p => p.SaldoAtualExibido).Ignore(p => p.ValorEmEstoqueExibido).Ignore(p => p.SituacaoExibida);
         modelBuilder.Entity<Venda>()
             .Ignore(v => v.Subtotal).Ignore(v => v.Desconto).Ignore(v => v.Total)
             .Ignore(v => v.Troco).Ignore(v => v.QuantidadeItens);
@@ -192,6 +194,20 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<ProdutoEstoqueModeloCompativel>()
             .HasOne(v => v.ModeloCelular).WithMany()
             .HasForeignKey(v => v.ModeloCelularId).OnDelete(DeleteBehavior.Cascade);
+
+        // Variação é, estruturalmente, outro ProdutoEstoque. Restrict e não Cascade:
+        // excluir o pai com variações precisa ser bloqueado no controller ANTES de
+        // chegar ao banco — Cascade apagaria silenciosamente variações com saldo e
+        // histórico de movimentação/venda ligados a elas, inaceitável numa loja em
+        // produção. Restrict é a rede de segurança que garante isso mesmo se algum
+        // código futuro esquecer da checagem.
+        modelBuilder.Entity<ProdutoEstoque>()
+            .HasOne(p => p.ProdutoPai)
+            .WithMany(p => p.Variacoes)
+            .HasForeignKey(p => p.ProdutoPaiId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<ProdutoEstoque>().HasIndex(p => p.ProdutoPaiId);
 
         modelBuilder.Entity<Venda>().HasIndex(v => v.Numero).IsUnique();
 

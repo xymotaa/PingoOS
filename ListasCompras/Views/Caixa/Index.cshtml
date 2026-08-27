@@ -233,10 +233,26 @@
         </div>
     </div>
 
+    <div id="modalVariacao" class="hidden fixed inset-0 z-[60] bg-[#0b1c30]/40 flex items-center justify-center p-md">
+        <div class="bg-white rounded-xl shadow-lg w-full max-w-[420px] p-lg">
+            <div class="flex justify-between items-center mb-md">
+                <h2 id="modalVariacaoTitulo" class="font-title-lg text-title-lg text-primary">Escolha a variação</h2>
+                <button id="fecharModalVariacaoBtn" type="button" class="w-8 h-8 rounded-lg hover:bg-surface-container-low flex items-center justify-center text-on-surface-variant">
+                    <span class="material-symbols-outlined text-[20px]">close</span>
+                </button>
+            </div>
+            <div id="modalVariacaoLista" class="flex flex-col gap-xs max-h-[360px] overflow-y-auto"></div>
+        </div>
+    </div>
+
     <script>
         const PRODUTOS = @Html.Raw(Json.Serialize(Model.Select(p => new {
-            p.Id, p.Codigo, p.Nome, PrecoUnitario = p.PrecoVenda, p.SaldoAtual,
-            ImagemUrl = p.Imagem != null ? Url.Content("~/uploads/produtos/" + p.Imagem) : null
+            p.Id, p.Codigo, p.Nome, PrecoUnitario = p.PrecoVenda,
+            SaldoAtual = p.Formato == "variacao" ? p.Variacoes.Sum(v => v.SaldoAtual) : p.SaldoAtual,
+            ImagemUrl = p.Imagem != null ? Url.Content("~/uploads/produtos/" + p.Imagem) : null,
+            Variacoes = p.Formato == "variacao"
+                ? p.Variacoes.Select(v => new { v.Id, v.Codigo, Descricao = v.DescricaoVariacao, PrecoUnitario = v.PrecoVenda, v.SaldoAtual }).ToList()
+                : null
         })));
         // Presente só na tela de edição de venda (ver CaixaController.EditarVenda) — o
         // carrinho nasce com esses itens em vez de vazio.

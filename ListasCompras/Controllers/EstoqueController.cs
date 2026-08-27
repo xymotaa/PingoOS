@@ -13,13 +13,18 @@ public class EstoqueController : LojaControllerBase
 
     public IActionResult Index()
     {
-        return View(Context.ProdutosEstoque.Include(p => p.Categoria).OrderBy(p => p.Nome).ToList());
+        var produtos = Context.ProdutosEstoque
+            .Include(p => p.Categoria).Include(p => p.Variacoes)
+            .Where(p => p.ProdutoPaiId == null)
+            .OrderBy(p => p.Nome).ToList();
+        return View(produtos);
     }
 
     public IActionResult Add(int? id)
     {
         var produto = id.HasValue
-            ? Context.ProdutosEstoque.Include(p => p.ModelosCompativeis).FirstOrDefault(p => p.Id == id.Value)
+            ? Context.ProdutosEstoque.Include(p => p.ModelosCompativeis).Include(p => p.Variacoes)
+                .FirstOrDefault(p => p.Id == id.Value && p.ProdutoPaiId == null)
             : null;
         if (id.HasValue && produto == null) return NotFound();
 
@@ -41,7 +46,10 @@ public class EstoqueController : LojaControllerBase
         string? condicao = CondicoesProduto.NaoEspecificado, string? descricao = null,
         string? marca = null, string? modeloRef = null, string? gtin = null,
         string? peso = null, string? largura = null, string? altura = null, string? profundidade = null,
-        string? localizacao = null, int origemFiscal = 0, string? ncm = null, string? cest = null, string? cfop = null)
+        string? localizacao = null, int origemFiscal = 0, string? ncm = null, string? cest = null, string? cfop = null,
+        int[]? variacaoId = null, string[]? variacaoDescricao = null, string[]? variacaoCodigo = null,
+        string[]? variacaoPreco = null, string[]? variacaoEstoqueAtual = null,
+        string[]? variacaoEstoqueMinimo = null, string[]? variacaoEstoqueMaximo = null)
     {
         if (string.IsNullOrWhiteSpace(nome))
         {
@@ -64,16 +72,21 @@ public class EstoqueController : LojaControllerBase
             return RedirectToAction(nameof(Add), new { id = id > 0 ? id : (int?)null });
         }
 
-        // "Com variação" ainda não tem a etapa de cadastro implementada — bloqueia aqui
-        // pra não deixar o produto num estado que a tela não sabe editar depois.
-        if (formato == TiposFormatoProduto.ComVariacao)
+        // Converter um produto Simples com saldo em Com variação não tem regra clara de
+        // para onde vai o saldo/histórico existente — bloqueia e pede pra zerar antes.
+        if (formato == TiposFormatoProduto.ComVariacao && id > 0)
         {
-            TempData["Erro"] = "Produtos com variação ainda não são suportados. Cadastre como \"Simples\" por enquanto.";
-            return RedirectToAction(nameof(Add), new { id = id > 0 ? id : (int?)null });
+            var produtoAtual = Context.ProdutosEstoque.Find(id);
+            if (produtoAtual != null && produtoAtual.Formato != TiposFormatoProduto.ComVariacao && produtoAtual.SaldoAtual != 0)
+            {
+                TempData["Erro"] = "Este produto tem saldo em estoque. Zere o estoque antes de converter para \"Com variação\", ou cadastre a variação como um produto novo.";
+                return RedirectToAction(nameof(Add), new { id });
+            }
         }
 
         var produto = id > 0
-            ? Context.ProdutosEstoque.Include(p => p.ModelosCompativeis).FirstOrDefault(p => p.Id == id)
+            ? Context.ProdutosEstoque.Include(p => p.ModelosCompativeis).Include(p => p.Variacoes)
+                .FirstOrDefault(p => p.Id == id)
             : null;
         if (id > 0 && produto == null) return NotFound();
 
@@ -96,10 +109,24 @@ public class EstoqueController : LojaControllerBase
         produto.Unidade = Limpar(unidade);
         produto.CustoUnitario = ParaDecimal(custo);
         produto.PrecoVenda = ParaDecimal(preco);
-        produto.EstoqueMinimo = estoqueMinimo;
-        produto.EstoqueMaximo = estoqueMaximo;
 
-        produto.Formato = formato == TiposFormatoProduto.ComVariacao ? TiposFormatoProduto.ComVariacao : TiposFormatoProduto.Simples;
+        var comVariacao = formato == TiposFormatoProduto.ComVariacao;
+        if (comVariacao)
+        {
+            // O pai não guarda saldo/estoque próprio — zera para não deixar um valor
+            // "fantasma" acumulado de quando era Simples antes de virar pai. SaldoAtual
+            // não é tocado aqui (não gera movimentação): a view passa a ler
+            // SaldoAtualExibido, que ignora esse campo para produtos com variação.
+            produto.EstoqueMinimo = 0;
+            produto.EstoqueMaximo = 0;
+        }
+        else
+        {
+            produto.EstoqueMinimo = estoqueMinimo;
+            produto.EstoqueMaximo = estoqueMaximo;
+        }
+
+        produto.Formato = comVariacao ? TiposFormatoProduto.ComVariacao : TiposFormatoProduto.Simples;
         produto.Tipo = tipo == TiposProduto.Servico ? TiposProduto.Servico : TiposProduto.Produto;
         produto.Condicao = condicao is CondicoesProduto.Novo or CondicoesProduto.Usado ? condicao : CondicoesProduto.NaoEspecificado;
         produto.Descricao = Limpar(descricao);
@@ -116,29 +143,27 @@ public class EstoqueController : LojaControllerBase
         produto.Cest = Limpar(cest);
         produto.Cfop = Limpar(cfop);
 
-        if (novo)
-        {
-            Context.ProdutosEstoque.Add(produto);
-            // O saldo inicial entra como movimentação, senão nasceria sem histórico
-            if (estoqueInicial > 0)
-                EstoqueServico.Movimentar(produto, TiposMovimentacao.Entrada, estoqueInicial,
-                    "Saldo inicial do cadastro", IdDoUsuarioLogado());
-        }
-        else
-        {
-            // Editar o estoque aqui não pula a auditoria: a diferença vira uma
-            // movimentação normal, igual a ajustar pela tela de Movimentação — só
-            // evita o usuário ter que abrir outra tela pra corrigir um número.
-            var diferenca = Math.Max(0, estoqueInicial) - produto.SaldoAtual;
-            if (diferenca > 0)
-                EstoqueServico.Movimentar(produto, TiposMovimentacao.Entrada, diferenca,
-                    "Ajuste via cadastro", IdDoUsuarioLogado());
-            else if (diferenca < 0)
-                EstoqueServico.Movimentar(produto, TiposMovimentacao.Saida, -diferenca,
-                    "Ajuste via cadastro", IdDoUsuarioLogado());
-        }
+        if (novo) Context.ProdutosEstoque.Add(produto);
+
+        // O pai não tem estoque próprio — o saldo dele fica congelado (ver acima),
+        // sem gerar movimentação a partir do campo de estoque do formulário.
+        if (!comVariacao)
+            AplicarEstoqueInformado(produto, novo, estoqueInicial,
+                "Saldo inicial do cadastro", "Ajuste via cadastro", IdDoUsuarioLogado());
 
         SincronizarModelosCompativeis(produto, modelosCelularIds);
+
+        try
+        {
+            SincronizarVariacoes(produto, variacaoId, variacaoDescricao, variacaoCodigo,
+                variacaoPreco, variacaoEstoqueAtual, variacaoEstoqueMinimo, variacaoEstoqueMaximo,
+                IdDoUsuarioLogado());
+        }
+        catch (InvalidOperationException ex)
+        {
+            TempData["Erro"] = ex.Message;
+            return RedirectToAction(nameof(Add), new { id = id > 0 ? id : (int?)null });
+        }
 
         if (foto != null && foto.Length > 0)
         {
@@ -174,6 +199,72 @@ public class EstoqueController : LojaControllerBase
             produto.ModelosCompativeis.Add(new ProdutoEstoqueModeloCompativel { ModeloCelularId = modeloId });
     }
 
+    // Usado tanto pelo produto simples/pai quanto por cada variação: a diferença entre o
+    // saldo informado e o saldo atual em banco vira uma movimentação normal, igual a
+    // ajustar pela tela de Movimentação — sem pular auditoria.
+    private void AplicarEstoqueInformado(ProdutoEstoque produto, bool novo, int estoqueInformado, string motivoNovo, string motivoAjuste, int? usuarioId)
+    {
+        if (novo)
+        {
+            if (estoqueInformado > 0)
+                EstoqueServico.Movimentar(produto, TiposMovimentacao.Entrada, estoqueInformado, motivoNovo, usuarioId);
+            return;
+        }
+
+        var diferenca = Math.Max(0, estoqueInformado) - produto.SaldoAtual;
+        if (diferenca > 0)
+            EstoqueServico.Movimentar(produto, TiposMovimentacao.Entrada, diferenca, motivoAjuste, usuarioId);
+        else if (diferenca < 0)
+            EstoqueServico.Movimentar(produto, TiposMovimentacao.Saida, -diferenca, motivoAjuste, usuarioId);
+    }
+
+    // Cada linha de variação é um ProdutoEstoque real (não uma junção simples): tem
+    // código, saldo e movimentação próprios, então passa pelo mesmo EstoqueServico do
+    // produto raiz. Substitui/atualiza a lista inteira vinda do formulário.
+    private void SincronizarVariacoes(
+        ProdutoEstoque pai, int[]? ids, string[]? descricoes, string[]? codigos,
+        string[]? precos, string[]? estoquesAtuais, string[]? estoquesMinimos, string[]? estoquesMaximos,
+        int? usuarioId)
+    {
+        if (pai.Formato != TiposFormatoProduto.ComVariacao || ids == null) return;
+
+        for (var i = 0; i < ids.Length; i++)
+        {
+            var descricaoVariacao = Limpar(descricoes != null && i < descricoes.Length ? descricoes[i] : null);
+            if (string.IsNullOrWhiteSpace(descricaoVariacao)) continue; // linha em branco, ignora
+
+            var variacaoExistente = ids[i] > 0
+                ? Context.ProdutosEstoque.FirstOrDefault(v => v.Id == ids[i] && v.ProdutoPaiId == pai.Id)
+                : null;
+            var nova = variacaoExistente == null;
+            var variacao = variacaoExistente ?? new ProdutoEstoque { Formato = TiposFormatoProduto.Simples };
+
+            var codigoInformado = Limpar(codigos != null && i < codigos.Length ? codigos[i] : null);
+            var codigoFinal = codigoInformado ?? (nova ? EstoqueServico.ProximoCodigo(Context) : variacao.Codigo);
+            if (Context.ProdutosEstoque.Any(p => p.Codigo == codigoFinal && p.Id != variacao.Id))
+                throw new InvalidOperationException($"Já existe um produto com o código \"{codigoFinal}\".");
+
+            variacao.Codigo = codigoFinal;
+            variacao.DescricaoVariacao = descricaoVariacao;
+            variacao.Nome = $"{pai.Nome} — {descricaoVariacao}";
+            variacao.CategoriaId = pai.CategoriaId;
+
+            var precoInformado = precos != null && i < precos.Length ? ParaDecimalNullable(precos[i]) : null;
+            variacao.PrecoVenda = precoInformado ?? pai.PrecoVenda;
+            variacao.EstoqueMinimo = Math.Max(0, estoquesMinimos != null && i < estoquesMinimos.Length ? ParaInt(estoquesMinimos[i]) : 0);
+            variacao.EstoqueMaximo = Math.Max(0, estoquesMaximos != null && i < estoquesMaximos.Length ? ParaInt(estoquesMaximos[i]) : 0);
+
+            if (nova) pai.Variacoes.Add(variacao); // deixa o EF Core resolver a FK ao salvar o grafo
+
+            var estoqueAtualInformado = estoquesAtuais != null && i < estoquesAtuais.Length ? ParaInt(estoquesAtuais[i]) : 0;
+            AplicarEstoqueInformado(variacao, nova, estoqueAtualInformado,
+                "Saldo inicial da variação", "Ajuste via cadastro da variação", usuarioId);
+        }
+
+        if (pai.Variacoes.Count == 0)
+            throw new InvalidOperationException("Cadastre ao menos uma variação.");
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public IActionResult Movimentar(int produtoId, string tipo, int quantidade, string? motivo)
@@ -182,6 +273,12 @@ public class EstoqueController : LojaControllerBase
         if (produto == null)
         {
             TempData["Erro"] = "Produto não encontrado.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        if (produto.Formato == TiposFormatoProduto.ComVariacao)
+        {
+            TempData["Erro"] = "Este produto tem variações — ajuste o estoque de cada variação individualmente.";
             return RedirectToAction(nameof(Index));
         }
 
@@ -198,8 +295,14 @@ public class EstoqueController : LojaControllerBase
     [ValidateAntiForgeryToken]
     public IActionResult Excluir(int id)
     {
-        var produto = Context.ProdutosEstoque.Find(id);
+        var produto = Context.ProdutosEstoque.Include(p => p.Variacoes).FirstOrDefault(p => p.Id == id);
         if (produto == null) return RedirectToAction(nameof(Index));
+
+        if (produto.Variacoes.Count > 0)
+        {
+            TempData["Erro"] = "Este produto tem variações cadastradas. Remova as variações antes de excluir o produto.";
+            return RedirectToAction(nameof(Index));
+        }
 
         if (produto.Imagem != null) ProdutoImagemServico.Remover(produto.Imagem);
 
@@ -207,6 +310,25 @@ public class EstoqueController : LojaControllerBase
         Context.SaveChanges();
         TempData["Sucesso"] = $"Produto {produto.Nome} excluído. As vendas antigas continuam no histórico.";
         return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult ExcluirVariacao(int id)
+    {
+        var variacao = Context.ProdutosEstoque.FirstOrDefault(v => v.Id == id && v.ProdutoPaiId != null);
+        if (variacao == null) return RedirectToAction(nameof(Index));
+
+        if (variacao.SaldoAtual != 0)
+        {
+            TempData["Erro"] = $"A variação \"{variacao.DescricaoVariacao}\" tem saldo ({variacao.SaldoAtual}) e não pode ser removida. Zere o estoque antes.";
+            return RedirectToAction(nameof(Add), new { id = variacao.ProdutoPaiId });
+        }
+
+        Context.ProdutosEstoque.Remove(variacao);
+        Context.SaveChanges();
+        TempData["Sucesso"] = "Variação removida.";
+        return RedirectToAction(nameof(Add), new { id = variacao.ProdutoPaiId });
     }
 
     public IActionResult Historico(int id)
@@ -267,4 +389,6 @@ public class EstoqueController : LojaControllerBase
     }
 
     private static string? Limpar(string? v) => string.IsNullOrWhiteSpace(v) ? null : v.Trim();
+
+    private static int ParaInt(string? valor) => int.TryParse(valor, out var n) ? n : 0;
 }

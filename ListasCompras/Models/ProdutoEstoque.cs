@@ -12,8 +12,18 @@ public class ProdutoEstoque
     public string? Unidade { get; set; }
     public string? Imagem { get; set; } // nome do arquivo em wwwroot/uploads/produtos, sem caminho
 
-    // "simples" | "variacao" — "variacao" ainda não tem a etapa de cadastro implementada,
-    // então o formulário bloqueia essa opção por enquanto (ver EstoqueController.Salvar).
+    public int? ProdutoPaiId { get; set; }
+    public ProdutoEstoque? ProdutoPai { get; set; }
+
+    // Só relevante quando ProdutoPaiId != null. Texto livre digitado pelo usuário nesta
+    // variação (ex: "Preta, 64GB"). Não é modelado como atributos estruturados (Cor/
+    // Capacidade em colunas separadas) de propósito: o cadastro é manual, sem geração de
+    // combinação — não há necessidade de filtrar/agrupar por atributo isoladamente.
+    public string? DescricaoVariacao { get; set; }
+
+    public ICollection<ProdutoEstoque> Variacoes { get; set; } = new List<ProdutoEstoque>();
+
+    // "simples" | "variacao"
     public string Formato { get; set; } = TiposFormatoProduto.Simples;
     public string Tipo { get; set; } = TiposProduto.Produto; // "produto" | "servico"
     public string Condicao { get; set; } = CondicoesProduto.NaoEspecificado; // "nao_especificado" | "novo" | "usado"
@@ -50,6 +60,27 @@ public class ProdutoEstoque
     public string Situacao =>
         SaldoAtual <= 0 ? "esgotado"
         : (EstoqueMinimo > 0 && SaldoAtual <= EstoqueMinimo ? "baixo" : "ok");
+
+    // Um produto pai (Formato=variacao) não guarda saldo próprio — o número exibido é
+    // sempre a soma das variações, calculado a partir da coleção já carregada, nunca
+    // sincronizado em segundo plano (evita a classe de bug "saldo do pai desatualizado").
+    public int SaldoAtualExibido =>
+        Formato == TiposFormatoProduto.ComVariacao ? Variacoes.Sum(v => v.SaldoAtual) : SaldoAtual;
+
+    public decimal ValorEmEstoqueExibido =>
+        Formato == TiposFormatoProduto.ComVariacao ? Variacoes.Sum(v => v.ValorEmEstoque) : ValorEmEstoque;
+
+    public string SituacaoExibida
+    {
+        get
+        {
+            if (Formato != TiposFormatoProduto.ComVariacao) return Situacao;
+            if (Variacoes.Count == 0) return "esgotado";
+            var saldo = SaldoAtualExibido;
+            var minimoAgregado = Variacoes.Sum(v => v.EstoqueMinimo);
+            return saldo <= 0 ? "esgotado" : (minimoAgregado > 0 && saldo <= minimoAgregado ? "baixo" : "ok");
+        }
+    }
 }
 
 // Vínculo explícito "este produto atende este modelo de celular" — ex: uma película

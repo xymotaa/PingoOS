@@ -80,6 +80,21 @@
     <input type="hidden" name="id" value="@Model.Id" />
     <main class="pt-24 px-lg pb-xl max-w-[1440px] mx-auto">
 
+        @if (TempData["Sucesso"] != null)
+        {
+            <div class="mb-md bg-secondary-container text-on-secondary-container px-md py-sm rounded-lg font-label-md text-label-md flex items-center gap-xs w-fit">
+                <span class="material-symbols-outlined text-[18px]">check_circle</span>
+                <span>@TempData["Sucesso"]</span>
+            </div>
+        }
+        @if (TempData["Erro"] != null)
+        {
+            <div class="mb-md bg-error-container text-error px-md py-sm rounded-lg font-label-md text-label-md flex items-center gap-xs w-fit">
+                <span class="material-symbols-outlined text-[18px]">error</span>
+                <span>@TempData["Erro"]</span>
+            </div>
+        }
+
         <div id="toast" class="hidden mb-md bg-secondary-container text-on-secondary-container px-md py-sm rounded-lg font-label-md text-label-md flex items-center gap-xs w-fit">
             <span id="toastIcon" class="material-symbols-outlined text-[18px]">check_circle</span>
             <span id="toastMsg"></span>
@@ -150,7 +165,7 @@
                                 </label>
                                 <select id="npFormato" name="formato" class="w-full mt-xs bg-surface-container-low border-none rounded-lg pl-md pr-10 py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30">
                                     <option value="simples" selected="@(Model.Formato != "variacao")">Simples</option>
-                                    <option value="variacao" selected="@(Model.Formato == "variacao")">Com variação (em breve)</option>
+                                    <option value="variacao" selected="@(Model.Formato == "variacao")">Com variação</option>
                                 </select>
                             </div>
                             <div class="md:col-span-3">
@@ -272,7 +287,7 @@
                     <!-- Etapa 4: Estoque -->
                     <div data-step-panel="4" class="hidden">
                         <h3 class="font-title-lg text-title-lg text-primary mb-lg">Estoque</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-12 gap-md">
+                        <div id="npEstoqueSimplesWrap" class="grid grid-cols-1 md:grid-cols-12 gap-md">
                             <div class="md:col-span-3">
                                 <label class="font-label-md text-label-md text-on-surface-variant" for="npEstoqueInicial">@(Model.Id > 0 ? "Estoque atual" : "Estoque inicial")</label>
                                 <input id="npEstoqueInicial" name="estoqueInicial" value="@(Model.Id > 0 ? Model.SaldoAtual.ToString() : "")" type="number" min="0" step="1" placeholder="0" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
@@ -285,6 +300,13 @@
                                 <label class="font-label-md text-label-md text-on-surface-variant" for="npEstoqueMaximo">Estoque máximo</label>
                                 <input id="npEstoqueMaximo" name="estoqueMaximo" value="@(Model.EstoqueMaximo > 0 ? Model.EstoqueMaximo.ToString() : "")" type="number" min="0" step="1" placeholder="0" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
                             </div>
+                        </div>
+                        <div id="npEstoqueVariacaoAviso" class="hidden bg-surface-container-low rounded-xl px-lg py-xl flex flex-col items-center justify-center text-center gap-sm">
+                            <span class="material-symbols-outlined text-[40px] text-outline">inventory_2</span>
+                            <p class="font-body-md text-body-md text-on-surface-variant">Este produto tem variações — o saldo é a soma do estoque de cada uma.</p>
+                            <p class="font-label-sm text-label-sm text-outline">Configure o estoque de cada variação na etapa "Variações".</p>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-md mt-md">
                             <div class="md:col-span-3">
                                 <label class="font-label-md text-label-md text-on-surface-variant" for="npCusto">Custo unitário</label>
                                 <input id="npCusto" value="@(Model.Id > 0 ? Model.CustoUnitario.ToString("0.00", System.Globalization.CultureInfo.GetCultureInfo("pt-BR")) : "")" type="text" inputmode="decimal" placeholder="0,00" data-mascara="valor" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
@@ -326,10 +348,38 @@
                     <!-- Etapa 6: Variações -->
                     <div data-step-panel="6" class="hidden">
                         <h3 class="font-title-lg text-title-lg text-primary mb-lg">Variações</h3>
-                        <div class="bg-surface-container-low rounded-xl px-lg py-xl flex flex-col items-center justify-center text-center gap-sm">
+
+                        <div id="npVariacoesAviso" class="hidden bg-surface-container-low rounded-xl px-lg py-xl flex flex-col items-center justify-center text-center gap-sm">
                             <span class="material-symbols-outlined text-[40px] text-outline">tune</span>
-                            <p class="font-body-md text-body-md text-on-surface-variant">Cadastre variações como cor, tamanho ou capacidade.</p>
-                            <p class="font-label-sm text-label-sm text-outline">Disponível para produtos com o formato “Com variação”. A montagem das variações estará na versão completa do cadastro.</p>
+                            <p class="font-body-md text-body-md text-on-surface-variant">Disponível apenas para produtos com o formato "Com variação".</p>
+                        </div>
+
+                        <div id="npVariacoesWrap" class="hidden">
+                            <div class="flex items-end justify-between mb-md">
+                                <p class="font-label-sm text-label-sm text-outline">
+                                    Ex: "Preta, 64GB". Deixe o código em branco para gerar automaticamente. Preço em branco herda o preço do produto principal.
+                                </p>
+                                <button id="npAddVariacaoBtn" type="button"
+                                        class="shrink-0 border border-outline text-secondary rounded-lg px-md py-xs font-label-md text-label-md font-bold hover:bg-surface-container-low transition-colors flex items-center gap-xs">
+                                    <span class="material-symbols-outlined text-[18px]">add</span> Adicionar variação
+                                </button>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left">
+                                    <thead>
+                                        <tr class="border-b border-outline-variant">
+                                            <th class="px-sm py-xs font-label-sm text-label-sm text-outline">Descrição</th>
+                                            <th class="px-sm py-xs font-label-sm text-label-sm text-outline">Código</th>
+                                            <th class="px-sm py-xs font-label-sm text-label-sm text-outline">Preço</th>
+                                            <th class="px-sm py-xs font-label-sm text-label-sm text-outline">Estoque atual</th>
+                                            <th class="px-sm py-xs font-label-sm text-label-sm text-outline">Mínimo</th>
+                                            <th class="px-sm py-xs font-label-sm text-label-sm text-outline">Máximo</th>
+                                            <th class="px-sm py-xs"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="npVariacoesBody"></tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
 
@@ -397,6 +447,19 @@
                 })
         ));
         const MODELOS_COMPATIVEIS_SELECIONADOS = @Html.Raw(Json.Serialize((List<int>)ViewBag.ModelosCompativeisIds));
+
+        const EXCLUIR_VARIACAO_URL = "@Url.Action("ExcluirVariacao", "Estoque")";
+        const VARIACOES_EXISTENTES = @Html.Raw(Json.Serialize(
+            Model.Variacoes.Select(v => new {
+                id = v.Id,
+                descricao = v.DescricaoVariacao,
+                codigo = v.Codigo,
+                preco = v.PrecoVenda,
+                estoqueAtual = v.SaldoAtual,
+                estoqueMinimo = v.EstoqueMinimo > 0 ? v.EstoqueMinimo : (int?)null,
+                estoqueMaximo = v.EstoqueMaximo > 0 ? v.EstoqueMaximo : (int?)null,
+            })
+        ));
     </script>
     <script src="~/js/mascaras.js" asp-append-version="true"></script>
     <script src="~/js/estoque-add.js" asp-append-version="true"></script>

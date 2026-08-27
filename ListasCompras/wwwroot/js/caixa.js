@@ -201,11 +201,59 @@ document.addEventListener("DOMContentLoaded", function () {
             window.setTimeout(function () { buscaInput.classList.remove("ring-2", "ring-error"); }, 1200);
             return;
         }
-        adicionarItem(produto);
+        selecionarOuEscolherVariacao(produto);
         buscaInput.value = "";
         buscaInput.focus();
         fecharSugestoes();
     });
+
+    // ===== Variações: produto com Formato=variacao pede escolha antes de entrar no carrinho =====
+
+    const modalVariacao = document.getElementById("modalVariacao");
+    const modalVariacaoTitulo = document.getElementById("modalVariacaoTitulo");
+    const modalVariacaoLista = document.getElementById("modalVariacaoLista");
+    const fecharModalVariacaoBtn = document.getElementById("fecharModalVariacaoBtn");
+
+    function fecharModalVariacao() { modalVariacao.classList.add("hidden"); }
+
+    function abrirModalVariacao(produtoPai) {
+        modalVariacaoTitulo.textContent = produtoPai.nome;
+        modalVariacaoLista.innerHTML = "";
+        produtoPai.variacoes.forEach(function (v) {
+            const item = document.createElement("button");
+            item.type = "button";
+            item.className = "w-full text-left px-md py-sm rounded-lg border border-outline-variant hover:border-secondary hover:bg-surface-container-low transition-colors flex items-center justify-between gap-md";
+
+            const esgotado = v.saldoAtual <= 0;
+            const nomeSpan = document.createElement("span");
+            nomeSpan.textContent = (v.descricao || v.codigo) + (esgotado ? " (sem estoque)" : "");
+            const precoSpan = document.createElement("span");
+            precoSpan.className = "font-semibold text-secondary";
+            precoSpan.textContent = formatBRL(v.precoUnitario);
+            item.append(nomeSpan, precoSpan);
+
+            item.addEventListener("click", function () {
+                fecharModalVariacao();
+                adicionarItem({ id: v.id, codigo: v.codigo, nome: produtoPai.nome + " — " + (v.descricao || v.codigo), precoUnitario: v.precoUnitario, saldoAtual: v.saldoAtual });
+            });
+            modalVariacaoLista.appendChild(item);
+        });
+        modalVariacao.classList.remove("hidden");
+    }
+
+    if (fecharModalVariacaoBtn) fecharModalVariacaoBtn.addEventListener("click", fecharModalVariacao);
+    if (modalVariacao) modalVariacao.addEventListener("click", function (e) { if (e.target === modalVariacao) fecharModalVariacao(); });
+
+    // Ponto único de decisão: produto com variações abre o modal de escolha; produto
+    // simples vai direto pro carrinho. Usado tanto pelo Enter direto na busca quanto
+    // pelo clique/Enter numa sugestão do dropdown.
+    function selecionarOuEscolherVariacao(produto) {
+        if (produto.variacoes && produto.variacoes.length > 0) {
+            abrirModalVariacao(produto);
+            return;
+        }
+        adicionarItem(produto);
+    }
 
     // ===== Sugestões de produto: dropdown do mesmo tamanho do campo de busca =====
 
@@ -219,7 +267,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function selecionarProdutoDaLista(produto) {
-        adicionarItem(produto);
+        selecionarOuEscolherVariacao(produto);
         buscaInput.value = "";
         buscaInput.focus();
         fecharSugestoes();

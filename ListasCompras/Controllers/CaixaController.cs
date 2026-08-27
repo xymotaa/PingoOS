@@ -14,7 +14,10 @@ public class CaixaController : LojaControllerBase
     public IActionResult Index()
     {
         ViewBag.VendaEmEdicaoId = 0;
-        return View(Context.ProdutosEstoque.OrderBy(p => p.Nome).ToList());
+        var produtos = Context.ProdutosEstoque.Include(p => p.Variacoes)
+            .Where(p => p.ProdutoPaiId == null)
+            .OrderBy(p => p.Nome).ToList();
+        return View(produtos);
     }
 
     public IActionResult Vendas()
@@ -54,7 +57,10 @@ public class CaixaController : LojaControllerBase
         ViewBag.FormaPagamentoEmEdicao = venda.FormaPagamento;
         ViewBag.ValorRecebidoEmEdicao = venda.ValorRecebido;
 
-        return View("Index", Context.ProdutosEstoque.OrderBy(p => p.Nome).ToList());
+        var produtos = Context.ProdutosEstoque.Include(p => p.Variacoes)
+            .Where(p => p.ProdutoPaiId == null)
+            .OrderBy(p => p.Nome).ToList();
+        return View("Index", produtos);
     }
 
     [HttpPost]

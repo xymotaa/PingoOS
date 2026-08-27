@@ -117,15 +117,15 @@
             </div>
             <div class="bg-white px-md py-sm rounded-lg border border-outline-variant shadow-sm">
                 <span class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Valor em Estoque</span>
-                <p class="font-title-lg text-title-lg text-primary">@Moeda(Model.Sum(p => p.ValorEmEstoque))</p>
+                <p class="font-title-lg text-title-lg text-primary">@Moeda(Model.Sum(p => p.ValorEmEstoqueExibido))</p>
             </div>
             <div class="bg-white px-md py-sm rounded-lg border border-outline-variant shadow-sm">
                 <span class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Abaixo do Mínimo</span>
-                <p class="font-title-lg text-title-lg text-primary">@Model.Count(p => p.Situacao == "baixo")</p>
+                <p class="font-title-lg text-title-lg text-primary">@Model.Count(p => p.SituacaoExibida == "baixo")</p>
             </div>
             <div class="bg-white px-md py-sm rounded-lg border border-outline-variant shadow-sm">
                 <span class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Esgotados</span>
-                <p class="font-title-lg text-title-lg text-primary">@Model.Count(p => p.Situacao == "esgotado")</p>
+                <p class="font-title-lg text-title-lg text-primary">@Model.Count(p => p.SituacaoExibida == "esgotado")</p>
             </div>
         </section>
 
@@ -198,14 +198,19 @@
                     <tbody id="estoqueBody">
                         @foreach (var p in Model)
                         {
-                            var cor = p.Situacao == "esgotado" ? "text-error"
-                                    : p.Situacao == "baixo" ? "text-warning" : "text-on-surface";
+                            var cor = p.SituacaoExibida == "esgotado" ? "text-error"
+                                    : p.SituacaoExibida == "baixo" ? "text-warning" : "text-on-surface";
+                            var comVariacao = p.Formato == "variacao";
                             <tr class="linha-produto border-t border-outline-variant hover:bg-surface-container-low transition-colors cursor-pointer"
-                                data-busca="@($"{p.Codigo} {p.Nome} {p.Categoria?.Nome}".ToLower())" data-situacao="@p.Situacao"
+                                data-busca="@($"{p.Codigo} {p.Nome} {p.Categoria?.Nome}".ToLower())" data-situacao="@p.SituacaoExibida"
                                 data-href="@Url.Action("Add", new { id = p.Id })">
                                 <td class="w-10"></td>
                                 <td class="px-md py-sm font-body-md text-body-md text-on-surface">
                                     @p.Nome
+                                    @if (comVariacao)
+                                    {
+                                        <span class="ml-xs inline-block bg-secondary-container text-on-secondary-container font-label-sm text-label-sm px-xs rounded">@p.Variacoes.Count variações</span>
+                                    }
                                     @if (p.Categoria != null)
                                     {
                                         <span class="block font-label-sm text-label-sm text-outline">@p.Categoria.Nome</span>
@@ -214,19 +219,22 @@
                                 <td class="px-md py-sm font-body-md text-body-md text-on-surface-variant">@p.Codigo</td>
                                 <td class="px-md py-sm font-body-md text-body-md text-right">@Moeda(p.PrecoVenda)</td>
                                 <td class="px-md py-sm text-center font-body-md text-body-md font-semibold @cor">
-                                    @p.SaldoAtual
-                                    @if (p.EstoqueMinimo > 0)
+                                    @p.SaldoAtualExibido
+                                    @if (!comVariacao && p.EstoqueMinimo > 0)
                                     {
                                         <span class="block font-label-sm text-label-sm text-outline">mín. @p.EstoqueMinimo</span>
                                     }
                                 </td>
                                 <td class="px-md py-sm">
                                     <div class="flex items-center justify-center gap-xs" onclick="event.stopPropagation()">
-                                        <button type="button" title="Registrar entrada ou saída"
-                                                onclick="abrirMovimentacao(@p.Id, '@p.Nome.Replace("'", "\\'")', @p.SaldoAtual)"
-                                                class="w-8 h-8 rounded-lg hover:bg-secondary-container inline-flex items-center justify-center text-on-surface-variant transition-colors">
-                                            <span class="material-symbols-outlined text-[18px]">swap_vert</span>
-                                        </button>
+                                        @if (!comVariacao)
+                                        {
+                                            <button type="button" title="Registrar entrada ou saída"
+                                                    onclick="abrirMovimentacao(@p.Id, '@p.Nome.Replace("'", "\\'")', @p.SaldoAtual)"
+                                                    class="w-8 h-8 rounded-lg hover:bg-secondary-container inline-flex items-center justify-center text-on-surface-variant transition-colors">
+                                                <span class="material-symbols-outlined text-[18px]">swap_vert</span>
+                                            </button>
+                                        }
                                         <a asp-action="Historico" asp-route-id="@p.Id" title="Histórico de movimentações"
                                            class="w-8 h-8 rounded-lg hover:bg-surface-container-high inline-flex items-center justify-center text-on-surface-variant transition-colors">
                                             <span class="material-symbols-outlined text-[18px]">history</span>
