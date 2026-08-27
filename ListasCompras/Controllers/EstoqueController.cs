@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Security.Claims;
 using ListasCompras.Data;
 using ListasCompras.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -368,13 +367,6 @@ public class EstoqueController : LojaControllerBase
 
         return Json(resultado);
     }
-
-    private int? IdDoUsuarioLogado()
-        => int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var id) ? id : null;
-
-    // Cultura invariante de propósito: o formulário manda ponto decimal
-    private static decimal ParaDecimal(string? valor)
-        => decimal.TryParse(valor, NumberStyles.Number, CultureInfo.InvariantCulture, out var d) ? d : 0m;
 
     // Peso/dimensões são opcionais e, diferente de Preço/Custo, não têm máscara de
     // digitação — o usuário digita "1,5" à mão (natural em pt-BR). NumberStyles.Number

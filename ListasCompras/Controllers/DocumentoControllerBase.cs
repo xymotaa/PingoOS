@@ -1,5 +1,3 @@
-using System.Globalization;
-using System.Security.Claims;
 using ListasCompras.Data;
 using ListasCompras.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -336,17 +334,6 @@ public abstract class DocumentoControllerBase : LojaControllerBase
             sequencia = n;
 
         return $"{prefixo}{sequencia + 1:D6}";
-    }
-
-    protected int? IdDoUsuarioLogado()
-    {
-        return int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var id) ? id : null;
-    }
-
-    // O campo escondido do formulário sempre manda ponto decimal (toFixed)
-    protected static decimal ParaDecimal(string? valor)
-    {
-        return decimal.TryParse(valor, NumberStyles.Number, CultureInfo.InvariantCulture, out var d) ? d : 0m;
     }
 
     private static string? Em(string[]? lista, int i)

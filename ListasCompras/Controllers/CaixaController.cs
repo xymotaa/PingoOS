@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Security.Claims;
 using ListasCompras.Data;
 using ListasCompras.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -96,10 +95,14 @@ public class CaixaController : LojaControllerBase
         venda.FormaPagamento = FormasPagamento.Todas.Contains(formaPagamento) ? formaPagamento : FormasPagamento.Dinheiro;
         venda.ValorRecebido = ParaDecimal(valorRecebido);
 
+        // Um único SELECT para todos os itens do carrinho, em vez de um Find() por item
+        var produtosPorId = Context.ProdutosEstoque
+            .Where(p => itemProdutoId.Contains(p.Id))
+            .ToDictionary(p => p.Id);
+
         for (var i = 0; i < itemProdutoId.Length; i++)
         {
-            var produto = Context.ProdutosEstoque.Find(itemProdutoId[i]);
-            if (produto == null) continue;
+            if (!produtosPorId.TryGetValue(itemProdutoId[i], out var produto)) continue;
 
             var quantidade = itemQuantidade != null && i < itemQuantidade.Length && itemQuantidade[i] > 0
                 ? itemQuantidade[i] : 1;
@@ -200,10 +203,14 @@ public class CaixaController : LojaControllerBase
 
         var semSaldo = new List<string>();
 
+        // Um único SELECT para todos os itens do carrinho, em vez de um Find() por item
+        var produtosPorId = Context.ProdutosEstoque
+            .Where(p => itemProdutoId.Contains(p.Id))
+            .ToDictionary(p => p.Id);
+
         for (var i = 0; i < itemProdutoId.Length; i++)
         {
-            var produto = Context.ProdutosEstoque.Find(itemProdutoId[i]);
-            if (produto == null) continue;
+            if (!produtosPorId.TryGetValue(itemProdutoId[i], out var produto)) continue;
 
             var quantidade = itemQuantidade != null && i < itemQuantidade.Length && itemQuantidade[i] > 0
                 ? itemQuantidade[i] : 1;
@@ -250,12 +257,6 @@ public class CaixaController : LojaControllerBase
 
         return RedirectToAction(nameof(Index));
     }
-
-    private int? IdDoUsuarioLogado()
-        => int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var id) ? id : null;
-
-    private static decimal ParaDecimal(string? valor)
-        => decimal.TryParse(valor, NumberStyles.Number, CultureInfo.InvariantCulture, out var d) ? d : 0m;
 
     private static string Moeda(decimal v) => v.ToString("C2", new CultureInfo("pt-BR"));
 }

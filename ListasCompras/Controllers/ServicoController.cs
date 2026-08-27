@@ -1,4 +1,3 @@
-using System.Globalization;
 using ListasCompras.Data;
 using ListasCompras.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -92,9 +91,6 @@ public class ServicoController : LojaControllerBase
 
         return Json(resultado);
     }
-
-    private static decimal ParaDecimal(string? valor)
-        => decimal.TryParse(valor, NumberStyles.Number, CultureInfo.InvariantCulture, out var d) ? d : 0m;
 
     private static string? Limpar(string? v) => string.IsNullOrWhiteSpace(v) ? null : v.Trim();
 }

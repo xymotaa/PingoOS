@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Security.Claims;
 using ListasCompras.Data;
 using ListasCompras.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -13,6 +15,15 @@ public abstract class LojaControllerBase : Controller
     {
         Context = context;
     }
+
+    // null quando não há sessão válida — nunca 0, que poderia colidir com um Id real.
+    protected int? IdDoUsuarioLogado()
+        => int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var id) ? id : null;
+
+    // Cultura invariante de propósito: os formulários mandam ponto decimal, e a
+    // cultura do sistema (pt-BR) interpretaria "620.00" como 62000.
+    protected static decimal ParaDecimal(string? valor)
+        => decimal.TryParse(valor, NumberStyles.Number, CultureInfo.InvariantCulture, out var d) ? d : 0m;
 
     public override void OnActionExecuting(ActionExecutingContext context)
     {

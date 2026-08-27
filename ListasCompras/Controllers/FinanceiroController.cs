@@ -1,5 +1,3 @@
-using System.Globalization;
-using System.Security.Claims;
 using ListasCompras.Data;
 using ListasCompras.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -147,12 +145,6 @@ public class FinanceiroController : LojaControllerBase
         }
         return RedirectToAction(nameof(Index));
     }
-
-    private int? IdDoUsuarioLogado()
-        => int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var id) ? id : null;
-
-    private static decimal ParaDecimal(string? valor)
-        => decimal.TryParse(valor, NumberStyles.Number, CultureInfo.InvariantCulture, out var d) ? d : 0m;
 
     private static string? Limpar(string? valor)
         => string.IsNullOrWhiteSpace(valor) ? null : valor.Trim();

@@ -287,11 +287,6 @@ public class ContaController : LojaControllerBase
         return codigo;
     }
 
-    private int IdDoUsuarioLogado()
-    {
-        return int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var id) ? id : 0;
-    }
-
     private async Task Autenticar(Usuario usuario)
     {
         var claims = new List<Claim>
