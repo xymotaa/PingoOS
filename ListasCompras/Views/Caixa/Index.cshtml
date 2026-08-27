@@ -234,7 +234,10 @@
     </div>
 
     <script>
-        const PRODUTOS = @Html.Raw(Json.Serialize(Model.Select(p => new { p.Id, p.Codigo, p.Nome, PrecoUnitario = p.PrecoVenda, p.SaldoAtual })));
+        const PRODUTOS = @Html.Raw(Json.Serialize(Model.Select(p => new {
+            p.Id, p.Codigo, p.Nome, PrecoUnitario = p.PrecoVenda, p.SaldoAtual,
+            ImagemUrl = p.Imagem != null ? Url.Content("~/uploads/produtos/" + p.Imagem) : null
+        })));
         // Presente só na tela de edição de venda (ver CaixaController.EditarVenda) — o
         // carrinho nasce com esses itens em vez de vazio.
         const ITENS_EM_EDICAO = @Html.Raw(Json.Serialize(ViewBag.ItensEmEdicao ?? new List<object>()));

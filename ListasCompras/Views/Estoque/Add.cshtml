@@ -76,7 +76,7 @@
 <body class="bg-surface">
     @await Html.PartialAsync("_Navbar")
 
-    <form asp-action="Salvar" method="post" id="formProduto">
+    <form asp-action="Salvar" method="post" id="formProduto" enctype="multipart/form-data">
     <input type="hidden" name="id" value="@Model.Id" />
     <main class="pt-24 px-lg pb-xl max-w-[1440px] mx-auto">
 
@@ -231,18 +231,42 @@
                                 <label class="font-label-md text-label-md text-on-surface-variant" for="npProfundidade">Profundidade (cm)</label>
                                 <input id="npProfundidade" type="text" inputmode="decimal" placeholder="0" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
                             </div>
+                            <div class="md:col-span-12">
+                                <label class="font-label-md text-label-md text-on-surface-variant">Modelos de celular compatíveis</label>
+                                <p class="font-label-sm text-label-sm text-outline mb-xs">Opcional. Deixe em branco se o produto não é específico de um modelo (ex: cabo USB-C genérico).</p>
+                                <div id="modelosCompativeisWrap" class="relative">
+                                    <input id="modelosCompativeisBusca" type="text" placeholder="Buscar por marca ou modelo (ex: Galaxy A12, Samsung...)"
+                                           class="w-full bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                                    <div id="modelosCompativeisResultados" class="hidden absolute z-10 mt-xs w-full max-h-64 overflow-y-auto bg-white border border-outline-variant rounded-lg shadow-lg"></div>
+                                </div>
+                                <div id="modelosCompativeisChips" class="flex flex-wrap gap-xs mt-sm"></div>
+                                <div id="modelosCompativeisInputs"></div>
+                            </div>
                         </div>
                     </div>
 
                     <!-- Etapa 3: Imagens -->
                     <div data-step-panel="3" class="hidden">
                         <h3 class="font-title-lg text-title-lg text-primary mb-lg">Imagens</h3>
-                        <div class="border-2 border-dashed border-outline-variant rounded-xl px-lg py-xl flex flex-col items-center justify-center text-center gap-sm">
-                            <span class="material-symbols-outlined text-[40px] text-outline">add_photo_alternate</span>
-                            <p class="font-body-md text-body-md text-on-surface-variant">Arraste imagens aqui ou clique para selecionar</p>
-                            <p class="font-label-sm text-label-sm text-outline">PNG ou JPG até 5 MB cada</p>
+                        <div class="flex items-start gap-md">
+                            <div class="relative">
+                                <label for="npFotoInput" class="flex flex-col items-center justify-center gap-xs w-[180px] h-[180px] bg-surface-container-low border-2 border-dashed border-outline-variant rounded-xl cursor-pointer hover:border-secondary transition-colors overflow-hidden">
+                                    <img id="npFotoPreview" src="@(Model.Imagem != null ? Url.Content("~/uploads/produtos/" + Model.Imagem) : "")" alt="Imagem do produto"
+                                         class="@(Model.Imagem == null ? "hidden" : "") w-full h-full object-contain" />
+                                    <div id="npFotoPlaceholder" class="@(Model.Imagem != null ? "hidden" : "") flex flex-col items-center gap-xs text-outline p-md text-center">
+                                        <span class="material-symbols-outlined text-[40px]">add_photo_alternate</span>
+                                        <p class="font-body-md text-body-md text-on-surface-variant">Arraste ou clique para selecionar</p>
+                                        <p class="font-label-sm text-label-sm text-outline">PNG, JPG ou WEBP até 8 MB</p>
+                                    </div>
+                                </label>
+                                <input id="npFotoInput" type="file" name="foto" accept="image/jpeg,image/png,image/webp" class="hidden" />
+                                <button id="npFotoRemoverBtn" type="button" title="Remover imagem"
+                                        class="@(Model.Imagem == null ? "hidden" : "") absolute -top-2 -right-2 w-7 h-7 rounded-full bg-error text-white flex items-center justify-center shadow hover:bg-opacity-90 transition-colors">
+                                    <span class="material-symbols-outlined text-[16px]">close</span>
+                                </button>
+                            </div>
                         </div>
-                        <p class="mt-sm font-label-sm text-label-sm text-outline">O envio das imagens será vinculado ao produto na versão completa do cadastro.</p>
+                        <input type="hidden" name="removerFoto" id="npRemoverFotoInput" value="false" />
                     </div>
 
                     <!-- Etapa 4: Estoque -->
@@ -259,7 +283,7 @@
                             </div>
                             <div class="md:col-span-3">
                                 <label class="font-label-md text-label-md text-on-surface-variant" for="npEstoqueMaximo">Estoque máximo</label>
-                                <input id="npEstoqueMaximo" type="number" min="0" step="1" placeholder="0" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                                <input id="npEstoqueMaximo" name="estoqueMaximo" value="@(Model.EstoqueMaximo > 0 ? Model.EstoqueMaximo.ToString() : "")" type="number" min="0" step="1" placeholder="0" class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
                             </div>
                             <div class="md:col-span-3">
                                 <label class="font-label-md text-label-md text-on-surface-variant" for="npCusto">Custo unitário</label>
@@ -363,9 +387,20 @@
         const ESTOQUE_INDEX_URL = "@Url.Action("Index", "Estoque")";
         const EDITAR_CODIGO = @Html.Raw(Json.Serialize(ViewData["EditarCodigo"] as string ?? ""));
         const CATEGORIA_CRIAR_URL = "@Url.Action("Criar", "Categoria")";
+
+        const MARCAS_CELULAR = @Html.Raw(Json.Serialize(
+            ((List<ListasCompras.Models.MarcaCelular>)ViewBag.MarcasCelular)
+                .Select(m => new {
+                    id = m.Id,
+                    nome = m.Nome,
+                    modelos = m.Modelos.OrderBy(mo => mo.Nome).Select(mo => new { id = mo.Id, nome = mo.Nome })
+                })
+        ));
+        const MODELOS_COMPATIVEIS_SELECIONADOS = @Html.Raw(Json.Serialize((List<int>)ViewBag.ModelosCompativeisIds));
     </script>
     <script src="~/js/mascaras.js" asp-append-version="true"></script>
     <script src="~/js/estoque-add.js" asp-append-version="true"></script>
     <script src="~/js/categoria-modal.js" asp-append-version="true"></script>
+    <script src="~/js/estoque-modelos-compativeis.js" asp-append-version="true"></script>
 </body>
 </html>

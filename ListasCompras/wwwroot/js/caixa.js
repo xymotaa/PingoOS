@@ -236,8 +236,26 @@ document.addEventListener("DOMContentLoaded", function () {
         encontrados.forEach(function (p, i) {
             const item = document.createElement("button");
             item.type = "button";
-            item.className = "sugestao-item w-full text-left px-md py-sm border-b border-outline-variant last:border-0 hover:bg-surface-container-low transition-colors flex items-center justify-between gap-md" +
+            item.className = "sugestao-item w-full text-left px-md py-sm border-b border-outline-variant last:border-0 hover:bg-surface-container-low transition-colors flex items-center gap-md" +
                 (i === indiceSugestaoAtiva ? " bg-surface-container-low" : "");
+
+            const miniatura = document.createElement("div");
+            miniatura.className = "w-10 h-10 shrink-0 rounded-lg bg-surface-container-low flex items-center justify-center overflow-hidden";
+            if (p.imagemUrl) {
+                const img = document.createElement("img");
+                img.src = p.imagemUrl;
+                img.alt = "";
+                img.className = "w-full h-full object-cover";
+                miniatura.appendChild(img);
+            } else {
+                const icone = document.createElement("span");
+                icone.className = "material-symbols-outlined text-[20px] text-outline";
+                icone.textContent = "inventory_2";
+                miniatura.appendChild(icone);
+            }
+
+            const conteudo = document.createElement("div");
+            conteudo.className = "flex items-center justify-between gap-md flex-1 min-w-0";
 
             const esquerda = document.createElement("div");
             esquerda.className = "min-w-0";
@@ -253,7 +271,8 @@ document.addEventListener("DOMContentLoaded", function () {
             preco.className = "font-body-md text-body-md font-semibold text-secondary shrink-0";
             preco.textContent = formatBRL(p.precoUnitario);
 
-            item.append(esquerda, preco);
+            conteudo.append(esquerda, preco);
+            item.append(miniatura, conteudo);
             item.addEventListener("click", function () { selecionarProdutoDaLista(p); });
             sugestoesProduto.appendChild(item);
         });

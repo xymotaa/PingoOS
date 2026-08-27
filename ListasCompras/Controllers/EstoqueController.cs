@@ -18,17 +18,25 @@ public class EstoqueController : LojaControllerBase
 
     public IActionResult Add(int? id)
     {
-        var produto = id.HasValue ? Context.ProdutosEstoque.Find(id.Value) : null;
+        var produto = id.HasValue
+            ? Context.ProdutosEstoque.Include(p => p.ModelosCompativeis).FirstOrDefault(p => p.Id == id.Value)
+            : null;
         if (id.HasValue && produto == null) return NotFound();
+
         ViewBag.Categorias = Context.Categorias.OrderBy(c => c.Nome).ToList();
+        ViewBag.MarcasCelular = Context.MarcasCelular.Include(m => m.Modelos).OrderBy(m => m.Nome).ToList();
+        ViewBag.ModelosCompativeisIds = produto?.ModelosCompativeis.Select(v => v.ModeloCelularId).ToList()
+            ?? new List<int>();
+
         return View(produto ?? new ProdutoEstoque());
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Salvar(
+    public async Task<IActionResult> Salvar(
         int id, string nome, string? codigo, int? categoriaId, string? unidade,
-        string? preco, string? custo, int estoqueInicial, int estoqueMinimo)
+        string? preco, string? custo, int estoqueInicial, int estoqueMinimo, int estoqueMaximo,
+        int[]? modelosCelularIds, IFormFile? foto, bool removerFoto = false)
     {
         if (string.IsNullOrWhiteSpace(nome))
         {
@@ -36,7 +44,24 @@ public class EstoqueController : LojaControllerBase
             return RedirectToAction(nameof(Add), new { id = id > 0 ? id : (int?)null });
         }
 
-        var produto = id > 0 ? Context.ProdutosEstoque.Find(id) : null;
+        estoqueMinimo = Math.Max(0, estoqueMinimo);
+        estoqueMaximo = Math.Max(0, estoqueMaximo);
+        if (estoqueMaximo > 0 && estoqueMaximo < estoqueMinimo)
+        {
+            TempData["Erro"] = "O estoque máximo não pode ser menor que o estoque mínimo.";
+            return RedirectToAction(nameof(Add), new { id = id > 0 ? id : (int?)null });
+        }
+
+        if (foto != null && foto.Length > 0 &&
+            (!ProdutoImagemServico.TipoValido(foto.ContentType) || !ProdutoImagemServico.TamanhoValido(foto.Length)))
+        {
+            TempData["Erro"] = "Envie uma imagem em JPEG, PNG ou WEBP de até 8 MB.";
+            return RedirectToAction(nameof(Add), new { id = id > 0 ? id : (int?)null });
+        }
+
+        var produto = id > 0
+            ? Context.ProdutosEstoque.Include(p => p.ModelosCompativeis).FirstOrDefault(p => p.Id == id)
+            : null;
         if (id > 0 && produto == null) return NotFound();
 
         var novo = produto == null;
@@ -58,7 +83,8 @@ public class EstoqueController : LojaControllerBase
         produto.Unidade = Limpar(unidade);
         produto.CustoUnitario = ParaDecimal(custo);
         produto.PrecoVenda = ParaDecimal(preco);
-        produto.EstoqueMinimo = Math.Max(0, estoqueMinimo);
+        produto.EstoqueMinimo = estoqueMinimo;
+        produto.EstoqueMaximo = estoqueMaximo;
 
         if (novo)
         {
@@ -69,9 +95,40 @@ public class EstoqueController : LojaControllerBase
                     "Saldo inicial do cadastro", IdDoUsuarioLogado());
         }
 
+        SincronizarModelosCompativeis(produto, modelosCelularIds);
+
+        if (foto != null && foto.Length > 0)
+        {
+            // Salva o arquivo novo antes de apagar o antigo — se SalvarAsync falhar
+            // (disco cheio etc.), o produto não fica sem imagem nenhuma.
+            var imagemAntiga = produto.Imagem;
+            await using var stream = foto.OpenReadStream();
+            produto.Imagem = await ProdutoImagemServico.SalvarAsync(stream, foto.ContentType!);
+            if (imagemAntiga != null) ProdutoImagemServico.Remover(imagemAntiga);
+        }
+        else if (removerFoto && produto.Imagem != null)
+        {
+            ProdutoImagemServico.Remover(produto.Imagem);
+            produto.Imagem = null;
+        }
+
         Context.SaveChanges();
         TempData["Sucesso"] = novo ? $"Produto {produto.Nome} cadastrado." : $"Produto {produto.Nome} atualizado.";
         return RedirectToAction(nameof(Index));
+    }
+
+    // Substitui a lista inteira pela que veio do formulário — mais simples que diff
+    // incremental, e o volume (poucos modelos por produto) não justifica otimizar isso.
+    private void SincronizarModelosCompativeis(ProdutoEstoque produto, int[]? modelosCelularIds)
+    {
+        if (produto.Id > 0)
+        {
+            Context.ProdutoEstoqueModeloCompativeis.RemoveRange(produto.ModelosCompativeis);
+            produto.ModelosCompativeis.Clear();
+        }
+
+        foreach (var modeloId in (modelosCelularIds ?? Array.Empty<int>()).Distinct())
+            produto.ModelosCompativeis.Add(new ProdutoEstoqueModeloCompativel { ModeloCelularId = modeloId });
     }
 
     [HttpPost]
@@ -100,6 +157,8 @@ public class EstoqueController : LojaControllerBase
     {
         var produto = Context.ProdutosEstoque.Find(id);
         if (produto == null) return RedirectToAction(nameof(Index));
+
+        if (produto.Imagem != null) ProdutoImagemServico.Remover(produto.Imagem);
 
         Context.ProdutosEstoque.Remove(produto);
         Context.SaveChanges();

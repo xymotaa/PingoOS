@@ -10,21 +10,36 @@ public class ProdutoEstoque
     public int? CategoriaId { get; set; }
     public Categoria? Categoria { get; set; }
     public string? Unidade { get; set; }
+    public string? Imagem { get; set; } // nome do arquivo em wwwroot/uploads/produtos, sem caminho
 
     public int SaldoAtual { get; set; }
     public int EstoqueMinimo { get; set; }
+    public int EstoqueMaximo { get; set; } // 0 = sem máximo definido
     public decimal CustoUnitario { get; set; }
     public decimal PrecoVenda { get; set; }
 
     public DateTime DataCadastro { get; set; } = DateTime.Now;
 
     public ICollection<MovimentacaoEstoque> Movimentacoes { get; set; } = new List<MovimentacaoEstoque>();
+    public ICollection<ProdutoEstoqueModeloCompativel> ModelosCompativeis { get; set; } = new List<ProdutoEstoqueModeloCompativel>();
 
     public decimal ValorEmEstoque => SaldoAtual * CustoUnitario;
 
     public string Situacao =>
         SaldoAtual <= 0 ? "esgotado"
         : (EstoqueMinimo > 0 && SaldoAtual <= EstoqueMinimo ? "baixo" : "ok");
+}
+
+// Vínculo explícito "este produto atende este modelo de celular" — ex: uma película
+// específica da Galaxy A12. Opcional: produto genérico (cabo USB-C) não tem vínculo
+// nenhum. Usado hoje só no cadastro; sugerir substituto no Caixa quando o produto
+// principal está esgotado é integração futura sobre esta mesma tabela.
+public class ProdutoEstoqueModeloCompativel
+{
+    public int ProdutoEstoqueId { get; set; }
+    public ProdutoEstoque ProdutoEstoque { get; set; } = null!;
+    public int ModeloCelularId { get; set; }
+    public ModeloCelular ModeloCelular { get; set; } = null!;
 }
 
 // Todo ajuste de saldo passa por aqui: o saldo é consequência do histórico, não um

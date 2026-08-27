@@ -24,6 +24,7 @@ public class AppDbContext : DbContext
     public DbSet<NotificacaoCliente> NotificacoesCliente { get; set; }
     public DbSet<PagamentoOrdemServico> PagamentosOrdemServico { get; set; }
     public DbSet<ProdutoEstoque> ProdutosEstoque { get; set; }
+    public DbSet<ProdutoEstoqueModeloCompativel> ProdutoEstoqueModeloCompativeis { get; set; }
     public DbSet<MovimentacaoEstoque> MovimentacoesEstoque { get; set; }
     public DbSet<Venda> Vendas { get; set; }
     public DbSet<ItemVenda> ItensVenda { get; set; }
@@ -180,6 +181,17 @@ public class AppDbContext : DbContext
             .WithMany()
             .HasForeignKey(p => p.CategoriaId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<ProdutoEstoqueModeloCompativel>()
+            .HasKey(v => new { v.ProdutoEstoqueId, v.ModeloCelularId });
+
+        modelBuilder.Entity<ProdutoEstoqueModeloCompativel>()
+            .HasOne(v => v.ProdutoEstoque).WithMany(p => p.ModelosCompativeis)
+            .HasForeignKey(v => v.ProdutoEstoqueId).OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ProdutoEstoqueModeloCompativel>()
+            .HasOne(v => v.ModeloCelular).WithMany()
+            .HasForeignKey(v => v.ModeloCelularId).OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<Venda>().HasIndex(v => v.Numero).IsUnique();
 

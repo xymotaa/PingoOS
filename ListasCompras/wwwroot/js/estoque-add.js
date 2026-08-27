@@ -40,6 +40,39 @@ document.addEventListener("DOMContentLoaded", function () {
         return parseFloat(String(valor).replace(/\./g, "").replace(",", ".")) || 0;
     }
 
+    // Preview da imagem do produto (etapa 3) — o arquivo só é enviado no submit do
+    // formulário inteiro, igual ao resto do cadastro (não é envio imediato).
+    const npFotoInput = document.getElementById("npFotoInput");
+    const npFotoPreview = document.getElementById("npFotoPreview");
+    const npFotoPlaceholder = document.getElementById("npFotoPlaceholder");
+    const npFotoRemoverBtn = document.getElementById("npFotoRemoverBtn");
+    const npRemoverFotoInput = document.getElementById("npRemoverFotoInput");
+
+    if (npFotoInput) {
+        npFotoInput.addEventListener("change", function () {
+            const file = this.files && this.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                npFotoPreview.src = e.target.result;
+                npFotoPreview.classList.remove("hidden");
+                npFotoPlaceholder.classList.add("hidden");
+                npFotoRemoverBtn.classList.remove("hidden");
+                npRemoverFotoInput.value = "false"; // escolher um arquivo novo cancela um "remover" pendente
+            };
+            reader.readAsDataURL(file);
+        });
+
+        npFotoRemoverBtn.addEventListener("click", function () {
+            npFotoInput.value = "";
+            npFotoPreview.src = "";
+            npFotoPreview.classList.add("hidden");
+            npFotoPlaceholder.classList.remove("hidden");
+            npFotoRemoverBtn.classList.add("hidden");
+            npRemoverFotoInput.value = "true";
+        });
+    }
+
     // O visível aceita vírgula; o que vai ao servidor usa ponto, senão a cultura
     // do sistema converteria "620,00" errado
     form.addEventListener("submit", function (e) {
