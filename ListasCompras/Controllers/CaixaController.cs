@@ -14,10 +14,7 @@ public class CaixaController : LojaControllerBase
     public IActionResult Index()
     {
         ViewBag.VendaEmEdicaoId = 0;
-        var produtos = Context.ProdutosEstoque.Include(p => p.Variacoes)
-            .Where(p => p.ProdutoPaiId == null)
-            .OrderBy(p => p.Nome).ToList();
-        return View(produtos);
+        return View(ProdutosVendaveis());
     }
 
     public IActionResult Vendas()
@@ -57,11 +54,18 @@ public class CaixaController : LojaControllerBase
         ViewBag.FormaPagamentoEmEdicao = venda.FormaPagamento;
         ViewBag.ValorRecebidoEmEdicao = venda.ValorRecebido;
 
-        var produtos = Context.ProdutosEstoque.Include(p => p.Variacoes)
+        return View("Index", ProdutosVendaveis());
+    }
+
+    // Só produtos raiz (simples ou pai de variação) — variação nunca aparece sozinha
+    // na busca do Caixa. Inclui ModelosCompativeis para montar, na view, a lista de
+    // "produtos que servem no mesmo aparelho" exibida como sugestão na busca.
+    private List<ProdutoEstoque> ProdutosVendaveis()
+        => Context.ProdutosEstoque
+            .Include(p => p.Variacoes)
+            .Include(p => p.ModelosCompativeis)
             .Where(p => p.ProdutoPaiId == null)
             .OrderBy(p => p.Nome).ToList();
-        return View("Index", produtos);
-    }
 
     [HttpPost]
     [ValidateAntiForgeryToken]

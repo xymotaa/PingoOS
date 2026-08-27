@@ -60,12 +60,36 @@ document.addEventListener("DOMContentLoaded", function () {
         }) || null;
     }
 
+    function porId(id) {
+        return PRODUTOS.find(function (p) { return p.id === id; }) || null;
+    }
+
+    // Além do que bate por texto, inclui produtos compatíveis (mesmo modelo de
+    // celular, ver ProdutoEstoqueModeloCompativel) com o que foi encontrado — mesmo
+    // que o compatível não tenha nada a ver com o texto digitado. Marcado com
+    // _compativelDe pra renderSugestoes saber que precisa da etiqueta.
     function buscarProdutos(termo) {
         const alvo = termo.trim().toLowerCase();
         if (!alvo) return [];
-        return PRODUTOS.filter(function (p) {
+
+        const encontrados = PRODUTOS.filter(function (p) {
             return p.codigo.toLowerCase().includes(alvo) || p.nome.toLowerCase().includes(alvo);
-        }).slice(0, 8);
+        });
+
+        const resultado = encontrados.slice();
+        const idsPresentes = new Set(encontrados.map(function (p) { return p.id; }));
+
+        encontrados.forEach(function (p) {
+            (p.compativeisComIds || []).forEach(function (idCompativel) {
+                if (idsPresentes.has(idCompativel)) return;
+                const compativel = porId(idCompativel);
+                if (!compativel) return;
+                idsPresentes.add(idCompativel);
+                resultado.push(Object.assign({}, compativel, { _compativelDe: p.nome }));
+            });
+        });
+
+        return resultado.slice(0, 8);
     }
 
     // Preço final da unidade após desconto. O tipo (percentual ou valor em
@@ -308,8 +332,18 @@ document.addEventListener("DOMContentLoaded", function () {
             const esquerda = document.createElement("div");
             esquerda.className = "min-w-0";
             const nome = document.createElement("p");
-            nome.className = "font-body-md text-body-md text-on-surface truncate";
-            nome.textContent = p.nome;
+            nome.className = "font-body-md text-body-md text-on-surface truncate flex items-center gap-xs";
+            const nomeTexto = document.createElement("span");
+            nomeTexto.className = "truncate";
+            nomeTexto.textContent = p.nome;
+            nome.appendChild(nomeTexto);
+            if (p._compativelDe) {
+                const etiqueta = document.createElement("span");
+                etiqueta.className = "shrink-0 bg-secondary-container text-on-secondary-container font-label-sm text-label-sm px-xs rounded";
+                etiqueta.title = "Também serve no mesmo aparelho que " + p._compativelDe;
+                etiqueta.textContent = "compatível";
+                nome.appendChild(etiqueta);
+            }
             const detalhe = document.createElement("p");
             detalhe.className = "font-label-sm text-label-sm text-outline";
             detalhe.textContent = p.codigo + " · estoque: " + p.saldoAtual;

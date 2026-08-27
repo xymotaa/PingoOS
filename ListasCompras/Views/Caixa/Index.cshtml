@@ -7,6 +7,23 @@
     var logo = ViewData["LogoLoja"] as string;
     var inicial = string.IsNullOrWhiteSpace(nomeLoja) ? "L" : nomeLoja.Trim()[0].ToString().ToUpper();
     var vendaEmEdicaoId = ViewBag.VendaEmEdicaoId is int idEdicao ? idEdicao : 0;
+
+    // Dois produtos são "compatíveis entre si" se atendem pelo menos um mesmo modelo
+    // de celular (ex: a película do A15 também serve no A25). Calculado aqui, sobre a
+    // lista já carregada em memória (poucos produtos numa loja), para o JS só ter que
+    // exibir a etiqueta, sem recalcular relacionamento nenhum.
+    var produtosPorModelo = Model
+        .SelectMany(p => p.ModelosCompativeis.Select(mc => new { ModeloId = mc.ModeloCelularId, ProdutoId = p.Id }))
+        .GroupBy(x => x.ModeloId)
+        .ToDictionary(g => g.Key, g => g.Select(x => x.ProdutoId).ToList());
+
+    var compativeisPorProduto = Model.ToDictionary(
+        p => p.Id,
+        p => p.ModelosCompativeis
+            .SelectMany(mc => produtosPorModelo.GetValueOrDefault(mc.ModeloCelularId, new List<int>()))
+            .Where(outroId => outroId != p.Id)
+            .Distinct()
+            .ToList());
 }
 <!DOCTYPE html>
 <html class="light" lang="pt-BR">
@@ -252,7 +269,8 @@
             ImagemUrl = p.Imagem != null ? Url.Content("~/uploads/produtos/" + p.Imagem) : null,
             Variacoes = p.Formato == "variacao"
                 ? p.Variacoes.Select(v => new { v.Id, v.Codigo, Descricao = v.DescricaoVariacao, PrecoUnitario = v.PrecoVenda, v.SaldoAtual }).ToList()
-                : null
+                : null,
+            CompativeisComIds = compativeisPorProduto.GetValueOrDefault(p.Id, new List<int>())
         })));
         // Presente só na tela de edição de venda (ver CaixaController.EditarVenda) — o
         // carrinho nasce com esses itens em vez de vazio.
