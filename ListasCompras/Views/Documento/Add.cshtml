@@ -29,6 +29,7 @@
     <form asp-action="Salvar" method="post" id="formOs">
     <input type="hidden" id="clienteId" name="clienteId" value="@(editando ? Model.ClienteId.ToString() : "")" />
     <input type="hidden" name="id" value="@Model.Id" />
+    <input type="hidden" name="retorno" value="@(ViewBag.Retorno as string)" />
     @if (Model.OrdemOrigemId.HasValue)
     {
         <input type="hidden" name="ordemOrigemId" value="@Model.OrdemOrigemId" />
@@ -355,10 +356,20 @@
 
             <!-- Ações -->
             <div class="flex items-center justify-end gap-sm">
-                <a asp-action="Index"
-                   class="border border-outline text-on-surface-variant rounded-lg px-lg py-sm font-label-md text-label-md font-bold hover:bg-surface-container-low transition-colors">
-                    Cancelar
-                </a>
+                @if (editando && ViewBag.Retorno as string == "Ver")
+                {
+                    <a asp-action="Ver" asp-route-id="@Model.Id"
+                       class="border border-outline text-on-surface-variant rounded-lg px-lg py-sm font-label-md text-label-md font-bold hover:bg-surface-container-low transition-colors">
+                        Cancelar
+                    </a>
+                }
+                else
+                {
+                    <a asp-action="Index"
+                       class="border border-outline text-on-surface-variant rounded-lg px-lg py-sm font-label-md text-label-md font-bold hover:bg-surface-container-low transition-colors">
+                        Cancelar
+                    </a>
+                }
                 <button id="salvarOrcamentoBtn" type="submit"
                         class="bg-secondary text-white rounded-lg px-lg py-sm font-label-md text-label-md font-bold hover:bg-opacity-90 transition-colors flex items-center gap-xs">
                     <span class="material-symbols-outlined text-[18px]">save</span>

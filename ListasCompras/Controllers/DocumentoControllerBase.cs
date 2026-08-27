@@ -48,8 +48,14 @@ public abstract class DocumentoControllerBase : LojaControllerBase
 
     // Mesma tela cria e edita: faltar um dado ou digitar errado é comum, e reabrir o documento
     // é melhor que excluir e refazer, que perderia o número e o histórico
-    public IActionResult Add(int? id)
+    //
+    // "retorno" segue o mesmo padrão já usado em AlterarSituacao: quem chegou aqui a partir da
+    // tela Ver leva esse rótulo consigo (via link), e Salvar devolve pra lá em vez de sempre
+    // ir pra Index — evita a queixa de "editei e salvei, mas caiu num lugar que eu não esperava".
+    public IActionResult Add(int? id, string? retorno)
     {
+        ViewBag.Retorno = retorno;
+
         if (!id.HasValue)
             return Tela("Add", new OrdemServico { Tipo = Tipo, Situacao = SituacaoInicial });
 
@@ -104,7 +110,7 @@ public abstract class DocumentoControllerBase : LojaControllerBase
         string[]? aparelhoSerie, string[]? aparelhoSemSerie,
         string? sinal, string? desconto, string? descontoTipo,
         string? formaPagamento, bool parcelado, int parcelas, int prazoGarantiaDias, int validadeDias,
-        int? ordemOrigemId,
+        int? ordemOrigemId, string? retorno,
         // Valor chega como texto e é convertido com cultura invariante de propósito: o binding
         // do .NET usa a cultura do sistema, e num Windows/Linux em pt-BR "620.00" viraria 62000.
         string[]? itemDescricao, int[]? itemQuantidade, string[]? itemValor)
@@ -112,7 +118,7 @@ public abstract class DocumentoControllerBase : LojaControllerBase
         if (clienteId <= 0 || !Context.Clientes.Any(c => c.Id == clienteId))
         {
             TempData["Erro"] = $"Selecione o cliente antes de salvar {(EhOrcamento ? "o orçamento" : "a ordem de serviço")}.";
-            return RedirectToAction(nameof(Add), id > 0 ? new { id } : null);
+            return RedirectToAction(nameof(Add), new { id = id > 0 ? id : (int?)null, retorno });
         }
 
         decimal haverRecebidoAgora = 0m;
@@ -242,7 +248,13 @@ public abstract class DocumentoControllerBase : LojaControllerBase
         }
 
         TempData["Sucesso"] = $"{documento.Rotulo} {documento.Numero} {(novo ? "salvo" : "atualizado")}.";
-        return RedirectToAction(nameof(Ver), new { id = documento.Id });
+
+        // Documento recém-criado: continua indo pra Ver, é natural conferir/imprimir na hora.
+        // Documento editado: volta pra onde a edição começou — Index se veio da listagem, Ver
+        // se veio de lá (mesmo padrão de "retorno" já usado em AlterarSituacao).
+        if (novo || retorno != "Index")
+            return RedirectToAction(nameof(Ver), new { id = documento.Id });
+        return RedirectToAction(nameof(Index));
     }
 
     [HttpPost]

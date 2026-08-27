@@ -130,7 +130,7 @@
                                            class="w-8 h-8 rounded-lg hover:bg-surface-container-high inline-flex items-center justify-center text-on-surface-variant transition-colors">
                                             <span class="material-symbols-outlined text-[18px]">visibility</span>
                                         </a>
-                                        <a asp-action="Add" asp-route-id="@os.Id" title="@(ehOrcamento ? "Editar o orçamento" : "Editar a ordem")"
+                                        <a asp-action="Add" asp-route-id="@os.Id" asp-route-retorno="Index" title="@(ehOrcamento ? "Editar o orçamento" : "Editar a ordem")"
                                            class="w-8 h-8 rounded-lg hover:bg-surface-container-high inline-flex items-center justify-center text-on-surface-variant transition-colors">
                                             <span class="material-symbols-outlined text-[18px]">edit</span>
                                         </a>
