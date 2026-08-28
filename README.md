@@ -19,6 +19,11 @@ gerenciar clientes, estoque e vendas em papel, planilhas soltas ou sistemas pago
 para o porte do negócio. O Pingo OS reúne isso em um único sistema, instalado localmente, com o
 dono dos dados sendo sempre o dono da loja.
 
+Cobre o ciclo do negócio de ponta a ponta: frente de caixa, orçamento e ordem de serviço,
+garantias, estoque com variações e modelos compatíveis, financeiro e controle de teto do MEI —
+com papéis de usuário (administrador, vendedor, técnico) para cada pessoa acessar só o que
+precisa.
+
 É software livre, aberto para uso, estudo e contribuição.
 
 ## Instalação
@@ -73,6 +78,16 @@ as migrations automaticamente.
 
 Contribuições são bem-vindas. Abra uma [issue](https://github.com/xymotaa/PingoOS/issues) para
 relatar bugs ou sugerir melhorias, ou envie um pull request.
+
+<a href="https://github.com/xymotaa/PingoOS/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=xymotaa/PingoOS" alt="Contribuidores do Pingo OS" />
+</a>
+
+## Apoie o projeto
+
+O Pingo OS é gratuito, sem mensalidade e sem coleta de dados — mantido no tempo livre do autor.
+Se o sistema ajudou sua loja, considere apoiar o desenvolvimento continuado. Os canais de doação
+serão divulgados aqui assim que estiverem configurados.
 
 ## Contato
 
