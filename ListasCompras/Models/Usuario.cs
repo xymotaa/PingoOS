@@ -13,7 +13,7 @@ public class Usuario
     // no momento em que é gerado, e nem o banco revela qual é.
     public string? CodigoRecuperacaoHash { get; set; }
 
-    public string Papel { get; set; } = Papeis.Tecnico; // Admin | Tecnico
+    public string Papel { get; set; } = Papeis.Tecnico; // Admin | Vendedor | Tecnico
     public bool Ativo { get; set; } = true;
     public DateTime DataCriacao { get; set; } = DateTime.Now;
 }
@@ -21,5 +21,19 @@ public class Usuario
 public static class Papeis
 {
     public const string Admin = "Admin";
+    public const string Vendedor = "Vendedor";
+
+    // Valor salvo no banco continua "Tecnico" por compatibilidade com quem já está cadastrado;
+    // só o rótulo exibido virou "Técnico de Celular" (ver Rotulo() abaixo).
     public const string Tecnico = "Tecnico";
+
+    public static readonly string[] Todos = { Admin, Vendedor, Tecnico };
+
+    public static string Rotulo(string papel) => papel switch
+    {
+        Admin => "Administrador",
+        Vendedor => "Vendedor",
+        Tecnico => "Técnico de Celular",
+        _ => papel,
+    };
 }

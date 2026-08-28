@@ -1,12 +1,15 @@
 using ListasCompras.Data;
 using ListasCompras.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace ListasCompras.Controllers;
 
 // MEI tem teto anual de faturamento; passar dele sem perceber desenquadra o regime e
-// aumenta a carga tributária. Esta tela soma o que já está gravado contra esse teto.
+// aumenta a carga tributária. Esta tela soma o que já está gravado contra esse teto — visão
+// gerencial, só o administrador acessa (Vendedor/Técnico de Celular usam Financeiro).
+[Authorize(Roles = Papeis.Admin)]
 public class FaturamentoController : LojaControllerBase
 {
     // Padrão vigente do MEI. Fixo por enquanto — virar configurável é ideia anotada no

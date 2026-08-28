@@ -15,14 +15,11 @@
 <body class="bg-surface">
     @await Html.PartialAsync("_Navbar")
 
-    <main class="pt-24 px-lg pb-xl max-w-[560px] mx-auto">
+    <main class="pt-24 px-lg pb-xl max-w-[1440px] mx-auto">
 
         <section class="mb-md">
-            <a asp-action="Usuarios" class="font-label-md text-label-md text-on-surface-variant hover:text-primary flex items-center gap-xs w-fit mb-sm">
-                <span class="material-symbols-outlined text-[18px]">arrow_back</span> Usuários
-            </a>
             <h1 class="font-headline-lg text-headline-lg text-primary">Novo usuário</h1>
-            <p class="font-body-md text-body-md text-on-surface-variant">Cadastre um técnico ou outro administrador.</p>
+            <p class="font-body-md text-body-md text-on-surface-variant">Cadastre um vendedor, técnico ou outro administrador.</p>
         </section>
 
         <div class="bg-white rounded-xl border border-outline-variant shadow-sm p-lg">
@@ -34,7 +31,7 @@
                 </div>
             }
 
-            <form asp-action="NovoUsuario" method="post" class="flex flex-col gap-md">
+            <form asp-action="NovoUsuario" method="post" class="flex flex-col gap-md max-w-[560px]">
 
                 <div>
                     <label class="font-label-md text-label-md text-on-surface-variant" for="nome">Nome</label>
@@ -52,8 +49,9 @@
                     <label class="font-label-md text-label-md text-on-surface-variant" for="papel">Papel</label>
                     <select id="papel" name="papel"
                             class="w-full mt-xs bg-surface-container-low border-none rounded-lg pl-md pr-10 py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30">
-                        <option value="Tecnico">Técnico — usa o sistema no dia a dia</option>
-                        <option value="Admin">Administrador — também gerencia usuários</option>
+                        <option value="Vendedor">Vendedor — caixa, clientes e ordens de serviço</option>
+                        <option value="Tecnico">Técnico de Celular — usa o sistema no dia a dia</option>
+                        <option value="Admin">Administrador — também gerencia usuários e a loja</option>
                     </select>
                 </div>
 

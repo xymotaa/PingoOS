@@ -9,6 +9,7 @@
 
     var hora = DateTime.Now.Hour;
     var saudacao = hora < 12 ? "Bom dia" : hora < 18 ? "Boa tarde" : "Boa noite";
+    var souAdmin = User.IsInRole(ListasCompras.Models.Papeis.Admin);
 
     string Moeda(decimal v) => v.ToString("C2", new System.Globalization.CultureInfo("pt-BR"));
     var diasSemana = new[] { "Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb" };
@@ -120,10 +121,13 @@
             <span class="material-symbols-outlined text-[22px]">inventory_2</span>
             <span class="font-body-lg text-body-lg">Estoque</span>
         </a>
-        <a asp-controller="Faturamento" asp-action="Index" class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
-            <span class="material-symbols-outlined text-[22px]">trending_up</span>
-            <span class="font-body-lg text-body-lg">Faturamento MEI</span>
-        </a>
+        @if (souAdmin)
+        {
+            <a asp-controller="Faturamento" asp-action="Index" class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
+                <span class="material-symbols-outlined text-[22px]">trending_up</span>
+                <span class="font-body-lg text-body-lg">Faturamento MEI</span>
+            </a>
+        }
         <a asp-controller="Financeiro" asp-action="Index" class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
             <span class="material-symbols-outlined text-[22px]">account_balance_wallet</span>
             <span class="font-body-lg text-body-lg">Financeiro</span>
@@ -136,10 +140,13 @@
             <span class="material-symbols-outlined text-[22px]">shopping_cart</span>
             <span class="font-body-lg text-body-lg">Lista de compra</span>
         </a>
-        <a asp-controller="Dashboards" asp-action="Index" class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
-            <span class="material-symbols-outlined text-[22px]">analytics</span>
-            <span class="font-body-lg text-body-lg">Dashboards</span>
-        </a>
+        @if (souAdmin)
+        {
+            <a asp-controller="Dashboards" asp-action="Index" class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
+                <span class="material-symbols-outlined text-[22px]">analytics</span>
+                <span class="font-body-lg text-body-lg">Dashboards</span>
+            </a>
+        }
 </aside>
 
     <!-- Conteúdo -->
@@ -268,9 +275,12 @@
                         }
                     </div>
                 }
-                <div class="p-md border-t border-outline-variant text-center">
-                    <a asp-controller="Dashboards" asp-action="Index" class="font-label-md text-label-md text-secondary font-bold hover:underline">Ver todo o histórico</a>
-                </div>
+                @if (souAdmin)
+                {
+                    <div class="p-md border-t border-outline-variant text-center">
+                        <a asp-controller="Dashboards" asp-action="Index" class="font-label-md text-label-md text-secondary font-bold hover:underline">Ver todo o histórico</a>
+                    </div>
+                }
             </div>
         </section>
 

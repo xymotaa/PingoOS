@@ -1,11 +1,12 @@
+@using ListasCompras.Models
 @{
     var navNomeLoja = ViewData["NomeLoja"] as string ?? "Minha Loja";
     var navLogo = ViewData["LogoLoja"] as string;
     var navInicial = string.IsNullOrWhiteSpace(navNomeLoja) ? "L" : navNomeLoja.Trim()[0].ToString().ToUpper();
 
     var navUsuario = User.Identity?.Name;
-    var navAdmin = User.IsInRole("Admin");
-    var navPapel = navAdmin ? "Administrador" : "Técnico";
+    var navAdmin = User.IsInRole(Papeis.Admin);
+    var navPapel = Papeis.Rotulo(User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "");
 }
 <!-- Barra superior -->
 <header class="no-print fixed top-0 w-full z-50 bg-surface border-b border-outline-variant shadow-sm flex justify-between items-center h-16 px-lg">

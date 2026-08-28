@@ -212,7 +212,7 @@ public class ContaController : LojaControllerBase
         {
             Nome = nome.Trim(),
             Email = email.Trim().ToLowerInvariant(),
-            Papel = papel == Papeis.Admin ? Papeis.Admin : Papeis.Tecnico,
+            Papel = Papeis.Todos.Contains(papel) ? papel : Papeis.Tecnico,
         };
         usuario.SenhaHash = _hasher.HashPassword(usuario, senha);
         var codigo = DefinirCodigo(usuario);

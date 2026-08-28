@@ -1,9 +1,13 @@
 using ListasCompras.Data;
 using ListasCompras.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ListasCompras.Controllers;
 
+// Números consolidados da loja: só o dono/administrador vê. Vendedor e Técnico de Celular
+// usam Vendas/Financeiro no dia a dia, mas não têm acesso à visão gerencial.
+[Authorize(Roles = Papeis.Admin)]
 public class DashboardsController : LojaControllerBase
 {
     public DashboardsController(AppDbContext context) : base(context) { }

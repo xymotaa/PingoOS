@@ -1,5 +1,6 @@
 @model List<ListasCompras.Models.Usuario>
 @using System.Security.Claims
+@using ListasCompras.Models
 @{
     Layout = null;
     ViewData["Title"] = "Usuários";
@@ -72,8 +73,8 @@
                                 </td>
                                 <td class="px-md py-sm font-body-md text-body-md text-on-surface-variant">@u.Email</td>
                                 <td class="px-md py-sm">
-                                    <span class="px-sm py-xs rounded-full font-label-sm text-label-sm @(u.Papel == "Admin" ? "bg-secondary-container text-on-secondary-container" : "bg-surface-container-high text-on-surface-variant")">
-                                        @(u.Papel == "Admin" ? "Administrador" : "Técnico")
+                                    <span class="px-sm py-xs rounded-full font-label-sm text-label-sm @(u.Papel == Papeis.Admin ? "bg-secondary-container text-on-secondary-container" : "bg-surface-container-high text-on-surface-variant")">
+                                        @Papeis.Rotulo(u.Papel)
                                     </span>
                                 </td>
                                 <td class="px-md py-sm font-body-md text-body-md @(u.Ativo ? "text-secondary" : "text-outline")">
