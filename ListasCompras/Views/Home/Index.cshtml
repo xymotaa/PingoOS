@@ -14,6 +14,15 @@
     string Moeda(decimal v) => v.ToString("C2", new System.Globalization.CultureInfo("pt-BR"));
     var diasSemana = new[] { "Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb" };
     var maiorValorSemana = Model.DesempenhoSemanal.Count > 0 ? Model.DesempenhoSemanal.Max(p => p.Total) : 0m;
+
+    // Item ativo da sidebar: compara pelo controller da rota atual, não pela action — assim
+    // "Caixa" fica marcado tanto em Index quanto em Vendas, sem duplicar lógica por link.
+    var controllerAtual = ViewContext.RouteData.Values["controller"] as string ?? "";
+    string ClasseItem(bool ativo) =>
+        ativo
+            ? "flex items-center gap-md px-md py-sm rounded-lg bg-secondary-container text-on-secondary-container font-semibold transition-colors"
+            : "flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors";
+    bool EhAtual(params string[] controllers) => controllers.Contains(controllerAtual, StringComparer.OrdinalIgnoreCase);
 }
 <!DOCTYPE html>
 <html class="light" lang="pt-BR">
@@ -83,71 +92,88 @@
     @await Html.PartialAsync("_Navbar")
 
     <!-- Menu lateral (módulos) -->
-    <aside id="sidebar" class="hidden lg:flex fixed top-16 left-0 bottom-0 w-[236px] bg-surface border-r border-outline-variant flex-col py-md px-sm gap-xs z-40 overflow-y-auto custom-scrollbar">
-        @* Caixa é um grupo: clicar abre as duas telas, clicar de novo fecha *@
-        <button id="grupoCaixaBtn" type="button" aria-expanded="false" aria-controls="grupoCaixa"
-                class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors text-left">
-            <span class="material-symbols-outlined text-[22px]">point_of_sale</span>
-            <span class="font-body-lg text-body-lg">Caixa</span>
-        </button>
-        <div id="grupoCaixa" class="hidden flex-col gap-xs">
-            <a asp-controller="Caixa" asp-action="Index" class="flex items-center gap-md pl-[52px] pr-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
-                <span class="font-body-md text-body-md">Frente de caixa</span>
+    <aside id="sidebar" class="hidden lg:flex fixed top-16 left-0 bottom-0 w-[248px] bg-surface border-r border-outline-variant flex-col py-md px-sm gap-lg z-40 overflow-y-auto custom-scrollbar">
+
+        <!-- Vendas -->
+        <div class="flex flex-col gap-xs">
+            <p class="px-md font-label-sm text-label-sm text-outline uppercase tracking-wider">Vendas</p>
+
+            @* Caixa é um grupo: clicar abre as duas telas, clicar de novo fecha *@
+            <button id="grupoCaixaBtn" type="button" aria-expanded="@(EhAtual("Caixa", "FechamentoCaixa") ? "true" : "false")" aria-controls="grupoCaixa"
+                    class="@ClasseItem(EhAtual("Caixa", "FechamentoCaixa")) w-full text-left">
+                <span class="material-symbols-outlined text-[22px]">point_of_sale</span>
+                <span class="font-body-lg text-body-lg flex-1">Caixa</span>
+                <span class="material-symbols-outlined text-[18px] transition-transform" id="grupoCaixaChevron">expand_more</span>
+            </button>
+            <div id="grupoCaixa" class="@(EhAtual("Caixa", "FechamentoCaixa") ? "flex" : "hidden") flex-col gap-xs">
+                <a asp-controller="Caixa" asp-action="Index" class="@ClasseItem(controllerAtual == "Caixa" && ViewContext.RouteData.Values["action"] as string == "Index") pl-[52px]">
+                    <span class="font-body-md text-body-md">Frente de caixa</span>
+                </a>
+                <a asp-controller="Caixa" asp-action="Vendas" class="@ClasseItem(controllerAtual == "Caixa" && ViewContext.RouteData.Values["action"] as string == "Vendas") pl-[52px]">
+                    <span class="font-body-md text-body-md">Vendas</span>
+                </a>
+                <a asp-controller="FechamentoCaixa" asp-action="Index" class="@ClasseItem(controllerAtual == "FechamentoCaixa") pl-[52px]">
+                    <span class="font-body-md text-body-md">Fechamento do dia</span>
+                </a>
+            </div>
+
+            <a asp-controller="Orcamento" asp-action="Index" class="@ClasseItem(controllerAtual == "Orcamento")">
+                <span class="material-symbols-outlined text-[22px]">request_quote</span>
+                <span class="font-body-lg text-body-lg">Orçamento</span>
             </a>
-            <a asp-controller="Caixa" asp-action="Vendas" class="flex items-center gap-md pl-[52px] pr-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
-                <span class="font-body-md text-body-md">Vendas</span>
+            <a asp-controller="OrdemServico" asp-action="Index" class="@ClasseItem(controllerAtual == "OrdemServico")">
+                <span class="material-symbols-outlined text-[22px]">receipt_long</span>
+                <span class="font-body-lg text-body-lg">Ordem de serviço</span>
             </a>
-            <a asp-controller="FechamentoCaixa" asp-action="Index" class="flex items-center gap-md pl-[52px] pr-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
-                <span class="font-body-md text-body-md">Fechamento do dia</span>
+            <a asp-controller="Garantia" asp-action="Index" class="@ClasseItem(controllerAtual == "Garantia")">
+                <span class="material-symbols-outlined text-[22px]">verified_user</span>
+                <span class="font-body-lg text-body-lg">Garantias</span>
             </a>
         </div>
-        <a asp-controller="Orcamento" asp-action="Index" class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
-            <span class="material-symbols-outlined text-[22px]">request_quote</span>
-            <span class="font-body-lg text-body-lg">Orçamento</span>
-        </a>
-        <a asp-controller="OrdemServico" asp-action="Index" class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
-            <span class="material-symbols-outlined text-[22px]">receipt_long</span>
-            <span class="font-body-lg text-body-lg">Ordem de serviço</span>
-        </a>
-        <a asp-controller="Servico" asp-action="Index" class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
-            <span class="material-symbols-outlined text-[22px]">handyman</span>
-            <span class="font-body-lg text-body-lg">Serviços</span>
-        </a>
-        <a asp-controller="Garantia" asp-action="Index" class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
-            <span class="material-symbols-outlined text-[22px]">verified_user</span>
-            <span class="font-body-lg text-body-lg">Garantias</span>
-        </a>
-        <a asp-controller="Estoque" asp-action="Index" class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
-            <span class="material-symbols-outlined text-[22px]">inventory_2</span>
-            <span class="font-body-lg text-body-lg">Estoque</span>
-        </a>
-        @if (souAdmin)
-        {
-            <a asp-controller="Faturamento" asp-action="Index" class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
-                <span class="material-symbols-outlined text-[22px]">trending_up</span>
-                <span class="font-body-lg text-body-lg">Faturamento MEI</span>
+
+        <!-- Cadastros e estoque -->
+        <div class="flex flex-col gap-xs">
+            <p class="px-md font-label-sm text-label-sm text-outline uppercase tracking-wider">Cadastros</p>
+
+            <a asp-controller="Servico" asp-action="Index" class="@ClasseItem(controllerAtual == "Servico")">
+                <span class="material-symbols-outlined text-[22px]">handyman</span>
+                <span class="font-body-lg text-body-lg">Serviços</span>
             </a>
-        }
-        <a asp-controller="Financeiro" asp-action="Index" class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
-            <span class="material-symbols-outlined text-[22px]">account_balance_wallet</span>
-            <span class="font-body-lg text-body-lg">Financeiro</span>
-        </a>
-        <a asp-controller="Cliente" asp-action="Index" class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
-            <span class="material-symbols-outlined text-[22px]">group</span>
-            <span class="font-body-lg text-body-lg">Clientes</span>
-        </a>
-        <a asp-controller="ListaCompra" asp-action="Index" class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
-            <span class="material-symbols-outlined text-[22px]">shopping_cart</span>
-            <span class="font-body-lg text-body-lg">Lista de compra</span>
-        </a>
-        @if (souAdmin)
-        {
-            <a asp-controller="Dashboards" asp-action="Index" class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
-                <span class="material-symbols-outlined text-[22px]">analytics</span>
-                <span class="font-body-lg text-body-lg">Dashboards</span>
+            <a asp-controller="Estoque" asp-action="Index" class="@ClasseItem(controllerAtual == "Estoque")">
+                <span class="material-symbols-outlined text-[22px]">inventory_2</span>
+                <span class="font-body-lg text-body-lg">Estoque</span>
             </a>
-        }
-</aside>
+            <a asp-controller="Cliente" asp-action="Index" class="@ClasseItem(controllerAtual == "Cliente")">
+                <span class="material-symbols-outlined text-[22px]">group</span>
+                <span class="font-body-lg text-body-lg">Clientes</span>
+            </a>
+            <a asp-controller="ListaCompra" asp-action="Index" class="@ClasseItem(controllerAtual == "ListaCompra")">
+                <span class="material-symbols-outlined text-[22px]">shopping_cart</span>
+                <span class="font-body-lg text-body-lg">Lista de compra</span>
+            </a>
+        </div>
+
+        <!-- Gestão: números do negócio, só quem tem visão gerencial -->
+        <div class="flex flex-col gap-xs">
+            <p class="px-md font-label-sm text-label-sm text-outline uppercase tracking-wider">Gestão</p>
+
+            <a asp-controller="Financeiro" asp-action="Index" class="@ClasseItem(controllerAtual == "Financeiro")">
+                <span class="material-symbols-outlined text-[22px]">account_balance_wallet</span>
+                <span class="font-body-lg text-body-lg">Financeiro</span>
+            </a>
+            @if (souAdmin)
+            {
+                <a asp-controller="Faturamento" asp-action="Index" class="@ClasseItem(controllerAtual == "Faturamento")">
+                    <span class="material-symbols-outlined text-[22px]">trending_up</span>
+                    <span class="font-body-lg text-body-lg">Faturamento MEI</span>
+                </a>
+                <a asp-controller="Dashboards" asp-action="Index" class="@ClasseItem(controllerAtual == "Dashboards")">
+                    <span class="material-symbols-outlined text-[22px]">analytics</span>
+                    <span class="font-body-lg text-body-lg">Dashboards</span>
+                </a>
+            }
+        </div>
+    </aside>
 
     <!-- Conteúdo -->
     <main class="pt-24 px-lg pb-xl lg:pl-[276px]">
@@ -339,17 +365,25 @@
     </main>
 
     <script>
-        // Grupo Caixa: fechado por padrão, abre e fecha no clique
+        // Grupo Caixa: já vem aberto quando a página atual é uma das dele (marcado no
+        // aria-expanded pelo servidor); clique alterna normalmente. A seta gira pra indicar
+        // o estado, em vez de só trocar o texto.
         (function () {
             const botao = document.getElementById("grupoCaixaBtn");
             const grupo = document.getElementById("grupoCaixa");
+            const seta = document.getElementById("grupoCaixaChevron");
             if (!botao || !grupo) return;
+
+            if (botao.getAttribute("aria-expanded") === "true" && seta) {
+                seta.style.transform = "rotate(180deg)";
+            }
 
             botao.addEventListener("click", function () {
                 const aberto = !grupo.classList.contains("hidden");
                 grupo.classList.toggle("hidden", aberto);
                 grupo.classList.toggle("flex", !aberto);
                 botao.setAttribute("aria-expanded", String(!aberto));
+                if (seta) seta.style.transform = aberto ? "" : "rotate(180deg)";
             });
         })();
 

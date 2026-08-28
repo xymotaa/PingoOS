@@ -34,23 +34,40 @@
                 </div>
                 <span class="material-symbols-outlined text-[20px] text-on-surface-variant hidden sm:inline">expand_more</span>
             </button>
-            <div id="userMenu" class="hidden absolute right-0 top-full mt-sm w-56 bg-white rounded-xl border border-outline-variant shadow-lg p-xs z-50">
-                @if (navAdmin)
-                {
-                    <a asp-controller="Configuracao" asp-action="Index" class="flex items-center gap-xs px-sm py-xs rounded-lg hover:bg-surface-container-low transition-colors text-on-surface">
-                        <span class="material-symbols-outlined text-[18px] text-on-surface-variant">storefront</span>
-                        <span class="font-label-md text-label-md">Perfil da loja</span>
+            <div id="userMenu" class="hidden absolute right-0 top-full mt-sm w-64 bg-white rounded-xl border border-outline-variant shadow-lg overflow-hidden z-50">
+                <div class="flex items-center gap-sm px-md py-md bg-surface-container-low">
+                    <div class="w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center font-bold overflow-hidden shrink-0">
+                        @if (!string.IsNullOrEmpty(navLogo))
+                        {
+                            <img src="@navLogo" alt="Logo" class="w-full h-full object-cover" />
+                        }
+                        else
+                        {
+                            <span>@navInicial</span>
+                        }
+                    </div>
+                    <div class="min-w-0">
+                        <p class="font-label-md text-label-md font-semibold text-on-surface truncate">@(navUsuario ?? navNomeLoja)</p>
+                        <p class="font-label-sm text-label-sm text-outline">@navPapel</p>
+                    </div>
+                </div>
+                <div class="p-xs">
+                    @if (navAdmin)
+                    {
+                        <a asp-controller="Configuracao" asp-action="Index" class="flex items-center gap-xs px-sm py-xs rounded-lg hover:bg-surface-container-low transition-colors text-on-surface">
+                            <span class="material-symbols-outlined text-[18px] text-on-surface-variant">storefront</span>
+                            <span class="font-label-md text-label-md">Perfil da loja</span>
+                        </a>
+                        <a asp-controller="Conta" asp-action="Usuarios" class="flex items-center gap-xs px-sm py-xs rounded-lg hover:bg-surface-container-low transition-colors text-on-surface">
+                            <span class="material-symbols-outlined text-[18px] text-on-surface-variant">group</span>
+                            <span class="font-label-md text-label-md">Usuários</span>
+                        </a>
+                    }
+                    <a asp-controller="Conta" asp-action="Sair" class="flex items-center gap-xs px-sm py-xs rounded-lg hover:bg-error-container hover:text-error transition-colors text-on-surface-variant">
+                        <span class="material-symbols-outlined text-[18px]">logout</span>
+                        <span class="font-label-md text-label-md">Sair</span>
                     </a>
-                    <a asp-controller="Conta" asp-action="Usuarios" class="flex items-center gap-xs px-sm py-xs rounded-lg hover:bg-surface-container-low transition-colors text-on-surface">
-                        <span class="material-symbols-outlined text-[18px] text-on-surface-variant">group</span>
-                        <span class="font-label-md text-label-md">Usuários</span>
-                    </a>
-                }
-                <hr class="my-xs border-outline-variant" />
-                <a asp-controller="Conta" asp-action="Sair" class="flex items-center gap-xs px-sm py-xs rounded-lg hover:bg-error-container hover:text-error transition-colors text-on-surface">
-                    <span class="material-symbols-outlined text-[18px]">logout</span>
-                    <span class="font-label-md text-label-md">Sair</span>
-                </a>
+                </div>
             </div>
         </div>
     </div>
