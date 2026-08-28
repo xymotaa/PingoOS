@@ -105,19 +105,24 @@
                 <span class="font-body-lg text-body-lg flex-1">Caixa</span>
                 <span class="material-symbols-outlined text-[18px] transition-transform" id="grupoCaixaChevron">expand_more</span>
             </button>
-            <div id="grupoCaixa" class="@(EhAtual("Caixa", "FechamentoCaixa") ? "flex" : "hidden") flex-col gap-xs">
-                <a asp-controller="Caixa" asp-action="Index" class="@ClasseItem(controllerAtual == "Caixa" && ViewContext.RouteData.Values["action"] as string == "Index") pl-[36px]">
-                    <span class="material-symbols-outlined text-[20px]">shopping_cart_checkout</span>
-                    <span class="font-body-md text-body-md">Frente de caixa</span>
-                </a>
-                <a asp-controller="Caixa" asp-action="Vendas" class="@ClasseItem(controllerAtual == "Caixa" && ViewContext.RouteData.Values["action"] as string == "Vendas") pl-[36px]">
-                    <span class="material-symbols-outlined text-[20px]">history</span>
-                    <span class="font-body-md text-body-md">Vendas</span>
-                </a>
-                <a asp-controller="FechamentoCaixa" asp-action="Index" class="@ClasseItem(controllerAtual == "FechamentoCaixa") pl-[36px]">
-                    <span class="material-symbols-outlined text-[20px]">event_available</span>
-                    <span class="font-body-md text-body-md">Fechamento do dia</span>
-                </a>
+            @* grid-template-rows via style inline, não classe arbitrária do Tailwind — o CDN
+               resolve "grid-rows-[0fr]" como "0px" em vez de "0fr", o que quebra a transição
+               (não dá pra interpolar de px pra fr) e o menu abria/fechava sem nenhuma animação. *@
+            <div id="grupoCaixa" class="grid" style="grid-template-rows: @(EhAtual("Caixa", "FechamentoCaixa") ? "1fr" : "0fr"); transition: grid-template-rows .22s ease-out;">
+                <div class="overflow-hidden flex flex-col gap-xs @(EhAtual("Caixa", "FechamentoCaixa") ? "" : "pointer-events-none")">
+                    <a asp-controller="Caixa" asp-action="Index" class="@ClasseItem(controllerAtual == "Caixa" && ViewContext.RouteData.Values["action"] as string == "Index") pl-[36px] mt-xs">
+                        <span class="material-symbols-outlined text-[20px]">shopping_cart_checkout</span>
+                        <span class="font-body-md text-body-md">Frente de caixa</span>
+                    </a>
+                    <a asp-controller="Caixa" asp-action="Vendas" class="@ClasseItem(controllerAtual == "Caixa" && ViewContext.RouteData.Values["action"] as string == "Vendas") pl-[36px]">
+                        <span class="material-symbols-outlined text-[20px]">history</span>
+                        <span class="font-body-md text-body-md">Vendas</span>
+                    </a>
+                    <a asp-controller="FechamentoCaixa" asp-action="Index" class="@ClasseItem(controllerAtual == "FechamentoCaixa") pl-[36px]">
+                        <span class="material-symbols-outlined text-[20px]">event_available</span>
+                        <span class="font-body-md text-body-md">Fechamento do dia</span>
+                    </a>
+                </div>
             </div>
 
             <a asp-controller="Orcamento" asp-action="Index" class="@ClasseItem(controllerAtual == "Orcamento")">
@@ -368,12 +373,14 @@
     </main>
 
     <script>
-        // Grupo Caixa: já vem aberto quando a página atual é uma das dele (marcado no
-        // aria-expanded pelo servidor); clique alterna normalmente. A seta gira pra indicar
-        // o estado, em vez de só trocar o texto.
+        // Grupo Caixa: abre/fecha com transição suave de altura (truque grid-template-rows
+        // 0fr/1fr — anima até "altura de conteúdo" sem precisar medir pixels em JS) em vez do
+        // hidden/flex instantâneo de antes. Já vem aberto quando a página atual é uma das dele
+        // (marcado no aria-expanded pelo servidor); a seta gira pra indicar o estado.
         (function () {
             const botao = document.getElementById("grupoCaixaBtn");
             const grupo = document.getElementById("grupoCaixa");
+            const conteudo = grupo ? grupo.firstElementChild : null;
             const seta = document.getElementById("grupoCaixaChevron");
             if (!botao || !grupo) return;
 
@@ -382,9 +389,9 @@
             }
 
             botao.addEventListener("click", function () {
-                const aberto = !grupo.classList.contains("hidden");
-                grupo.classList.toggle("hidden", aberto);
-                grupo.classList.toggle("flex", !aberto);
+                const aberto = botao.getAttribute("aria-expanded") === "true";
+                grupo.style.gridTemplateRows = aberto ? "0fr" : "1fr";
+                if (conteudo) conteudo.classList.toggle("pointer-events-none", aberto);
                 botao.setAttribute("aria-expanded", String(!aberto));
                 if (seta) seta.style.transform = aberto ? "" : "rotate(180deg)";
             });
