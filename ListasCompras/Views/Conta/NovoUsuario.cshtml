@@ -3,6 +3,12 @@
     ViewData["Title"] = "Novo usuário";
     var nomeLoja = ViewData["NomeLoja"] as string ?? "Minha Loja";
     var erro = ViewData["Erro"] as string;
+
+    // Repreenchidos depois de um erro (ex: confirmação de senha não bateu) — só o que já era
+    // seguro devolver pro HTML; senha nunca é ecoada de volta.
+    var nomePreenchido = ViewData["Nome"] as string ?? "";
+    var emailPreenchido = ViewData["Email"] as string ?? "";
+    var papelPreenchido = ViewData["Papel"] as string ?? "Vendedor";
 }
 <!DOCTYPE html>
 <html class="light" lang="pt-BR">
@@ -31,41 +37,40 @@
                 </div>
             }
 
-            <form asp-action="NovoUsuario" method="post" class="flex flex-col gap-md max-w-[560px]">
+            <form asp-action="NovoUsuario" method="post" class="flex flex-col gap-md">
 
-                <div>
-                    <label class="font-label-md text-label-md text-on-surface-variant" for="nome">Nome</label>
-                    <input id="nome" name="nome" type="text" required autofocus
-                           class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
-                </div>
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-md">
+                    <div class="md:col-span-5">
+                        <label class="font-label-md text-label-md text-on-surface-variant" for="nome">Nome</label>
+                        <input id="nome" name="nome" type="text" required autofocus value="@nomePreenchido"
+                               class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                    </div>
+                    <div class="md:col-span-4">
+                        <label class="font-label-md text-label-md text-on-surface-variant" for="email">E-mail (será o login)</label>
+                        <input id="email" name="email" type="email" required autocomplete="off" value="@emailPreenchido"
+                               class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                    </div>
+                    <div class="md:col-span-3">
+                        <label class="font-label-md text-label-md text-on-surface-variant" for="papel">Papel</label>
+                        <select id="papel" name="papel"
+                                class="w-full mt-xs bg-surface-container-low border-none rounded-lg pl-md pr-10 py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30">
+                            <option value="Vendedor" selected="@(papelPreenchido == "Vendedor" ? "selected" : null)">Vendedor — caixa, clientes e ordens de serviço</option>
+                            <option value="Tecnico" selected="@(papelPreenchido == "Tecnico" ? "selected" : null)">Técnico de Celular — usa o sistema no dia a dia</option>
+                            <option value="Admin" selected="@(papelPreenchido == "Admin" ? "selected" : null)">Administrador — também gerencia usuários e a loja</option>
+                        </select>
+                    </div>
 
-                <div>
-                    <label class="font-label-md text-label-md text-on-surface-variant" for="email">E-mail (será o login)</label>
-                    <input id="email" name="email" type="email" required autocomplete="off"
-                           class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
-                </div>
-
-                <div>
-                    <label class="font-label-md text-label-md text-on-surface-variant" for="papel">Papel</label>
-                    <select id="papel" name="papel"
-                            class="w-full mt-xs bg-surface-container-low border-none rounded-lg pl-md pr-10 py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30">
-                        <option value="Vendedor">Vendedor — caixa, clientes e ordens de serviço</option>
-                        <option value="Tecnico">Técnico de Celular — usa o sistema no dia a dia</option>
-                        <option value="Admin">Administrador — também gerencia usuários e a loja</option>
-                    </select>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-md">
-                    <div>
+                    <div class="md:col-span-4">
                         <label class="font-label-md text-label-md text-on-surface-variant" for="senha">Senha</label>
                         <input id="senha" name="senha" type="password" required minlength="6" autocomplete="new-password"
                                class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
                     </div>
-                    <div>
+                    <div class="md:col-span-4">
                         <label class="font-label-md text-label-md text-on-surface-variant" for="confirmacao">Confirmar senha</label>
                         <input id="confirmacao" name="confirmacao" type="password" required minlength="6" autocomplete="new-password"
                                class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
                     </div>
+                    <div class="md:col-span-4"></div>
                 </div>
 
                 <p class="font-label-sm text-label-sm text-outline">

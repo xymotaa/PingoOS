@@ -35,12 +35,12 @@
                 <span class="material-symbols-outlined text-[20px] text-on-surface-variant hidden sm:inline">expand_more</span>
             </button>
             <div id="userMenu" class="hidden absolute right-0 top-full mt-sm w-56 bg-white rounded-xl border border-outline-variant shadow-lg p-xs z-50">
-                <a asp-controller="Configuracao" asp-action="Index" class="flex items-center gap-xs px-sm py-xs rounded-lg hover:bg-surface-container-low transition-colors text-on-surface">
-                    <span class="material-symbols-outlined text-[18px] text-on-surface-variant">storefront</span>
-                    <span class="font-label-md text-label-md">Perfil da loja</span>
-                </a>
                 @if (navAdmin)
                 {
+                    <a asp-controller="Configuracao" asp-action="Index" class="flex items-center gap-xs px-sm py-xs rounded-lg hover:bg-surface-container-low transition-colors text-on-surface">
+                        <span class="material-symbols-outlined text-[18px] text-on-surface-variant">storefront</span>
+                        <span class="font-label-md text-label-md">Perfil da loja</span>
+                    </a>
                     <a asp-controller="Conta" asp-action="Usuarios" class="flex items-center gap-xs px-sm py-xs rounded-lg hover:bg-surface-container-low transition-colors text-on-surface">
                         <span class="material-symbols-outlined text-[18px] text-on-surface-variant">group</span>
                         <span class="font-label-md text-label-md">Usuários</span>

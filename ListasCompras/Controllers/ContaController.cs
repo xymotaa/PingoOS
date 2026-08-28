@@ -204,7 +204,13 @@ public class ContaController : LojaControllerBase
         var erro = ValidarCadastro(nome, email, senha, confirmacao);
         if (erro != null)
         {
+            // Nunca ecoar senha de volta pro HTML, mas nome/e-mail/papel já digitados não têm
+            // motivo pra se perder por causa de um erro de confirmação de senha — quem for
+            // corrigir só a senha não deveria ter que redigitar todo o resto.
             ViewData["Erro"] = erro;
+            ViewData["Nome"] = nome;
+            ViewData["Email"] = email;
+            ViewData["Papel"] = papel;
             return View();
         }
 

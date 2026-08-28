@@ -193,60 +193,57 @@
             </div>
         </form>
 
-        @if (User.IsInRole("Admin"))
-        {
-            <!-- Backup -->
-            <section class="mt-md bg-white rounded-xl border border-outline-variant shadow-sm p-lg">
-                <div class="flex items-center gap-sm mb-md">
-                    <span class="material-symbols-outlined text-[20px] text-secondary">backup</span>
-                    <h2 class="font-title-lg text-title-lg text-primary">Backup dos dados</h2>
+        <!-- Backup -->
+        <section class="mt-md bg-white rounded-xl border border-outline-variant shadow-sm p-lg">
+            <div class="flex items-center gap-sm mb-md">
+                <span class="material-symbols-outlined text-[20px] text-secondary">backup</span>
+                <h2 class="font-title-lg text-title-lg text-primary">Backup dos dados</h2>
+            </div>
+
+            <p class="font-body-md text-body-md text-on-surface-variant mb-md">
+                Todo o sistema cabe num arquivo: clientes, ordens de serviço, estoque, vendas e
+                usuários. Guarde a cópia fora deste computador — pendrive, nuvem, e-mail para
+                você mesmo. Se o HD falhar, é isso que traz a loja de volta.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-lg">
+
+                <!-- Baixar -->
+                <div class="border border-outline-variant rounded-lg p-md">
+                    <h3 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-xs">Baixar cópia</h3>
+                    <p class="font-body-md text-body-md text-on-surface-variant mb-md">
+                        Gera o arquivo agora, com tudo que está gravado neste instante.
+                    </p>
+                    <a asp-action="Backup"
+                       class="bg-secondary text-white rounded-lg px-lg py-sm font-label-md text-label-md font-bold hover:bg-opacity-90 transition-colors inline-flex items-center gap-xs">
+                        <span class="material-symbols-outlined text-[18px]">download</span>
+                        Baixar backup
+                    </a>
                 </div>
 
-                <p class="font-body-md text-body-md text-on-surface-variant mb-md">
-                    Todo o sistema cabe num arquivo: clientes, ordens de serviço, estoque, vendas e
-                    usuários. Guarde a cópia fora deste computador — pendrive, nuvem, e-mail para
-                    você mesmo. Se o HD falhar, é isso que traz a loja de volta.
-                </p>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-lg">
-
-                    <!-- Baixar -->
-                    <div class="border border-outline-variant rounded-lg p-md">
-                        <h3 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-xs">Baixar cópia</h3>
-                        <p class="font-body-md text-body-md text-on-surface-variant mb-md">
-                            Gera o arquivo agora, com tudo que está gravado neste instante.
-                        </p>
-                        <a asp-action="Backup"
-                           class="bg-secondary text-white rounded-lg px-lg py-sm font-label-md text-label-md font-bold hover:bg-opacity-90 transition-colors inline-flex items-center gap-xs">
-                            <span class="material-symbols-outlined text-[18px]">download</span>
-                            Baixar backup
-                        </a>
-                    </div>
-
-                    <!-- Restaurar -->
-                    <div class="border border-error/40 rounded-lg p-md">
-                        <h3 class="font-label-md text-label-md text-error uppercase tracking-wider mb-xs">Restaurar</h3>
-                        <p class="font-body-md text-body-md text-on-surface-variant mb-md">
-                            <strong>Substitui todos os dados atuais</strong> pelos do arquivo. O que
-                            estiver aqui agora e não estiver no backup se perde. O banco de antes é
-                            guardado ao lado do atual, por segurança.
-                        </p>
-                        <form asp-action="Restaurar" method="post" enctype="multipart/form-data" class="flex flex-col gap-sm">
-                            <input type="file" name="backup" accept=".db" required
-                                   class="w-full font-body-md text-body-md file:mr-sm file:rounded-lg file:border-0 file:bg-surface-container-low file:px-md file:py-2 file:font-label-md file:text-label-md file:text-on-surface-variant" />
-                            <input type="text" name="confirmacao" required autocomplete="off" placeholder="Digite RESTAURAR para confirmar"
-                                   class="w-full bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-error/30" />
-                            <button type="submit"
-                                    onsubmit="return confirm('Isso substitui todos os dados atuais. Continuar?');"
-                                    class="bg-error text-white rounded-lg px-lg py-sm font-label-md text-label-md font-bold hover:bg-opacity-90 transition-colors inline-flex items-center justify-center gap-xs">
-                                <span class="material-symbols-outlined text-[18px]">restore</span>
-                                Restaurar backup
-                            </button>
-                        </form>
-                    </div>
+                <!-- Restaurar -->
+                <div class="border border-error/40 rounded-lg p-md">
+                    <h3 class="font-label-md text-label-md text-error uppercase tracking-wider mb-xs">Restaurar</h3>
+                    <p class="font-body-md text-body-md text-on-surface-variant mb-md">
+                        <strong>Substitui todos os dados atuais</strong> pelos do arquivo. O que
+                        estiver aqui agora e não estiver no backup se perde. O banco de antes é
+                        guardado ao lado do atual, por segurança.
+                    </p>
+                    <form asp-action="Restaurar" method="post" enctype="multipart/form-data" class="flex flex-col gap-sm">
+                        <input type="file" name="backup" accept=".db" required
+                               class="w-full font-body-md text-body-md file:mr-sm file:rounded-lg file:border-0 file:bg-surface-container-low file:px-md file:py-2 file:font-label-md file:text-label-md file:text-on-surface-variant" />
+                        <input type="text" name="confirmacao" required autocomplete="off" placeholder="Digite RESTAURAR para confirmar"
+                               class="w-full bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-error/30" />
+                        <button type="submit"
+                                onsubmit="return confirm('Isso substitui todos os dados atuais. Continuar?');"
+                                class="bg-error text-white rounded-lg px-lg py-sm font-label-md text-label-md font-bold hover:bg-opacity-90 transition-colors inline-flex items-center justify-center gap-xs">
+                            <span class="material-symbols-outlined text-[18px]">restore</span>
+                            Restaurar backup
+                        </button>
+                    </form>
                 </div>
-            </section>
-        }
+            </div>
+        </section>
     </main>
 
     <script>

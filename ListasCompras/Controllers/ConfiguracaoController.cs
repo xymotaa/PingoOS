@@ -7,6 +7,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ListasCompras.Controllers;
 
+// Dados da loja (nome, CNPJ, endereço, logo) e backup/restauração do banco — só o
+// administrador altera. Vendedor e Técnico de Celular não têm motivo pra mexer aqui.
+[Authorize(Roles = Papeis.Admin)]
 public class ConfiguracaoController : LojaControllerBase
 {
     public ConfiguracaoController(AppDbContext context) : base(context) { }
@@ -70,7 +73,6 @@ public class ConfiguracaoController : LojaControllerBase
     // O banco é um arquivo com o cadastro de clientes, as ordens e o histórico. Copiar
     // pelo terminal é o que ninguém faz; por isso o botão.
 
-    [Authorize(Roles = Papeis.Admin)]
     public IActionResult Backup()
     {
         var copia = BackupServico.GerarCopia(Context);
@@ -83,7 +85,6 @@ public class ConfiguracaoController : LojaControllerBase
         return File(bytes, "application/octet-stream", nome);
     }
 
-    [Authorize(Roles = Papeis.Admin)]
     [HttpPost]
     [ValidateAntiForgeryToken]
     [RequestSizeLimit(200_000_000)]
