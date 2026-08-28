@@ -205,6 +205,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // ===== Cliente: os dados vêm do cadastro, não são digitados aqui =====
 
     const modalCliente = document.getElementById("modalCliente");
+    const transicaoModalCliente = UiTransicoes.modal(modalCliente);
     const buscarClienteBtn = document.getElementById("buscarClienteBtn");
     const limparClienteBtn = document.getElementById("limparClienteBtn");
     const fecharModalCliente = document.getElementById("fecharModalCliente");
@@ -215,14 +216,14 @@ document.addEventListener("DOMContentLoaded", function () {
                            "clienteEndereco", "clienteNumero", "clienteBairro", "clienteCidade", "clienteUf"];
 
     function abrirModalCliente() {
-        modalCliente.classList.remove("hidden");
+        transicaoModalCliente.abrir();
         buscaClienteInput.value = "";
         buscaClienteInput.focus();
         procurarClientes("");
     }
 
     function fecharModal() {
-        modalCliente.classList.add("hidden");
+        transicaoModalCliente.fechar();
     }
 
     function procurarClientes(termo) {
@@ -433,6 +434,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // ===== Catálogo de serviços: preenche o item em vez de digitar =====
 
     const modalServico = document.getElementById("modalServico");
+    const transicaoModalServico = UiTransicoes.modal(modalServico);
     const buscaServicoInput = document.getElementById("buscaServicoInput");
     const resultadosServico = document.getElementById("resultadosServico");
     const fecharModalServico = document.getElementById("fecharModalServico");
@@ -440,14 +442,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function abrirCatalogo(tr) {
         linhaDestino = tr;
-        modalServico.classList.remove("hidden");
+        transicaoModalServico.abrir();
         buscaServicoInput.value = "";
         buscaServicoInput.focus();
         procurarServicos("");
     }
 
     function fecharCatalogo() {
-        modalServico.classList.add("hidden");
+        transicaoModalServico.fechar();
         linhaDestino = null;
     }
 

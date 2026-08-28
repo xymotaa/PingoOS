@@ -20,6 +20,7 @@ document.addEventListener("DOMContentLoaded", function () {
     var formEditar = document.getElementById("formEditarCategoria");
 
     var editandoId = null;
+    var transicaoModal = UiTransicoes.modal(modal);
 
     function tokenAntiForgery() {
         var el = document.querySelector('#formNovaCategoria input[name="__RequestVerificationToken"]');
@@ -33,7 +34,7 @@ document.addEventListener("DOMContentLoaded", function () {
         erroEl.classList.add("hidden");
         nomeInput.value = "";
         if (requerModeloInput) requerModeloInput.checked = false;
-        modal.classList.remove("hidden");
+        transicaoModal.abrir();
         nomeInput.focus();
     }
 
@@ -44,11 +45,11 @@ document.addEventListener("DOMContentLoaded", function () {
         erroEl.classList.add("hidden");
         nomeInput.value = linha.dataset.nome || "";
         if (requerModeloInput) requerModeloInput.checked = linha.dataset.requerModelo === "true";
-        modal.classList.remove("hidden");
+        transicaoModal.abrir();
         nomeInput.focus();
     }
 
-    function fechar() { modal.classList.add("hidden"); }
+    function fechar() { transicaoModal.fechar(); }
 
     function adicionarNosSelects(id, nome) {
         document.querySelectorAll("[data-categoria-select]").forEach(function (select) {

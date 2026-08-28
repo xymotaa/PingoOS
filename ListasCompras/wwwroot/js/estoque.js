@@ -39,6 +39,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // ===== Movimentação (entrada / saída) =====
 
     const modal = document.getElementById("modalMovimentacao");
+    const transicaoModalMovimentacao = UiTransicoes.modal(modal);
     const movProdutoId = document.getElementById("movProdutoId");
     const movProdutoNome = document.getElementById("movProdutoNome");
     const movQtdValor = document.getElementById("movQtdValor");
@@ -69,10 +70,10 @@ document.addEventListener("DOMContentLoaded", function () {
         saldoAtual = saldo;
         quantidade = 1;
         atualizarPrevia();
-        modal.classList.remove("hidden");
+        transicaoModalMovimentacao.abrir();
     };
 
-    function fechar() { modal.classList.add("hidden"); }
+    function fechar() { transicaoModalMovimentacao.fechar(); }
 
     if (fecharBtn) fecharBtn.addEventListener("click", fechar);
     if (modal) {

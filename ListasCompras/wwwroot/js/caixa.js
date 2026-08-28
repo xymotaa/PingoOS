@@ -234,11 +234,12 @@ document.addEventListener("DOMContentLoaded", function () {
     // ===== Variações: produto com Formato=variacao pede escolha antes de entrar no carrinho =====
 
     const modalVariacao = document.getElementById("modalVariacao");
+    const transicaoModalVariacao = UiTransicoes.modal(modalVariacao);
     const modalVariacaoTitulo = document.getElementById("modalVariacaoTitulo");
     const modalVariacaoLista = document.getElementById("modalVariacaoLista");
     const fecharModalVariacaoBtn = document.getElementById("fecharModalVariacaoBtn");
 
-    function fecharModalVariacao() { modalVariacao.classList.add("hidden"); }
+    function fecharModalVariacao() { transicaoModalVariacao.fechar(); }
 
     function abrirModalVariacao(produtoPai) {
         modalVariacaoTitulo.textContent = produtoPai.nome;
@@ -262,7 +263,7 @@ document.addEventListener("DOMContentLoaded", function () {
             });
             modalVariacaoLista.appendChild(item);
         });
-        modalVariacao.classList.remove("hidden");
+        transicaoModalVariacao.abrir();
     }
 
     if (fecharModalVariacaoBtn) fecharModalVariacaoBtn.addEventListener("click", fecharModalVariacao);

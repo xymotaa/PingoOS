@@ -149,15 +149,17 @@
         </div>
     </div>
 
+    <script src="~/js/ui-transicoes.js" asp-append-version="true"></script>
     <script>
         const modal = document.getElementById("modalRedefinir");
+        const transicaoModalRedefinir = UiTransicoes.modal(modal);
         function abrirRedefinir(id, nome) {
             document.getElementById("idAlvo").value = id;
             document.getElementById("nomeAlvo").textContent = nome;
-            modal.classList.remove("hidden");
+            transicaoModalRedefinir.abrir();
             document.getElementById("novaSenha").focus();
         }
-        function fecharRedefinir() { modal.classList.add("hidden"); }
+        function fecharRedefinir() { transicaoModalRedefinir.fechar(); }
         modal.addEventListener("click", function (e) { if (e.target === modal) fecharRedefinir(); });
     </script>
 </body>

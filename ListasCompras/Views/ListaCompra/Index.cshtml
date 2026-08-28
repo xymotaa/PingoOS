@@ -249,6 +249,7 @@
         const modelos = @Html.Raw(Json.Serialize(Model.Modelos.Select(m => new { m.Id, m.Nome, m.MarcaCelularId })));
         const CATEGORIA_CRIAR_URL = "@Url.Action("Criar", "Categoria")";
     </script>
+    <script src="~/js/ui-transicoes.js" asp-append-version="true"></script>
     <script src="~/js/reposicao.js" asp-append-version="true"></script>
     <script src="~/js/categoria-modal.js" asp-append-version="true"></script>
 </body>

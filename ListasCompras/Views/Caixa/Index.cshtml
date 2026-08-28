@@ -281,6 +281,7 @@
         const FORMA_PAGAMENTO_EM_EDICAO = @Html.Raw(Json.Serialize(ViewBag.FormaPagamentoEmEdicao ?? ""));
         const VALOR_RECEBIDO_EM_EDICAO = @Html.Raw(Json.Serialize(ViewBag.ValorRecebidoEmEdicao ?? 0m));
     </script>
+    <script src="~/js/ui-transicoes.js" asp-append-version="true"></script>
     <script src="~/js/caixa.js" asp-append-version="true"></script>
 </body>
 </html>

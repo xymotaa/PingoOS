@@ -34,7 +34,7 @@
                 </div>
                 <span class="material-symbols-outlined text-[20px] text-on-surface-variant hidden sm:inline">expand_more</span>
             </button>
-            <div id="userMenu" class="hidden absolute right-0 top-full mt-sm w-64 bg-white rounded-xl border border-outline-variant shadow-lg overflow-hidden z-50">
+            <div id="userMenu" class="hidden absolute right-0 top-full mt-sm w-64 bg-white rounded-xl border border-outline-variant shadow-lg overflow-hidden z-50 opacity-0 scale-95 -translate-y-1 transition-all duration-150 ease-out">
                 <div class="flex items-center gap-sm px-md py-md bg-surface-container-low">
                     <div class="w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center font-bold overflow-hidden shrink-0">
                         @if (!string.IsNullOrEmpty(navLogo))
@@ -73,13 +73,31 @@
     </div>
 </header>
 <script>
+    // Dropdown do usuário: fade + leve escala/deslize em vez do hidden/visible abrupto de
+    // antes. Mesmo padrão usado nos modais do sistema (ver wwwroot/js/ui-transicoes.js).
     (function () {
         const btn = document.getElementById("userMenuBtn");
         const menu = document.getElementById("userMenu");
         if (!btn || !menu) return;
-        btn.addEventListener("click", function (e) { e.stopPropagation(); menu.classList.toggle("hidden"); });
+
+        function abrir() {
+            menu.classList.remove("hidden");
+            requestAnimationFrame(function () {
+                menu.classList.remove("opacity-0", "scale-95", "-translate-y-1");
+            });
+        }
+        function fechar() {
+            if (menu.classList.contains("hidden")) return;
+            menu.classList.add("opacity-0", "scale-95", "-translate-y-1");
+            setTimeout(function () { menu.classList.add("hidden"); }, 150);
+        }
+
+        btn.addEventListener("click", function (e) {
+            e.stopPropagation();
+            menu.classList.contains("hidden") ? abrir() : fechar();
+        });
         document.addEventListener("click", function (e) {
-            if (!menu.contains(e.target) && !btn.contains(e.target)) menu.classList.add("hidden");
+            if (!menu.contains(e.target) && !btn.contains(e.target)) fechar();
         });
     })();
 </script>

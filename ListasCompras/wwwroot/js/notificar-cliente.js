@@ -1,13 +1,14 @@
 document.addEventListener("DOMContentLoaded", function () {
     const modal = document.getElementById("modalNotificar");
+    const transicaoModal = UiTransicoes.modal(modal);
     const abrirBtn = document.getElementById("abrirNotificarBtn");
     const fecharBtn = document.getElementById("fecharModalNotificar");
     const cancelarBtn = document.getElementById("cancelarNotificarBtn");
     const form = document.getElementById("formNotificar");
     if (!modal || !abrirBtn) return;
 
-    function abrir() { modal.classList.remove("hidden"); }
-    function fechar() { modal.classList.add("hidden"); }
+    function abrir() { transicaoModal.abrir(); }
+    function fechar() { transicaoModal.fechar(); }
 
     abrirBtn.addEventListener("click", abrir);
     fecharBtn.addEventListener("click", fechar);
