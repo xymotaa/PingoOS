@@ -177,62 +177,65 @@
                 </div>
             </div>
 
-            <!-- Coluna lateral: resumo e pagamento -->
-            <aside class="w-[360px] shrink-0 border-l border-outline-variant bg-white flex flex-col overflow-y-auto custom-scrollbar">
-                <div class="p-lg border-b border-outline-variant">
-                    <h2 class="font-title-lg text-title-lg text-primary mb-md">Resumo da Venda</h2>
-                    <div class="flex justify-between items-center mb-xs">
-                        <span id="subtotalLabel" class="font-body-md text-body-md text-on-surface-variant">Subtotal (0 itens)</span>
-                        <span id="subtotalValor" class="font-body-md text-body-md text-on-surface">R$ 0,00</span>
-                    </div>
+            <!-- Coluna lateral: resumo e pagamento. Layout de 3 blocos (resumo fixo compacto,
+                 forma de pagamento rolável, botão de finalizar sempre fixo embaixo) — antes
+                 a coluna inteira rolava e o botão de finalizar podia ficar fora da tela com
+                 muitos itens ou o painel de dinheiro aberto. -->
+            <aside class="w-[360px] shrink-0 border-l border-outline-variant bg-white flex flex-col overflow-hidden">
+
+                <!-- Resumo: compacto, sempre visível no topo -->
+                <div class="shrink-0 px-lg py-md border-b border-outline-variant">
                     <div class="flex justify-between items-center">
-                        <span class="font-body-md text-body-md text-on-surface-variant">Descontos</span>
-                        <span id="descontoValor" class="font-body-md text-body-md text-error">- R$ 0,00</span>
+                        <span id="subtotalLabel" class="font-label-md text-label-md text-on-surface-variant">Subtotal (0 itens)</span>
+                        <span id="subtotalValor" class="font-label-md text-label-md text-on-surface">R$ 0,00</span>
                     </div>
-                    <div class="h-[1px] bg-outline-variant my-md"></div>
-                    <div class="flex justify-between items-center">
-                        <span class="font-title-lg text-title-lg text-on-surface">Total</span>
-                        <span id="totalValor" class="font-display-lg text-display-lg text-primary">R$ 0,00</span>
+                    <div class="flex justify-between items-center mt-xs">
+                        <span class="font-label-md text-label-md text-on-surface-variant">Descontos</span>
+                        <span id="descontoValor" class="font-label-md text-label-md text-error">- R$ 0,00</span>
+                    </div>
+                    <div class="flex justify-between items-center mt-sm pt-sm border-t border-outline-variant">
+                        <span class="font-label-md text-label-md text-outline uppercase tracking-wider">Total</span>
+                        <span id="totalValor" class="font-headline-md text-headline-md text-primary">R$ 0,00</span>
                     </div>
                 </div>
 
-                <div class="p-lg border-b border-outline-variant">
-                    <h3 class="font-title-lg text-title-lg text-primary mb-md">Forma de Pagamento</h3>
-                    <div class="flex flex-col gap-sm" id="formasPagamento">
-                        <label class="pagamento-opcao flex items-center gap-sm border border-outline-variant rounded-lg px-md py-sm cursor-pointer transition-colors" data-metodo="dinheiro">
+                <!-- Forma de pagamento: só essa parte rola, se precisar -->
+                <div class="flex-1 overflow-y-auto custom-scrollbar px-lg py-md">
+                    <h3 class="font-label-sm text-label-sm text-outline uppercase tracking-wider mb-sm">Forma de Pagamento</h3>
+                    <div class="flex flex-col gap-xs" id="formasPagamento">
+                        <label class="pagamento-opcao flex items-center gap-sm border border-outline-variant rounded-lg px-md py-xs cursor-pointer transition-colors" data-metodo="dinheiro">
                             <input type="radio" name="metodo" value="dinheiro" class="accent-secondary" checked />
-                            <span class="material-symbols-outlined text-on-surface-variant">payments</span>
+                            <span class="material-symbols-outlined text-[20px] text-on-surface-variant">payments</span>
                             <span class="font-label-md text-label-md text-on-surface">Dinheiro</span>
                         </label>
-                        <label class="pagamento-opcao flex items-center gap-sm border border-outline-variant rounded-lg px-md py-sm cursor-pointer transition-colors" data-metodo="cartao">
+                        <label class="pagamento-opcao flex items-center gap-sm border border-outline-variant rounded-lg px-md py-xs cursor-pointer transition-colors" data-metodo="cartao">
                             <input type="radio" name="metodo" value="cartao" class="accent-secondary" />
-                            <span class="material-symbols-outlined text-on-surface-variant">credit_card</span>
+                            <span class="material-symbols-outlined text-[20px] text-on-surface-variant">credit_card</span>
                             <span class="font-label-md text-label-md text-on-surface">Cartão (Crédito/Débito)</span>
                         </label>
-                        <label class="pagamento-opcao flex items-center gap-sm border border-outline-variant rounded-lg px-md py-sm cursor-pointer transition-colors" data-metodo="pix">
+                        <label class="pagamento-opcao flex items-center gap-sm border border-outline-variant rounded-lg px-md py-xs cursor-pointer transition-colors" data-metodo="pix">
                             <input type="radio" name="metodo" value="pix" class="accent-secondary" />
-                            <span class="material-symbols-outlined text-on-surface-variant">qr_code_2</span>
+                            <span class="material-symbols-outlined text-[20px] text-on-surface-variant">qr_code_2</span>
                             <span class="font-label-md text-label-md text-on-surface">PIX</span>
                         </label>
                     </div>
 
-                    <div id="painelDinheiro" class="mt-md flex flex-col gap-sm">
+                    <div id="painelDinheiro" class="mt-sm flex flex-col gap-xs">
                         <label class="font-label-md text-label-md text-on-surface-variant" for="valorRecebido">Valor Recebido</label>
                         <div class="relative">
                             <span class="absolute left-3 top-1/2 -translate-y-1/2 font-body-md text-body-md text-outline">R$</span>
                             <input id="valorRecebido" type="number" min="0" step="0.01" placeholder="0,00"
                                    class="w-full bg-surface-container-low border-none rounded-lg pl-10 pr-4 py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
                         </div>
-                        <div class="flex justify-between items-center bg-surface-container-low rounded-lg px-md py-sm">
+                        <div class="flex justify-between items-center bg-surface-container-low rounded-lg px-md py-xs">
                             <span class="font-label-md text-label-md text-on-surface-variant">Troco</span>
                             <span id="trocoValor" class="font-title-lg text-title-lg text-primary">R$ 0,00</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="flex-1"></div>
-
-                <form asp-action="@(vendaEmEdicaoId > 0 ? "SalvarEdicao" : "Finalizar")" method="post" class="p-lg">
+                <!-- Finalizar: sempre visível, nunca exige rolagem -->
+                <form asp-action="@(vendaEmEdicaoId > 0 ? "SalvarEdicao" : "Finalizar")" method="post" class="shrink-0 p-lg border-t border-outline-variant">
                     @if (vendaEmEdicaoId > 0)
                     {
                         <input type="hidden" name="vendaId" value="@vendaEmEdicaoId" />
