@@ -92,7 +92,7 @@
     @await Html.PartialAsync("_Navbar")
 
     <!-- Menu lateral (módulos) -->
-    <aside id="sidebar" class="hidden lg:flex fixed top-16 left-0 bottom-0 w-[248px] bg-surface border-r border-outline-variant flex-col py-md px-sm gap-lg z-40 overflow-y-auto custom-scrollbar">
+    <aside id="sidebar" class="hidden lg:flex fixed top-16 left-0 bottom-0 w-[252px] bg-surface border-r border-outline-variant flex-col py-md px-sm gap-lg z-40 overflow-y-auto custom-scrollbar">
 
         <!-- Vendas -->
         <div class="flex flex-col gap-xs">
@@ -106,13 +106,16 @@
                 <span class="material-symbols-outlined text-[18px] transition-transform" id="grupoCaixaChevron">expand_more</span>
             </button>
             <div id="grupoCaixa" class="@(EhAtual("Caixa", "FechamentoCaixa") ? "flex" : "hidden") flex-col gap-xs">
-                <a asp-controller="Caixa" asp-action="Index" class="@ClasseItem(controllerAtual == "Caixa" && ViewContext.RouteData.Values["action"] as string == "Index") pl-[52px]">
+                <a asp-controller="Caixa" asp-action="Index" class="@ClasseItem(controllerAtual == "Caixa" && ViewContext.RouteData.Values["action"] as string == "Index") pl-[36px]">
+                    <span class="material-symbols-outlined text-[20px]">shopping_cart_checkout</span>
                     <span class="font-body-md text-body-md">Frente de caixa</span>
                 </a>
-                <a asp-controller="Caixa" asp-action="Vendas" class="@ClasseItem(controllerAtual == "Caixa" && ViewContext.RouteData.Values["action"] as string == "Vendas") pl-[52px]">
+                <a asp-controller="Caixa" asp-action="Vendas" class="@ClasseItem(controllerAtual == "Caixa" && ViewContext.RouteData.Values["action"] as string == "Vendas") pl-[36px]">
+                    <span class="material-symbols-outlined text-[20px]">history</span>
                     <span class="font-body-md text-body-md">Vendas</span>
                 </a>
-                <a asp-controller="FechamentoCaixa" asp-action="Index" class="@ClasseItem(controllerAtual == "FechamentoCaixa") pl-[52px]">
+                <a asp-controller="FechamentoCaixa" asp-action="Index" class="@ClasseItem(controllerAtual == "FechamentoCaixa") pl-[36px]">
+                    <span class="material-symbols-outlined text-[20px]">event_available</span>
                     <span class="font-body-md text-body-md">Fechamento do dia</span>
                 </a>
             </div>
