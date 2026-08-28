@@ -201,41 +201,33 @@
         <!-- Indicadores -->
         <section class="grid grid-cols-1 lg:grid-cols-3 gap-xl mb-xl">
             <div class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-gutter">
-                <a asp-controller="Caixa" asp-action="Vendas" class="bg-white p-md rounded-xl border border-outline-variant shadow-sm hover:border-secondary transition-colors">
-                    <div class="flex justify-between items-start mb-xs">
-                        <span class="font-label-md text-label-md text-outline uppercase tracking-wider">Vendas Hoje</span>
-                    </div>
-                    <h3 class="font-headline-lg text-[26px] font-semibold text-primary">@Moeda(Model.VendasHoje)</h3>
-                    <p class="font-body-md text-body-md text-on-surface-variant mt-sm">
+                <a asp-controller="Caixa" asp-action="Vendas" class="bg-white p-sm rounded-xl border border-outline-variant shadow-sm hover:border-secondary transition-colors">
+                    <span class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Vendas Hoje</span>
+                    <h3 class="font-title-lg text-[24px] font-semibold text-primary mt-xs">@Moeda(Model.VendasHoje)</h3>
+                    <p class="font-label-sm text-label-sm text-on-surface-variant mt-xs">
                         @(Model.VendasHoje > 0 ? "Total vendido no dia" : "Nenhuma venda ainda hoje")
                     </p>
                 </a>
-                <a asp-controller="Estoque" asp-action="Index" class="bg-white p-md rounded-xl border border-outline-variant shadow-sm hover:border-secondary transition-colors">
-                    <div class="flex justify-between items-start mb-xs">
-                        <span class="font-label-md text-label-md text-outline uppercase tracking-wider">Itens em Falta</span>
-                    </div>
-                    <h3 class="font-headline-lg text-[26px] font-semibold @(Model.ItensEmFalta > 0 ? "text-error" : "text-primary")">@Model.ItensEmFalta</h3>
-                    <p class="font-body-md text-body-md text-on-surface-variant mt-sm">
+                <a asp-controller="Estoque" asp-action="Index" class="bg-white p-sm rounded-xl border border-outline-variant shadow-sm hover:border-secondary transition-colors">
+                    <span class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Itens em Falta</span>
+                    <h3 class="font-title-lg text-[24px] font-semibold mt-xs @(Model.ItensEmFalta > 0 ? "text-error" : "text-primary")">@Model.ItensEmFalta</h3>
+                    <p class="font-label-sm text-label-sm text-on-surface-variant mt-xs">
                         @(Model.ItensEmFalta > 0 ? "Esgotados ou abaixo do mínimo" : "Estoque em dia")
                     </p>
                 </a>
-                <a asp-controller="Cliente" asp-action="Index" class="bg-white p-md rounded-xl border border-outline-variant shadow-sm hover:border-secondary transition-colors">
-                    <div class="flex justify-between items-start mb-xs">
-                        <span class="font-label-md text-label-md text-outline uppercase tracking-wider">Novos Clientes</span>
-                    </div>
-                    <h3 class="font-headline-lg text-[26px] font-semibold text-primary">@Model.NovosClientesHoje</h3>
-                    <p class="font-body-md text-body-md text-on-surface-variant mt-sm">
+                <a asp-controller="Cliente" asp-action="Index" class="bg-white p-sm rounded-xl border border-outline-variant shadow-sm hover:border-secondary transition-colors">
+                    <span class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Novos Clientes</span>
+                    <h3 class="font-title-lg text-[24px] font-semibold text-primary mt-xs">@Model.NovosClientesHoje</h3>
+                    <p class="font-label-sm text-label-sm text-on-surface-variant mt-xs">
                         @(Model.NovosClientesHoje > 0 ? "Cadastrados hoje" : "Nenhum cadastro hoje")
                     </p>
                 </a>
             </div>
 
-            <a asp-controller="Financeiro" asp-action="Index" class="bg-white p-md rounded-xl border border-outline-variant shadow-sm hover:border-secondary transition-colors">
-                <div class="flex justify-between items-start mb-xs">
-                    <span class="font-label-md text-label-md text-outline uppercase tracking-wider">Contas a Pagar</span>
-                </div>
-                <h3 class="font-headline-lg text-[26px] font-semibold @(Model.ContasAPagarPendentes > 0 ? "text-error" : "text-primary")">@Moeda(Model.ContasAPagarPendentes)</h3>
-                <p class="font-body-md text-body-md text-on-surface-variant mt-sm">
+            <a asp-controller="Financeiro" asp-action="Index" class="bg-white p-sm rounded-xl border border-outline-variant shadow-sm hover:border-secondary transition-colors">
+                <span class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Contas a Pagar</span>
+                <h3 class="font-title-lg text-[24px] font-semibold mt-xs @(Model.ContasAPagarPendentes > 0 ? "text-error" : "text-primary")">@Moeda(Model.ContasAPagarPendentes)</h3>
+                <p class="font-label-sm text-label-sm text-on-surface-variant mt-xs">
                     @(Model.ContasAPagarPendentes > 0 ? "Ainda não pagas" : "Nada pendente")
                 </p>
             </a>
