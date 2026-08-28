@@ -486,3 +486,7 @@ $RECYCLE.BIN/
 *.db
 *.db-shm
 *.db-wal
+
+# Projeto de testes automatizados — fica só local por decisão do usuário, não sobe
+# pro repositório junto com o código de produção.
+ListasCompras.Tests/
