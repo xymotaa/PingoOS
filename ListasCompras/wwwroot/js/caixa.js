@@ -139,8 +139,12 @@ document.addEventListener("DOMContentLoaded", function () {
         const total = totalVenda();
         totalValor.textContent = formatBRL(total);
 
+        // Sem item nenhum no carrinho o total é R$0 — "troco" nesse caso seria só o valor
+        // recebido de volta inteiro, o que não representa nada de real ainda (a venda nem
+        // começou). Mostra zerado até haver pelo menos 1 item, em vez de "recebi 100, troco
+        // 100" antes de qualquer produto entrar.
         const recebido = parseDecimal(valorRecebido.value);
-        const troco = recebido - total;
+        const troco = cart.length > 0 ? recebido - total : 0;
         trocoValor.textContent = formatBRL(Math.max(troco, 0));
         trocoValor.classList.toggle("text-error", troco < 0 && metodoSelecionado() === "dinheiro");
         trocoValor.classList.toggle("text-primary", !(troco < 0 && metodoSelecionado() === "dinheiro"));
