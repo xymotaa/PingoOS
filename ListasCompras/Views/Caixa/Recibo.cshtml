@@ -3,10 +3,12 @@
     Layout = null;
     ViewData["Title"] = "Comprovante " + Model.Numero;
     var nomeLoja = ViewData["NomeLoja"] as string ?? "Minha Loja";
+    var logo = ViewData["LogoLoja"] as string;
     var lojaCnpj = ViewData["LojaCnpj"] as string;
     var lojaEndereco = ViewData["LojaEndereco"] as string;
     var lojaTelefone = ViewData["LojaTelefone"] as string;
-    var lojaContato = string.Join(" · ", new[] { lojaTelefone, lojaEndereco }.Where(s => !string.IsNullOrWhiteSpace(s)));
+    var lojaEmail = ViewData["LojaEmail"] as string;
+    var lojaContato = string.Join(" · ", new[] { lojaTelefone, lojaEmail }.Where(s => !string.IsNullOrWhiteSpace(s)));
     string Moeda(decimal v) => v.ToString("C2", new System.Globalization.CultureInfo("pt-BR"));
 }
 <!DOCTYPE html>
@@ -29,9 +31,34 @@
         @@media print {
             html, body { background: #fff !important; }
             .no-print { display: none !important; }
+            /* Na impressão sobra só o documento: o cartão que o emoldura na tela some
+               (mesmo tratamento de .moldura em Views/Documento/Ver.cshtml) */
+            #reciboPadrao, #reciboPadrao > div { padding: 0 !important; margin: 0 auto !important; border: none !important; box-shadow: none !important; }
         }
         body.modo-termico #reciboPadrao { display: none !important; }
         body.modo-termico #reciboTermico { display: block; page: termica; }
+
+        /* Recibo padrão: mesmo idioma visual da impressão de Ordem de Serviço (cabeçalho com
+           logo à esquerda / título+meta à direita com régua grossa embaixo, blocos com título
+           em fundo cinza, tabela com bordas finas) — mas sem 2ª via, só um recibo até a
+           metade da folha A4. Prefixo "rec-" pra não colidir com as classes "os-" da OS,
+           mesmo não estando as duas páginas nunca juntas no DOM. */
+        #reciboPadrao { color: #000; font-family: 'Hanken Grotesk', Arial, sans-serif; font-size: 11px; line-height: 1.4; }
+        #reciboPadrao .rec-topo { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #000; padding-bottom: 6px; margin-bottom: 8px; }
+        #reciboPadrao .rec-loja { display: flex; align-items: center; gap: 8px; }
+        #reciboPadrao .rec-logo { width: 40px; height: 40px; object-fit: contain; }
+        #reciboPadrao .rec-loja-nome { font-size: 15px; font-weight: 700; }
+        #reciboPadrao .rec-loja-sub { font-size: 10px; color: #444; }
+        #reciboPadrao .rec-doc-meta { text-align: right; font-size: 10px; }
+        #reciboPadrao .rec-doc-titulo { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+        #reciboPadrao .rec-bloco { margin-bottom: 8px; }
+        #reciboPadrao .rec-bloco-titulo { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; background: #f0f0f0; border: 1px solid #ccc; padding: 2px 8px; margin-bottom: 4px; }
+        #reciboPadrao .rec-linhas { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 16px; padding: 0 4px; font-size: 11px; }
+        #reciboPadrao .rec-rot { font-weight: 600; }
+        #reciboPadrao .rec-tabela { width: 100%; border-collapse: collapse; }
+        #reciboPadrao .rec-tabela th, #reciboPadrao .rec-tabela td { border: 1px solid #ccc; padding: 3px 8px; font-size: 11px; }
+        #reciboPadrao .rec-tabela th { background: #f0f0f0; }
+        #reciboPadrao .rec-rodape { margin-top: 16px; font-size: 9px; text-align: center; color: #666; }
 
         #reciboTermico {
             display: none;
@@ -68,88 +95,109 @@
         </div>
     </div>
 
-    <!-- Recibo padrão: papel comum (A4), o que a loja realmente usa até ter impressora
-         térmica — visual do sistema (Hanken Grotesk), não o monoespaçado de cupom. -->
-    <div id="reciboPadrao" class="bg-white mx-auto max-w-[480px] p-lg border border-outline-variant rounded-xl mb-xl">
-        <div class="text-center border-b border-outline-variant pb-md mb-md">
-            <p class="font-title-lg text-title-lg text-primary font-bold">@nomeLoja</p>
-            @if (!string.IsNullOrWhiteSpace(lojaCnpj)) { <p class="font-label-sm text-label-sm text-outline">CNPJ: @lojaCnpj</p> }
-            @if (!string.IsNullOrWhiteSpace(lojaContato)) { <p class="font-label-sm text-label-sm text-outline">@lojaContato</p> }
-        </div>
-
-        <p class="font-label-md text-label-md text-outline uppercase tracking-wider text-center mb-md">Comprovante não fiscal</p>
-
-        <div class="grid grid-cols-2 gap-sm font-body-md text-body-md mb-md">
-            <div><span class="text-on-surface-variant">Nº</span> <span class="font-semibold">@Model.Numero</span></div>
-            <div class="text-right"><span class="text-on-surface-variant">Data</span> <span class="font-semibold">@Model.Data.ToString("dd/MM/yyyy HH:mm")</span></div>
-            @if (!string.IsNullOrWhiteSpace(Model.ClienteNome))
-            {
-                <div class="col-span-2"><span class="text-on-surface-variant">Cliente</span> <span class="font-semibold">@Model.ClienteNome</span></div>
-            }
-        </div>
-
-        <table class="w-full text-left border-collapse mb-md">
-            <thead>
-                <tr class="border-b border-outline-variant">
-                    <th class="py-xs font-label-sm text-label-sm text-outline uppercase tracking-wider">Item</th>
-                    <th class="py-xs font-label-sm text-label-sm text-outline uppercase tracking-wider text-right">Valor</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in Model.Itens)
+    <!-- Recibo padrão: mesmo estilo visual da impressão de Ordem de Serviço
+         (Views/Documento/Ver.cshtml — cabeçalho com régua grossa, blocos com título em fundo
+         cinza, tabela com bordas finas), mas sem 2ª via — um documento só, até a metade da
+         folha A4. É o que a loja usa até ter impressora térmica. -->
+    <div id="reciboPadrao" class="bg-white mx-auto max-w-[560px] p-lg border border-outline-variant rounded-xl mb-xl">
+        <div class="rec-topo">
+            <div class="rec-loja">
+                @if (!string.IsNullOrEmpty(logo))
                 {
-                    <tr class="border-b border-outline-variant">
-                        <td class="py-xs font-body-md text-body-md">@item.Quantidade x @item.Descricao</td>
-                        <td class="py-xs font-body-md text-body-md text-right">@Moeda(item.Total)</td>
-                    </tr>
+                    <img src="@logo" alt="@nomeLoja" class="rec-logo" />
                 }
-            </tbody>
-        </table>
-
-        <div class="flex flex-col gap-xs mb-md">
-            <div class="flex justify-between font-body-md text-body-md">
-                <span class="text-on-surface-variant">Subtotal</span>
-                <span>@Moeda(Model.Subtotal)</span>
+                <div>
+                    <div class="rec-loja-nome">@nomeLoja</div>
+                    @if (!string.IsNullOrWhiteSpace(lojaCnpj)) { <div class="rec-loja-sub">CNPJ: @lojaCnpj</div> }
+                    @if (!string.IsNullOrWhiteSpace(lojaEndereco)) { <div class="rec-loja-sub">@lojaEndereco</div> }
+                    @if (!string.IsNullOrWhiteSpace(lojaContato)) { <div class="rec-loja-sub">@lojaContato</div> }
+                </div>
             </div>
-            @if (Model.Desconto > 0)
+            <div class="rec-doc-meta">
+                <div class="rec-doc-titulo">COMPROVANTE NÃO FISCAL</div>
+                <div>Nº @Model.Numero</div>
+                <div>Data: @Model.Data.ToString("dd/MM/yyyy HH:mm")</div>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(Model.ClienteNome))
+        {
+            <div class="rec-bloco">
+                <div class="rec-bloco-titulo">Cliente</div>
+                <div class="rec-linhas">
+                    <div><span class="rec-rot">Nome:</span> @Model.ClienteNome</div>
+                    @if (!string.IsNullOrWhiteSpace(Model.ClienteTelefone)) { <div><span class="rec-rot">Telefone:</span> @Model.ClienteTelefone</div> }
+                </div>
+            </div>
+        }
+
+        <div class="rec-bloco">
+            <div class="rec-bloco-titulo">Itens</div>
+            <table class="rec-tabela">
+                <thead>
+                    <tr>
+                        <th style="text-align:left">Descrição</th>
+                        <th style="width:48px;text-align:center">Qtd</th>
+                        <th style="width:90px;text-align:right">Valor</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Itens)
+                    {
+                        <tr>
+                            <td>@item.Descricao</td>
+                            <td style="text-align:center">@item.Quantidade</td>
+                            <td style="text-align:right">@Moeda(item.Total)</td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="2" style="text-align:right">Subtotal</td>
+                        <td style="text-align:right">@Moeda(Model.Subtotal)</td>
+                    </tr>
+                    @if (Model.Desconto > 0)
+                    {
+                        <tr>
+                            <td colspan="2" style="text-align:right">Desconto</td>
+                            <td style="text-align:right">− @Moeda(Model.Desconto)</td>
+                        </tr>
+                    }
+                    <tr>
+                        <td colspan="2" style="text-align:right;font-weight:700">Total</td>
+                        <td style="text-align:right;font-weight:700">@Moeda(Model.Total)</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <div class="rec-bloco">
+            <div class="rec-bloco-titulo">Pagamento</div>
+            @if (Model.Parcelas.Count <= 1)
             {
-                <div class="flex justify-between font-body-md text-body-md text-error">
-                    <span>Desconto</span>
-                    <span>- @Moeda(Model.Desconto)</span>
+                <div class="rec-linhas">
+                    <div><span class="rec-rot">Forma:</span> @ListasCompras.Models.FormasPagamento.Rotulo(Model.FormaPagamento)</div>
+                    @if (Model.FormaPagamento == ListasCompras.Models.FormasPagamento.Dinheiro && Model.ValorRecebido > 0)
+                    {
+                        <div><span class="rec-rot">Recebido:</span> @Moeda(Model.ValorRecebido)</div>
+                        <div><span class="rec-rot">Troco:</span> @Moeda(Model.Troco)</div>
+                    }
                 </div>
             }
-            <div class="flex justify-between font-title-lg text-title-lg font-bold text-primary border-t border-outline-variant pt-xs">
-                <span>Total</span>
-                <span>@Moeda(Model.Total)</span>
-            </div>
-        </div>
-
-        @if (Model.Parcelas.Count <= 1)
-        {
-            <div class="flex flex-col gap-xs font-body-md text-body-md border-t border-outline-variant pt-md">
-                <div class="flex justify-between"><span class="text-on-surface-variant">Pagamento</span><span class="font-semibold">@ListasCompras.Models.FormasPagamento.Rotulo(Model.FormaPagamento)</span></div>
-                @if (Model.FormaPagamento == ListasCompras.Models.FormasPagamento.Dinheiro && Model.ValorRecebido > 0)
-                {
-                    <div class="flex justify-between"><span class="text-on-surface-variant">Recebido</span><span>@Moeda(Model.ValorRecebido)</span></div>
-                    <div class="flex justify-between"><span class="text-on-surface-variant">Troco</span><span>@Moeda(Model.Troco)</span></div>
-                }
-            </div>
-        }
-        else
-        {
-            <div class="border-t border-outline-variant pt-md">
-                <p class="font-label-md text-label-md text-outline uppercase tracking-wider mb-xs">Pagamento em @Model.Parcelas.Count parcelas</p>
+            else
+            {
+                <div style="font-size:10px;font-weight:600;margin-bottom:3px">@Model.Parcelas.Count parcelas</div>
                 @foreach (var parcela in Model.Parcelas)
                 {
-                    <div class="flex justify-between font-body-md text-body-md">
-                        <span>@parcela.Numero/@Model.Parcelas.Count · @parcela.Data.ToString("dd/MM") · @ListasCompras.Models.FormasPagamento.Rotulo(parcela.FormaPagamento)</span>
-                        <span>@Moeda(parcela.Valor)</span>
+                    <div class="rec-linhas" style="grid-template-columns: 2fr 1fr">
+                        <div>@parcela.Numero/@Model.Parcelas.Count · @parcela.Data.ToString("dd/MM") · @ListasCompras.Models.FormasPagamento.Rotulo(parcela.FormaPagamento)</div>
+                        <div style="text-align:right">@Moeda(parcela.Valor)</div>
                     </div>
                 }
-            </div>
-        }
+            }
+        </div>
 
-        <p class="font-label-sm text-label-sm text-outline text-center mt-lg">Este documento não tem valor fiscal.</p>
+        <p class="rec-rodape">Este documento não tem valor fiscal.</p>
     </div>
 
     <!-- Recibo térmico: cupom 80mm monoespaçado — só usado quando a pessoa clica
