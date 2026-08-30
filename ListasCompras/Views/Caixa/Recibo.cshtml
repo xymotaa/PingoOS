@@ -19,17 +19,24 @@
     <style>
         body { font-family: 'Hanken Grotesk', sans-serif; background-color: #f8f9ff; color: #0b1c30; }
 
-        /* Cupom térmico 80mm — mesmo padrão do comprovante de entrada da OS
-           (Views/Documento/Ver.cshtml): fica escondido na tela, some do A4 padrão e
-           usa a named page "termica" só quando a impressão é disparada. */
+        /* Dois documentos, só um sai por vez na impressão — mesmo padrão do comprovante de
+           entrada da OS (Views/Documento/Ver.cshtml): #reciboPadrao é o normal (papel comum,
+           A4), #reciboTermico só existe pra quando a loja tiver de fato uma impressora
+           térmica 80mm — sem isso configurada no sistema, o navegador ignora a "named page"
+           e imprime em A4 de qualquer forma, então o padrão tem que ficar bom nesse caso. */
         @@page termica { size: 80mm auto; margin: 3mm; }
+        @@page { size: A4; margin: 15mm; }
         @@media print {
             html, body { background: #fff !important; }
+            .no-print { display: none !important; }
         }
-        #recibo {
+        body.modo-termico #reciboPadrao { display: none !important; }
+        body.modo-termico #reciboTermico { display: block; page: termica; }
+
+        #reciboTermico {
+            display: none;
             font-family: 'Courier New', monospace;
             font-size: 12px; line-height: 1.4; color: #000;
-            page: termica;
         }
         .term-centro { text-align: center; }
         .term-titulo { font-size: 13px; font-weight: 700; }
@@ -40,21 +47,114 @@
     </style>
 </head>
 <body class="bg-surface">
-    <div class="no-print pt-16 max-w-[420px] mx-auto px-lg pb-xl">
+    <div class="no-print pt-16 max-w-[480px] mx-auto px-lg pb-xl">
         <div class="flex items-center justify-between gap-sm my-md">
             <h1 class="font-title-lg text-title-lg text-primary">Comprovante @Model.Numero</h1>
-            <button onclick="window.print()" type="button"
+        </div>
+        <p class="font-body-md text-body-md text-on-surface-variant mb-md">
+            Comprovante não fiscal, sem valor perante o fisco — só o registro da compra para o cliente.
+        </p>
+        <div class="flex gap-sm">
+            <button id="imprimirBtn" type="button"
                     class="h-9 px-md rounded-lg bg-secondary text-white flex items-center gap-xs hover:bg-opacity-90 transition-colors shrink-0">
                 <span class="material-symbols-outlined text-[18px]">print</span>
                 <span class="font-label-md text-label-md font-bold">Imprimir</span>
             </button>
+            <button id="imprimirTermicoBtn" type="button" title="Impressora térmica 58/80mm"
+                    class="h-9 px-md rounded-lg border border-outline-variant text-on-surface flex items-center gap-xs hover:bg-surface-container-low transition-colors shrink-0">
+                <span class="material-symbols-outlined text-[18px]">receipt_long</span>
+                <span class="font-label-md text-label-md font-bold">Impressora térmica</span>
+            </button>
         </div>
-        <p class="font-body-md text-body-md text-on-surface-variant">
-            Comprovante não fiscal, sem valor perante o fisco — só o registro da compra para o cliente.
-        </p>
     </div>
 
-    <div id="recibo" class="bg-white mx-auto max-w-[320px] p-md border border-outline-variant rounded-lg mb-xl">
+    <!-- Recibo padrão: papel comum (A4), o que a loja realmente usa até ter impressora
+         térmica — visual do sistema (Hanken Grotesk), não o monoespaçado de cupom. -->
+    <div id="reciboPadrao" class="bg-white mx-auto max-w-[480px] p-lg border border-outline-variant rounded-xl mb-xl">
+        <div class="text-center border-b border-outline-variant pb-md mb-md">
+            <p class="font-title-lg text-title-lg text-primary font-bold">@nomeLoja</p>
+            @if (!string.IsNullOrWhiteSpace(lojaCnpj)) { <p class="font-label-sm text-label-sm text-outline">CNPJ: @lojaCnpj</p> }
+            @if (!string.IsNullOrWhiteSpace(lojaContato)) { <p class="font-label-sm text-label-sm text-outline">@lojaContato</p> }
+        </div>
+
+        <p class="font-label-md text-label-md text-outline uppercase tracking-wider text-center mb-md">Comprovante não fiscal</p>
+
+        <div class="grid grid-cols-2 gap-sm font-body-md text-body-md mb-md">
+            <div><span class="text-on-surface-variant">Nº</span> <span class="font-semibold">@Model.Numero</span></div>
+            <div class="text-right"><span class="text-on-surface-variant">Data</span> <span class="font-semibold">@Model.Data.ToString("dd/MM/yyyy HH:mm")</span></div>
+            @if (!string.IsNullOrWhiteSpace(Model.ClienteNome))
+            {
+                <div class="col-span-2"><span class="text-on-surface-variant">Cliente</span> <span class="font-semibold">@Model.ClienteNome</span></div>
+            }
+        </div>
+
+        <table class="w-full text-left border-collapse mb-md">
+            <thead>
+                <tr class="border-b border-outline-variant">
+                    <th class="py-xs font-label-sm text-label-sm text-outline uppercase tracking-wider">Item</th>
+                    <th class="py-xs font-label-sm text-label-sm text-outline uppercase tracking-wider text-right">Valor</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Itens)
+                {
+                    <tr class="border-b border-outline-variant">
+                        <td class="py-xs font-body-md text-body-md">@item.Quantidade x @item.Descricao</td>
+                        <td class="py-xs font-body-md text-body-md text-right">@Moeda(item.Total)</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <div class="flex flex-col gap-xs mb-md">
+            <div class="flex justify-between font-body-md text-body-md">
+                <span class="text-on-surface-variant">Subtotal</span>
+                <span>@Moeda(Model.Subtotal)</span>
+            </div>
+            @if (Model.Desconto > 0)
+            {
+                <div class="flex justify-between font-body-md text-body-md text-error">
+                    <span>Desconto</span>
+                    <span>- @Moeda(Model.Desconto)</span>
+                </div>
+            }
+            <div class="flex justify-between font-title-lg text-title-lg font-bold text-primary border-t border-outline-variant pt-xs">
+                <span>Total</span>
+                <span>@Moeda(Model.Total)</span>
+            </div>
+        </div>
+
+        @if (Model.Parcelas.Count <= 1)
+        {
+            <div class="flex flex-col gap-xs font-body-md text-body-md border-t border-outline-variant pt-md">
+                <div class="flex justify-between"><span class="text-on-surface-variant">Pagamento</span><span class="font-semibold">@ListasCompras.Models.FormasPagamento.Rotulo(Model.FormaPagamento)</span></div>
+                @if (Model.FormaPagamento == ListasCompras.Models.FormasPagamento.Dinheiro && Model.ValorRecebido > 0)
+                {
+                    <div class="flex justify-between"><span class="text-on-surface-variant">Recebido</span><span>@Moeda(Model.ValorRecebido)</span></div>
+                    <div class="flex justify-between"><span class="text-on-surface-variant">Troco</span><span>@Moeda(Model.Troco)</span></div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="border-t border-outline-variant pt-md">
+                <p class="font-label-md text-label-md text-outline uppercase tracking-wider mb-xs">Pagamento em @Model.Parcelas.Count parcelas</p>
+                @foreach (var parcela in Model.Parcelas)
+                {
+                    <div class="flex justify-between font-body-md text-body-md">
+                        <span>@parcela.Numero/@Model.Parcelas.Count · @parcela.Data.ToString("dd/MM") · @ListasCompras.Models.FormasPagamento.Rotulo(parcela.FormaPagamento)</span>
+                        <span>@Moeda(parcela.Valor)</span>
+                    </div>
+                }
+            </div>
+        }
+
+        <p class="font-label-sm text-label-sm text-outline text-center mt-lg">Este documento não tem valor fiscal.</p>
+    </div>
+
+    <!-- Recibo térmico: cupom 80mm monoespaçado — só usado quando a pessoa clica
+         "Impressora térmica" (body.modo-termico), pra quem já tem esse hardware. -->
+    <div id="reciboTermico">
         <div class="term-centro">
             <div class="term-titulo">@nomeLoja</div>
             @if (!string.IsNullOrWhiteSpace(lojaCnpj)) { <div>CNPJ: @lojaCnpj</div> }
@@ -103,5 +203,19 @@
         }
         <div class="term-rodape">Este documento não tem valor fiscal.</div>
     </div>
+
+    <script>
+        // Padrão e térmico nunca saem juntos: a classe no body escolhe qual dos dois o CSS
+        // mostra (mesmo padrão de Views/Documento/Ver.cshtml + wwwroot/js/os-impressao.js).
+        document.getElementById("imprimirBtn").addEventListener("click", function () { window.print(); });
+        var btnTermico = document.getElementById("imprimirTermicoBtn");
+        btnTermico.addEventListener("click", function () {
+            document.body.classList.add("modo-termico");
+            window.print();
+        });
+        window.addEventListener("afterprint", function () {
+            document.body.classList.remove("modo-termico");
+        });
+    </script>
 </body>
 </html>
