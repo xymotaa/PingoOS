@@ -28,6 +28,7 @@ public class AppDbContext : DbContext
     public DbSet<MovimentacaoEstoque> MovimentacoesEstoque { get; set; }
     public DbSet<Venda> Vendas { get; set; }
     public DbSet<ItemVenda> ItensVenda { get; set; }
+    public DbSet<ParcelaVenda> ParcelasVenda { get; set; }
     public DbSet<HistoricoVenda> HistoricoVendas { get; set; }
     public DbSet<LancamentoFinanceiro> LancamentosFinanceiros { get; set; }
     public DbSet<ContaAPagar> ContasAPagar { get; set; }
@@ -210,6 +211,14 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<ProdutoEstoque>().HasIndex(p => p.ProdutoPaiId);
 
         modelBuilder.Entity<Venda>().HasIndex(v => v.Numero).IsUnique();
+
+        // Parcela nasce e morre com a venda: editar/excluir a venda relança as parcelas
+        // do zero (mesmo padrão já usado pros itens em CaixaController.SalvarEdicao).
+        modelBuilder.Entity<ParcelaVenda>()
+            .HasOne(p => p.Venda)
+            .WithMany(v => v.Parcelas)
+            .HasForeignKey(p => p.VendaId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         // Excluir um produto não pode apagar o histórico de vendas: o item guarda
         // código, descrição e preço praticado, então a venda continua legível

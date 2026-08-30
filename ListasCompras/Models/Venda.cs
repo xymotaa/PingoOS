@@ -6,8 +6,17 @@ public class Venda
     public string Numero { get; set; } = string.Empty; // V-000001
     public DateTime Data { get; set; } = DateTime.Now;
 
+    // Resumo da forma de pagamento predominante — derivado das parcelas ao salvar
+    // (ver CaixaController), não digitado direto. Existe pra listagem/filtro de Vendas
+    // não precisar abrir as parcelas uma a uma.
     public string FormaPagamento { get; set; } = FormasPagamento.Dinheiro;
-    public decimal ValorRecebido { get; set; }  // só faz sentido em dinheiro
+    public decimal ValorRecebido { get; set; }  // só faz sentido quando a única parcela é dinheiro
+
+    // Cliente da venda de balcão: texto livre digitado na hora, sem depender do
+    // cadastro em Cliente existir — a vendedora só anota o que a pessoa falar.
+    public string? ClienteNome { get; set; }
+    public string? ClienteTelefone { get; set; }
+    public string? ClienteDocumento { get; set; }
 
     public int? UsuarioId { get; set; }
     public Usuario? Usuario { get; set; }
@@ -21,6 +30,7 @@ public class Venda
 
     public ICollection<ItemVenda> Itens { get; set; } = new List<ItemVenda>();
     public ICollection<HistoricoVenda> Historico { get; set; } = new List<HistoricoVenda>();
+    public ICollection<ParcelaVenda> Parcelas { get; set; } = new List<ParcelaVenda>();
 
     public decimal Subtotal => Itens.Sum(i => i.Quantidade * i.PrecoUnitario);
     public decimal Desconto => Itens.Sum(i => i.DescontoTotal);
@@ -48,9 +58,29 @@ public class ItemVenda
     public int Quantidade { get; set; } = 1;
     public decimal PrecoUnitario { get; set; }
     public decimal DescontoPercentual { get; set; }
+    public string? Comentario { get; set; }
 
     public decimal DescontoTotal => Quantidade * PrecoUnitario * (DescontoPercentual / 100m);
     public decimal Total => Quantidade * PrecoUnitario - DescontoTotal;
+}
+
+// Uma linha do pagamento — a venda pode ter uma só (à vista) ou várias (parcelado),
+// cada uma com sua própria data/valor/forma, editável independente das outras
+// (mesmo espírito do parcelamento livre do Bling, mais granular que o da Ordem de
+// Serviço — lá é só "quantidade de parcelas" com valor dividido igualmente).
+public class ParcelaVenda
+{
+    public int Id { get; set; }
+
+    public int VendaId { get; set; }
+    public Venda Venda { get; set; } = null!;
+
+    public int Numero { get; set; } = 1; // ordem de exibição, 1-based
+    public int DiasParaVencer { get; set; }
+    public DateTime Data { get; set; } = DateTime.Today;
+    public decimal Valor { get; set; }
+    public string FormaPagamento { get; set; } = FormasPagamento.Dinheiro;
+    public string? Observacao { get; set; }
 }
 
 // Trilha de auditoria da venda: nunca edita/apaga um evento antigo, só acrescenta um

@@ -22,6 +22,7 @@ public class CaixaController : LojaControllerBase
             .Where(v => !v.Excluida)
             .Include(v => v.Itens)
             .Include(v => v.Usuario)
+            .Include(v => v.Parcelas)
             .OrderByDescending(v => v.Id)
             .ToList();
 
@@ -35,6 +36,7 @@ public class CaixaController : LojaControllerBase
     {
         var venda = Context.Vendas
             .Include(v => v.Itens)
+            .Include(v => v.Parcelas)
             .FirstOrDefault(v => v.Id == id && !v.Excluida);
         if (venda == null) return NotFound();
 
@@ -49,8 +51,22 @@ public class CaixaController : LojaControllerBase
             qtd = i.Quantidade,
             desconto = i.DescontoPercentual,
             descontoTipo = "percentual",
+            comentario = i.Comentario,
         }).ToList();
-        ViewBag.FormaPagamentoEmEdicao = venda.FormaPagamento;
+        ViewBag.ClienteEmEdicao = new
+        {
+            nome = venda.ClienteNome,
+            telefone = venda.ClienteTelefone,
+            documento = venda.ClienteDocumento,
+        };
+        ViewBag.ParcelasEmEdicao = venda.Parcelas.OrderBy(p => p.Numero).Select(p => new
+        {
+            dias = p.DiasParaVencer,
+            data = p.Data.ToString("yyyy-MM-dd"),
+            valor = p.Valor,
+            formaPagamento = p.FormaPagamento,
+            observacao = p.Observacao,
+        }).ToList();
         ViewBag.ValorRecebidoEmEdicao = venda.ValorRecebido;
 
         return View("Index", ProdutosVendaveis());
@@ -66,13 +82,100 @@ public class CaixaController : LojaControllerBase
             .Where(p => p.ProdutoPaiId == null)
             .OrderBy(p => p.Nome).ToList();
 
+    // Monta as linhas de ItemVenda a partir dos arrays paralelos que o carrinho do PDV
+    // manda no POST — usado tanto por Finalizar quanto por SalvarEdicao.
+    private List<ItemVenda> MontarItens(
+        int[] itemProdutoId, int[]? itemQuantidade, string[]? itemPreco, string[]? itemDesconto, string[]? itemComentario,
+        string numeroVenda, int? usuarioId, Venda venda, List<string> semSaldo)
+    {
+        var produtosPorId = Context.ProdutosEstoque
+            .Where(p => itemProdutoId.Contains(p.Id))
+            .ToDictionary(p => p.Id);
+
+        var itens = new List<ItemVenda>();
+        for (var i = 0; i < itemProdutoId.Length; i++)
+        {
+            if (!produtosPorId.TryGetValue(itemProdutoId[i], out var produto)) continue;
+
+            var quantidade = itemQuantidade != null && i < itemQuantidade.Length && itemQuantidade[i] > 0
+                ? itemQuantidade[i] : 1;
+
+            itens.Add(new ItemVenda
+            {
+                ProdutoEstoque = produto,
+                Codigo = produto.Codigo,
+                Descricao = produto.Nome,
+                Quantidade = quantidade,
+                PrecoUnitario = itemPreco != null && i < itemPreco.Length ? ParaDecimal(itemPreco[i]) : produto.PrecoVenda,
+                DescontoPercentual = itemDesconto != null && i < itemDesconto.Length ? ParaDecimal(itemDesconto[i]) : 0m,
+                Comentario = itemComentario != null && i < itemComentario.Length && !string.IsNullOrWhiteSpace(itemComentario[i])
+                    ? itemComentario[i].Trim() : null,
+            });
+
+            if (produto.SaldoAtual < quantidade) semSaldo.Add(produto.Nome);
+
+            // A venda baixa o estoque: é o que liga os dois módulos
+            EstoqueServico.Movimentar(produto, TiposMovimentacao.Saida, quantidade, $"Venda {numeroVenda}", usuarioId, venda);
+        }
+        return itens;
+    }
+
+    // Uma parcela por trio (dias/data/valor/forma/observação) nos arrays paralelos vindos
+    // do PDV. Sem parcela nenhuma informada, cai numa única parcela à vista na forma
+    // padrão — cobre o caminho comum (dinheiro/cartão/pix à vista) sem forçar a
+    // vendedora a preencher a tabela de parcelas toda vez.
+    private List<ParcelaVenda> MontarParcelas(
+        int[]? parcelaDias, string[]? parcelaData, string[]? parcelaValor, string[]? parcelaForma, string[]? parcelaObservacao,
+        decimal total)
+    {
+        if (parcelaValor == null || parcelaValor.Length == 0)
+        {
+            return new List<ParcelaVenda>
+            {
+                new() { Numero = 1, DiasParaVencer = 0, Data = DateTime.Today, Valor = total, FormaPagamento = FormasPagamento.Dinheiro },
+            };
+        }
+
+        var parcelas = new List<ParcelaVenda>();
+        for (var i = 0; i < parcelaValor.Length; i++)
+        {
+            var forma = parcelaForma != null && i < parcelaForma.Length && FormasPagamento.Todas.Contains(parcelaForma[i])
+                ? parcelaForma[i] : FormasPagamento.Dinheiro;
+            var data = parcelaData != null && i < parcelaData.Length && DateTime.TryParse(parcelaData[i], out var d) ? d : DateTime.Today;
+
+            parcelas.Add(new ParcelaVenda
+            {
+                Numero = i + 1,
+                DiasParaVencer = parcelaDias != null && i < parcelaDias.Length ? parcelaDias[i] : 0,
+                Data = data,
+                Valor = ParaDecimal(parcelaValor[i]),
+                FormaPagamento = forma,
+                Observacao = parcelaObservacao != null && i < parcelaObservacao.Length && !string.IsNullOrWhiteSpace(parcelaObservacao[i])
+                    ? parcelaObservacao[i].Trim() : null,
+            });
+        }
+        return parcelas;
+    }
+
+    // Forma de pagamento "resumo" da venda (ver comentário em Models/Venda.cs): a
+    // primeira parcela representa a venda nas listagens; ValorRecebido só faz sentido
+    // quando há uma única parcela em dinheiro (onde troco é calculado).
+    private static void AplicarResumoPagamento(Venda venda, List<ParcelaVenda> parcelas, string? valorRecebido)
+    {
+        var primeira = parcelas.OrderBy(p => p.Numero).First();
+        venda.FormaPagamento = primeira.FormaPagamento;
+        venda.ValorRecebido = parcelas.Count == 1 && primeira.FormaPagamento == FormasPagamento.Dinheiro
+            ? ParaDecimal(valorRecebido) : 0m;
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public IActionResult SalvarEdicao(
-        int vendaId, string formaPagamento, string? valorRecebido,
-        int[]? itemProdutoId, int[]? itemQuantidade, string[]? itemPreco, string[]? itemDesconto)
+        int vendaId, string? valorRecebido, string? clienteNome, string? clienteTelefone, string? clienteDocumento,
+        int[]? itemProdutoId, int[]? itemQuantidade, string[]? itemPreco, string[]? itemDesconto, string[]? itemComentario,
+        int[]? parcelaDias, string[]? parcelaData, string[]? parcelaValor, string[]? parcelaForma, string[]? parcelaObservacao)
     {
-        var venda = Context.Vendas.Include(v => v.Itens).FirstOrDefault(v => v.Id == vendaId && !v.Excluida);
+        var venda = Context.Vendas.Include(v => v.Itens).Include(v => v.Parcelas).FirstOrDefault(v => v.Id == vendaId && !v.Excluida);
         if (venda == null) return NotFound();
 
         if (itemProdutoId == null || itemProdutoId.Length == 0)
@@ -84,6 +187,10 @@ public class CaixaController : LojaControllerBase
         var usuarioId = IdDoUsuarioLogado();
         var totalAntes = venda.Total;
 
+        venda.ClienteNome = string.IsNullOrWhiteSpace(clienteNome) ? null : clienteNome.Trim();
+        venda.ClienteTelefone = string.IsNullOrWhiteSpace(clienteTelefone) ? null : clienteTelefone.Trim();
+        venda.ClienteDocumento = string.IsNullOrWhiteSpace(clienteDocumento) ? null : clienteDocumento.Trim();
+
         // Devolve tudo que a venda original tinha baixado, depois relança do zero com
         // os itens da edição — mais simples e seguro que comparar item a item o que
         // mudou, e o rastro (estorno + saída nova) fica claro no histórico do produto.
@@ -91,41 +198,22 @@ public class CaixaController : LojaControllerBase
 
         Context.ItensVenda.RemoveRange(venda.Itens);
         venda.Itens.Clear();
+        Context.ParcelasVenda.RemoveRange(venda.Parcelas);
+        venda.Parcelas.Clear();
 
-        venda.FormaPagamento = FormasPagamento.Todas.Contains(formaPagamento) ? formaPagamento : FormasPagamento.Dinheiro;
-        venda.ValorRecebido = ParaDecimal(valorRecebido);
-
-        // Um único SELECT para todos os itens do carrinho, em vez de um Find() por item
-        var produtosPorId = Context.ProdutosEstoque
-            .Where(p => itemProdutoId.Contains(p.Id))
-            .ToDictionary(p => p.Id);
-
-        for (var i = 0; i < itemProdutoId.Length; i++)
-        {
-            if (!produtosPorId.TryGetValue(itemProdutoId[i], out var produto)) continue;
-
-            var quantidade = itemQuantidade != null && i < itemQuantidade.Length && itemQuantidade[i] > 0
-                ? itemQuantidade[i] : 1;
-
-            venda.Itens.Add(new ItemVenda
-            {
-                ProdutoEstoque = produto,
-                Codigo = produto.Codigo,
-                Descricao = produto.Nome,
-                Quantidade = quantidade,
-                PrecoUnitario = itemPreco != null && i < itemPreco.Length ? ParaDecimal(itemPreco[i]) : produto.PrecoVenda,
-                DescontoPercentual = itemDesconto != null && i < itemDesconto.Length ? ParaDecimal(itemDesconto[i]) : 0m,
-            });
-
-            EstoqueServico.Movimentar(produto, TiposMovimentacao.Saida, quantidade,
-                $"Venda {venda.Numero} (editada)", usuarioId, venda);
-        }
+        var semSaldo = new List<string>();
+        var itens = MontarItens(itemProdutoId, itemQuantidade, itemPreco, itemDesconto, itemComentario, venda.Numero, usuarioId, venda, semSaldo);
+        foreach (var item in itens) venda.Itens.Add(item);
 
         if (venda.Itens.Count == 0)
         {
             TempData["Erro"] = "Nenhum dos produtos informados foi encontrado no estoque.";
             return RedirectToAction(nameof(EditarVenda), new { id = vendaId });
         }
+
+        var parcelas = MontarParcelas(parcelaDias, parcelaData, parcelaValor, parcelaForma, parcelaObservacao, venda.Total);
+        foreach (var parcela in parcelas) venda.Parcelas.Add(parcela);
+        AplicarResumoPagamento(venda, parcelas, valorRecebido);
 
         Context.HistoricoVendas.Add(new HistoricoVenda
         {
@@ -181,14 +269,35 @@ public class CaixaController : LojaControllerBase
         return View(venda);
     }
 
+    // Comprovante não fiscal (cupom térmico 80mm) — sem valor fiscal, só o registro
+    // da compra para o cliente. Aberto do painel de fechamento da venda.
+    public IActionResult Recibo(int id)
+    {
+        var venda = Context.Vendas
+            .Include(v => v.Itens)
+            .Include(v => v.Parcelas)
+            .Include(v => v.Usuario)
+            .FirstOrDefault(v => v.Id == id && !v.Excluida);
+        if (venda == null) return NotFound();
+
+        venda.Parcelas = venda.Parcelas.OrderBy(p => p.Numero).ToList();
+        return View(venda);
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public IActionResult Finalizar(
-        string formaPagamento, string? valorRecebido,
-        int[]? itemProdutoId, int[]? itemQuantidade, string[]? itemPreco, string[]? itemDesconto)
+        string? valorRecebido, string? clienteNome, string? clienteTelefone, string? clienteDocumento,
+        int[]? itemProdutoId, int[]? itemQuantidade, string[]? itemPreco, string[]? itemDesconto, string[]? itemComentario,
+        int[]? parcelaDias, string[]? parcelaData, string[]? parcelaValor, string[]? parcelaForma, string[]? parcelaObservacao)
     {
+        // O PDV envia por fetch (para abrir o painel de fechamento sem navegar);
+        // outras chamadas ao mesmo endpoint continuam recebendo o redirect tradicional.
+        var viaAjax = Request.Headers["X-Requested-With"] == "XMLHttpRequest";
+
         if (itemProdutoId == null || itemProdutoId.Length == 0)
         {
+            if (viaAjax) return BadRequest(new { erro = "Adicione ao menos um produto antes de finalizar." });
             TempData["Erro"] = "Adicione ao menos um produto antes de finalizar.";
             return RedirectToAction(nameof(Index));
         }
@@ -196,47 +305,26 @@ public class CaixaController : LojaControllerBase
         var venda = new Venda
         {
             Numero = EstoqueServico.ProximoNumeroVenda(Context),
-            FormaPagamento = FormasPagamento.Todas.Contains(formaPagamento) ? formaPagamento : FormasPagamento.Dinheiro,
-            ValorRecebido = ParaDecimal(valorRecebido),
+            ClienteNome = string.IsNullOrWhiteSpace(clienteNome) ? null : clienteNome.Trim(),
+            ClienteTelefone = string.IsNullOrWhiteSpace(clienteTelefone) ? null : clienteTelefone.Trim(),
+            ClienteDocumento = string.IsNullOrWhiteSpace(clienteDocumento) ? null : clienteDocumento.Trim(),
             UsuarioId = IdDoUsuarioLogado(),
         };
 
         var semSaldo = new List<string>();
-
-        // Um único SELECT para todos os itens do carrinho, em vez de um Find() por item
-        var produtosPorId = Context.ProdutosEstoque
-            .Where(p => itemProdutoId.Contains(p.Id))
-            .ToDictionary(p => p.Id);
-
-        for (var i = 0; i < itemProdutoId.Length; i++)
-        {
-            if (!produtosPorId.TryGetValue(itemProdutoId[i], out var produto)) continue;
-
-            var quantidade = itemQuantidade != null && i < itemQuantidade.Length && itemQuantidade[i] > 0
-                ? itemQuantidade[i] : 1;
-
-            venda.Itens.Add(new ItemVenda
-            {
-                ProdutoEstoque = produto,
-                Codigo = produto.Codigo,
-                Descricao = produto.Nome,
-                Quantidade = quantidade,
-                PrecoUnitario = itemPreco != null && i < itemPreco.Length ? ParaDecimal(itemPreco[i]) : produto.PrecoVenda,
-                DescontoPercentual = itemDesconto != null && i < itemDesconto.Length ? ParaDecimal(itemDesconto[i]) : 0m,
-            });
-
-            if (produto.SaldoAtual < quantidade) semSaldo.Add(produto.Nome);
-
-            // A venda baixa o estoque: é o que liga os dois módulos
-            EstoqueServico.Movimentar(produto, TiposMovimentacao.Saida, quantidade,
-                $"Venda {venda.Numero}", venda.UsuarioId, venda);
-        }
+        var itens = MontarItens(itemProdutoId, itemQuantidade, itemPreco, itemDesconto, itemComentario, venda.Numero, venda.UsuarioId, venda, semSaldo);
+        foreach (var item in itens) venda.Itens.Add(item);
 
         if (venda.Itens.Count == 0)
         {
+            if (viaAjax) return BadRequest(new { erro = "Nenhum dos produtos da venda foi encontrado no estoque." });
             TempData["Erro"] = "Nenhum dos produtos da venda foi encontrado no estoque.";
             return RedirectToAction(nameof(Index));
         }
+
+        var parcelas = MontarParcelas(parcelaDias, parcelaData, parcelaValor, parcelaForma, parcelaObservacao, venda.Total);
+        foreach (var parcela in parcelas) venda.Parcelas.Add(parcela);
+        AplicarResumoPagamento(venda, parcelas, valorRecebido);
 
         Context.Vendas.Add(venda);
         Context.HistoricoVendas.Add(new HistoricoVenda
@@ -247,13 +335,29 @@ public class CaixaController : LojaControllerBase
         });
         Context.SaveChanges();
 
+        var aviso = semSaldo.Count > 0
+            ? "Saldo ficou negativo em: " + string.Join(", ", semSaldo.Distinct()) + ". Confira a contagem do estoque."
+            : null;
+
+        if (viaAjax)
+        {
+            return Json(new
+            {
+                id = venda.Id,
+                numero = venda.Numero,
+                total = venda.Total,
+                quantidadeItens = venda.QuantidadeItens,
+                formaPagamento = venda.FormaPagamento,
+                itens = venda.Itens.Select(i => new { i.Descricao, i.Quantidade, total = i.Total }),
+                aviso,
+            });
+        }
+
         TempData["Sucesso"] = $"Venda {venda.Numero} registrada — {venda.QuantidadeItens} " +
             (venda.QuantidadeItens == 1 ? "item" : "itens") + $", {Moeda(venda.Total)}.";
 
         // Vendemos o que não tinha na prateleira: avisa, mas a venda está feita
-        if (semSaldo.Count > 0)
-            TempData["Aviso"] = "Saldo ficou negativo em: " + string.Join(", ", semSaldo.Distinct()) +
-                ". Confira a contagem do estoque.";
+        if (aviso != null) TempData["Aviso"] = aviso;
 
         return RedirectToAction(nameof(Index));
     }

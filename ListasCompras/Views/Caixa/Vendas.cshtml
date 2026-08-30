@@ -55,6 +55,7 @@
                             <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider">Nº</th>
                             <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider">Data</th>
                             <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider">Itens</th>
+                            <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider">Cliente</th>
                             <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider">Pagamento</th>
                             <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider">Quem vendeu</th>
                             <th class="px-md py-sm font-label-sm text-label-sm text-outline uppercase tracking-wider text-right">Total</th>
@@ -74,7 +75,10 @@
                                         @string.Join(", ", v.Itens.Take(3).Select(i => i.Descricao))@(v.Itens.Count > 3 ? "..." : "")
                                     </span>
                                 </td>
-                                <td class="px-md py-sm font-body-md text-body-md text-on-surface-variant">@ListasCompras.Models.FormasPagamento.Rotulo(v.FormaPagamento)</td>
+                                <td class="px-md py-sm font-body-md text-body-md text-on-surface-variant">@(string.IsNullOrWhiteSpace(v.ClienteNome) ? "—" : v.ClienteNome)</td>
+                                <td class="px-md py-sm font-body-md text-body-md text-on-surface-variant">
+                                    @ListasCompras.Models.FormasPagamento.Rotulo(v.FormaPagamento)@(v.Parcelas.Count > 1 ? " · " + v.Parcelas.Count + "x" : "")
+                                </td>
                                 <td class="px-md py-sm font-body-md text-body-md text-on-surface-variant">@(v.Usuario?.Nome ?? "—")</td>
                                 <td class="px-md py-sm font-body-md text-body-md text-right font-semibold text-secondary">@Moeda(v.Total)</td>
                                 <td class="px-md py-sm">

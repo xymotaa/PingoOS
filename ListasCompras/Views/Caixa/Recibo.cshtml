@@ -1,0 +1,107 @@
+@model ListasCompras.Models.Venda
+@{
+    Layout = null;
+    ViewData["Title"] = "Comprovante " + Model.Numero;
+    var nomeLoja = ViewData["NomeLoja"] as string ?? "Minha Loja";
+    var lojaCnpj = ViewData["LojaCnpj"] as string;
+    var lojaEndereco = ViewData["LojaEndereco"] as string;
+    var lojaTelefone = ViewData["LojaTelefone"] as string;
+    var lojaContato = string.Join(" · ", new[] { lojaTelefone, lojaEndereco }.Where(s => !string.IsNullOrWhiteSpace(s)));
+    string Moeda(decimal v) => v.ToString("C2", new System.Globalization.CultureInfo("pt-BR"));
+}
+<!DOCTYPE html>
+<html class="light" lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>@ViewData["Title"]</title>
+    @await Html.PartialAsync("_HeadTailwind")
+    <style>
+        body { font-family: 'Hanken Grotesk', sans-serif; background-color: #f8f9ff; color: #0b1c30; }
+
+        /* Cupom térmico 80mm — mesmo padrão do comprovante de entrada da OS
+           (Views/Documento/Ver.cshtml): fica escondido na tela, some do A4 padrão e
+           usa a named page "termica" só quando a impressão é disparada. */
+        @@page termica { size: 80mm auto; margin: 3mm; }
+        @@media print {
+            html, body { background: #fff !important; }
+        }
+        #recibo {
+            font-family: 'Courier New', monospace;
+            font-size: 12px; line-height: 1.4; color: #000;
+            page: termica;
+        }
+        .term-centro { text-align: center; }
+        .term-titulo { font-size: 13px; font-weight: 700; }
+        .term-sep { border-top: 1px dashed #000; margin: 6px 0; }
+        .term-linha { display: flex; justify-content: space-between; gap: 6px; }
+        .term-rot { font-weight: 700; }
+        .term-rodape { margin-top: 8px; font-size: 10px; text-align: center; }
+    </style>
+</head>
+<body class="bg-surface">
+    <div class="no-print pt-16 max-w-[420px] mx-auto px-lg pb-xl">
+        <div class="flex items-center justify-between gap-sm my-md">
+            <h1 class="font-title-lg text-title-lg text-primary">Comprovante @Model.Numero</h1>
+            <button onclick="window.print()" type="button"
+                    class="h-9 px-md rounded-lg bg-secondary text-white flex items-center gap-xs hover:bg-opacity-90 transition-colors shrink-0">
+                <span class="material-symbols-outlined text-[18px]">print</span>
+                <span class="font-label-md text-label-md font-bold">Imprimir</span>
+            </button>
+        </div>
+        <p class="font-body-md text-body-md text-on-surface-variant">
+            Comprovante não fiscal, sem valor perante o fisco — só o registro da compra para o cliente.
+        </p>
+    </div>
+
+    <div id="recibo" class="bg-white mx-auto max-w-[320px] p-md border border-outline-variant rounded-lg mb-xl">
+        <div class="term-centro">
+            <div class="term-titulo">@nomeLoja</div>
+            @if (!string.IsNullOrWhiteSpace(lojaCnpj)) { <div>CNPJ: @lojaCnpj</div> }
+            @if (!string.IsNullOrWhiteSpace(lojaContato)) { <div>@lojaContato</div> }
+        </div>
+        <div class="term-sep"></div>
+        <div class="term-centro term-titulo">COMPROVANTE NÃO FISCAL</div>
+        <div class="term-linha"><span class="term-rot">Nº</span><span>@Model.Numero</span></div>
+        <div class="term-linha"><span class="term-rot">Data</span><span>@Model.Data.ToString("dd/MM/yyyy HH:mm")</span></div>
+        @if (!string.IsNullOrWhiteSpace(Model.ClienteNome))
+        {
+            <div class="term-linha"><span class="term-rot">Cliente</span><span>@Model.ClienteNome</span></div>
+        }
+        <div class="term-sep"></div>
+        @foreach (var item in Model.Itens)
+        {
+            <div class="term-linha"><span>@item.Quantidade x @item.Descricao</span><span>@Moeda(item.Total)</span></div>
+        }
+        <div class="term-sep"></div>
+        <div class="term-linha"><span class="term-rot">Subtotal</span><span>@Moeda(Model.Subtotal)</span></div>
+        @if (Model.Desconto > 0)
+        {
+            <div class="term-linha"><span class="term-rot">Desconto</span><span>- @Moeda(Model.Desconto)</span></div>
+        }
+        <div class="term-linha term-titulo"><span>Total</span><span>@Moeda(Model.Total)</span></div>
+        <div class="term-sep"></div>
+        @if (Model.Parcelas.Count <= 1)
+        {
+            <div class="term-linha"><span class="term-rot">Pagamento</span><span>@ListasCompras.Models.FormasPagamento.Rotulo(Model.FormaPagamento)</span></div>
+            @if (Model.FormaPagamento == ListasCompras.Models.FormasPagamento.Dinheiro && Model.ValorRecebido > 0)
+            {
+                <div class="term-linha"><span class="term-rot">Recebido</span><span>@Moeda(Model.ValorRecebido)</span></div>
+                <div class="term-linha"><span class="term-rot">Troco</span><span>@Moeda(Model.Troco)</span></div>
+            }
+        }
+        else
+        {
+            <div class="term-rot">Pagamento em @Model.Parcelas.Count parcelas</div>
+            @foreach (var parcela in Model.Parcelas)
+            {
+                <div class="term-linha">
+                    <span>@parcela.Numero/@Model.Parcelas.Count · @parcela.Data.ToString("dd/MM") · @ListasCompras.Models.FormasPagamento.Rotulo(parcela.FormaPagamento)</span>
+                    <span>@Moeda(parcela.Valor)</span>
+                </div>
+            }
+        }
+        <div class="term-rodape">Este documento não tem valor fiscal.</div>
+    </div>
+</body>
+</html>
