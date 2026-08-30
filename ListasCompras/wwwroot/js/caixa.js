@@ -270,6 +270,12 @@ document.addEventListener("DOMContentLoaded", function () {
     // pela pessoa), ele é só informativo — o Valor unitário já É o preço final, então
     // não pode ser descontado de novo no cálculo do subtotal (ver precoEdicaoComDesconto).
     let descontoOrigemAutomatica = false;
+    // Diferença exata em reais entre o preço original e o valor unitário editado, sem
+    // passar pelo arredondamento de exibição do campo %. É a fonte de verdade enquanto
+    // descontoOrigemAutomatica for true — sem ela, alternar % → R$ → % duas vezes acumula
+    // erro de arredondamento a cada volta (10,3448...% vira "10,34" na tela; calcular de volta
+    // 10,34% de 290 já não bate mais com os R$30,00 originais).
+    let diferencaExataEmEdicao = 0;
 
     function selecionarOuEscolherVariacao(produto) {
         if (produto.variacoes && produto.variacoes.length > 0) {
@@ -283,6 +289,7 @@ document.addEventListener("DOMContentLoaded", function () {
         produtoEmEdicao = produto;
         descontoTipoEmEdicao = "percentual";
         descontoOrigemAutomatica = false;
+        diferencaExataEmEdicao = 0;
         precoOriginalEmEdicao = produto.precoUnitario;
         edicaoProdutoImg.innerHTML = miniaturaHtml(produto.imagemUrl, 48);
         edicaoProdutoNome.textContent = produto.nome;
@@ -304,6 +311,7 @@ document.addEventListener("DOMContentLoaded", function () {
     function fecharEdicaoProduto() {
         produtoEmEdicao = null;
         descontoOrigemAutomatica = false;
+        diferencaExataEmEdicao = 0;
         edicaoProdutoImg.innerHTML = '<span class="material-symbols-outlined text-[48px] text-outline-variant">inventory_2</span>';
         edicaoProdutoNome.textContent = "Nenhum produto selecionado";
         edicaoProdutoCodigo.textContent = "Busque um produto acima";
@@ -340,32 +348,40 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     edicaoQtd.addEventListener("input", atualizarEdicaoSubtotal);
-    edicaoValorUnitario.addEventListener("input", atualizarEdicaoSubtotal);
 
     // Editar o desconto à mão sempre desconta "de verdade" sobre o valor unitário atual
     // — só o preenchimento automático (abaixo) fica marcado como não reaplicável.
     edicaoDesconto.addEventListener("input", function () {
         descontoOrigemAutomatica = false;
+        // Guarda a diferença exata já na base R$ no momento da digitação — se a pessoa
+        // alternar % ↔ R$ depois, o toggle parte sempre desse valor exato, nunca do texto
+        // já arredondado que ficou no campo (mesmo raciocínio do valor unitário abaixo).
+        const valorUnitario = parseDecimal(edicaoValorUnitario.value);
+        const desconto = Math.max(parseDecimal(edicaoDesconto.value), 0);
+        diferencaExataEmEdicao = descontoTipoEmEdicao === "valor" ? desconto : valorUnitario * desconto / 100;
         atualizarEdicaoSubtotal();
     });
 
-    // Editar o valor unitário direto (ex: baixar de R$290 pra R$280 num acerto de preço)
+    // Editar o valor unitário direto (ex: baixar de R$290 pra R$260 num acerto de preço)
     // preenche o desconto sozinho com essa diferença, no modo % ou R$ que já estiver
-    // selecionado — sem isso a pessoa precisaria calcular o desconto de cabeça toda vez.
+    // selecionado, e só depois recalcula o subtotal — um único listener, nessa ordem exata,
+    // pra não depender de em que ordem o navegador dispara dois listeners "input" separados
+    // no mesmo campo (foi exatamente isso que causava subtotal desencontrado do desconto
+    // exibido: um listener calculava o subtotal com o desconto ainda do estado anterior).
     // O valor unitário digitado já É o preço final: o desconto aqui é só informativo.
     edicaoValorUnitario.addEventListener("input", function () {
         const valorAtual = parseDecimal(edicaoValorUnitario.value);
         descontoOrigemAutomatica = true;
         if (!precoOriginalEmEdicao || valorAtual >= precoOriginalEmEdicao) {
+            diferencaExataEmEdicao = 0;
             edicaoDesconto.value = "";
-            return;
-        }
-        const diferenca = precoOriginalEmEdicao - valorAtual;
-        if (descontoTipoEmEdicao === "valor") {
-            edicaoDesconto.value = diferenca.toFixed(2);
         } else {
-            edicaoDesconto.value = (diferenca / precoOriginalEmEdicao * 100).toFixed(2);
+            diferencaExataEmEdicao = precoOriginalEmEdicao - valorAtual;
+            edicaoDesconto.value = descontoTipoEmEdicao === "valor"
+                ? diferencaExataEmEdicao.toFixed(2)
+                : (diferencaExataEmEdicao / precoOriginalEmEdicao * 100).toFixed(2);
         }
+        atualizarEdicaoSubtotal();
     });
 
     edicaoQtdDec.addEventListener("click", function () {
@@ -380,30 +396,26 @@ document.addEventListener("DOMContentLoaded", function () {
     // Alterna o desconto entre % e R$ recalculando o valor equivalente em vez de zerar —
     // troca só a "unidade" exibida, a diferença de preço que ela representa continua a
     // mesma (10% de R$290 vira R$29,00 e vice-versa), esteja esse desconto ali por causa do
-    // valor unitário editado (automático) ou digitado à mão. A base do percentual muda
-    // conforme a origem: desconto automático é sempre sobre o preço original (é dali que a
-    // diferença foi calculada); desconto manual é sobre o valor unitário atual (o que
-    // realmente vai ser descontado na hora de inserir).
+    // valor unitário editado (automático) ou digitado à mão. Parte sempre de
+    // diferencaExataEmEdicao (a diferença em reais, guardada sem arredondamento) em vez de
+    // reler o texto já truncado do campo %, senão cada ida-e-volta % → R$ → % perde um
+    // pouco de precisão (10,3448...% vira "10,34" na tela; 10,34% de volta pra R$ já não
+    // bate mais com os R$30,00 exatos — foi exatamente esse desencontro relatado). A base do
+    // percentual muda conforme a origem: desconto automático é sempre sobre o preço
+    // original (é dali que a diferença nasceu); desconto manual é sobre o valor unitário
+    // atual (o que realmente vai ser descontado na hora de inserir).
     edicaoDescontoToggle.addEventListener("click", function () {
         const baseCalculo = descontoOrigemAutomatica ? precoOriginalEmEdicao : parseDecimal(edicaoValorUnitario.value);
-        const descontoAtual = Math.max(parseDecimal(edicaoDesconto.value), 0);
-
-        let diferencaEmReais;
-        if (descontoTipoEmEdicao === "valor") {
-            diferencaEmReais = descontoAtual;
-        } else {
-            diferencaEmReais = baseCalculo * Math.min(descontoAtual, 100) / 100;
-        }
 
         descontoTipoEmEdicao = descontoTipoEmEdicao === "valor" ? "percentual" : "valor";
         edicaoDescontoToggle.textContent = descontoTipoEmEdicao === "valor" ? "R$" : "%";
 
-        if (!descontoAtual) {
+        if (!diferencaExataEmEdicao) {
             edicaoDesconto.value = "";
         } else if (descontoTipoEmEdicao === "valor") {
-            edicaoDesconto.value = diferencaEmReais.toFixed(2);
+            edicaoDesconto.value = diferencaExataEmEdicao.toFixed(2);
         } else if (baseCalculo > 0) {
-            edicaoDesconto.value = Math.min(diferencaEmReais / baseCalculo * 100, 100).toFixed(2);
+            edicaoDesconto.value = Math.min(diferencaExataEmEdicao / baseCalculo * 100, 100).toFixed(2);
         } else {
             edicaoDesconto.value = "";
         }
