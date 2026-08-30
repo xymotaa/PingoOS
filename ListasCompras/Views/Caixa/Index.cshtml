@@ -43,21 +43,27 @@
         #painelFechamento.fechado { transform: translateX(100%); }
         #veuFechamento { transition: opacity .22s ease; }
 
-        /* Passos Produto → Cliente → Pagamento em sequência com seta (estilo Bling): cada
-           etapa é um "degrau" — cinza quando ainda não chegou nela, verde quando ativa,
-           esmaecida quando já passou. A seta é feita com clip-path, sem imagem. */
+        /* Passos Produto → Cliente → Pagamento: cartões no mesmo idioma visual do resto do
+           Pingo OS (cantos de 8px, borda outline-variant, preenchimento sólido no ativo) em vez
+           da metáfora de seta/breadcrumb do Bling. Pendente = contorno neutro; ativo = fundo
+           verde sólido; completo = contorno verde com check, sinalizando "já passou por aqui". */
         .passo-etapa {
-            clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 0 100%, 14px 50%);
-            background-color: #e5eeff; color: #404944;
+            background-color: #ffffff; color: #404944; border: 1.5px solid #bfc9c3;
         }
-        .passo-etapa:first-child { clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 0 100%); }
-        .passo-etapa + .passo-etapa { margin-left: -14px; }
-        .passo-etapa.passo-ativo { background-color: #006c49; color: #ffffff; }
-        .passo-etapa.passo-completo { background-color: #cbdbf5; color: #003527; }
+        .passo-etapa.passo-ativo { background-color: #006c49; border-color: #006c49; color: #ffffff; }
+        .passo-etapa.passo-completo { background-color: #ffffff; border-color: #006c49; color: #006c49; }
+        .passo-etapa .passo-check { display: none; }
+        .passo-etapa.passo-completo .passo-check { display: inline-flex; }
+        .passo-etapa.passo-completo .passo-numero { display: none; }
 
         /* Forma de pagamento como cards grandes (inspirado no Bling), não radio simples */
         .card-pagamento { transition: border-color .12s ease, background-color .12s ease; }
         .card-pagamento.selecionado { border-color: #006c49; background-color: rgba(0,108,73,.06); }
+
+        /* Card de edição do produto: sempre visível, esmaece e trava a interação até um
+           produto ser escolhido — não some do layout, só perde ênfase (ver ponto 2 do pedido). */
+        #edicaoProduto.card-vazio { opacity: .55; }
+        #edicaoProduto.card-vazio input, #edicaoProduto.card-vazio textarea { pointer-events: none; }
     </style>
 </head>
 <body class="bg-surface">
@@ -66,24 +72,37 @@
     <!-- Frente de caixa -->
     <div class="pt-16 h-screen flex overflow-hidden">
 
-        <!-- Coluna esquerda: passos Produto → Cliente → Pagamento, como o PDV do Bling -->
-        <div class="w-[420px] shrink-0 border-r border-outline-variant bg-white flex flex-col overflow-hidden">
+        <!-- Coluna esquerda: passos Produto → Cliente → Pagamento -->
+        <div class="w-[500px] shrink-0 border-r border-outline-variant bg-white flex flex-col overflow-hidden">
 
-            <div class="shrink-0 flex px-md pt-md">
+            <div class="shrink-0 flex gap-sm px-md pt-md">
                 <button id="passoProdutoBtn" type="button" data-passo="produto" accesskey="z"
-                        class="passo-etapa flex-1 py-sm flex items-center justify-center gap-xs font-label-md text-label-md font-bold uppercase tracking-wide transition-colors">
-                    Produto <span class="font-label-sm text-label-sm font-normal opacity-70 normal-case">(Alt+Z)</span>
+                        class="passo-etapa flex-1 rounded-lg py-sm px-xs flex items-center justify-center gap-xs font-label-md text-label-md font-bold transition-colors">
+                    <span class="passo-numero w-5 h-5 shrink-0 rounded-full border-2 border-current flex items-center justify-center font-label-sm text-label-sm">1</span>
+                    <span class="passo-check w-5 h-5 shrink-0 rounded-full bg-secondary text-white items-center justify-center">
+                        <span class="material-symbols-outlined text-[14px]">check</span>
+                    </span>
+                    Produto
                 </button>
                 <button id="passoClienteBtn" type="button" data-passo="cliente" accesskey="c"
-                        class="passo-etapa flex-1 py-sm flex items-center justify-center gap-xs font-label-md text-label-md font-bold uppercase tracking-wide transition-colors">
-                    Cliente <span class="font-label-sm text-label-sm font-normal opacity-70 normal-case">(Alt+C)</span>
+                        class="passo-etapa flex-1 rounded-lg py-sm px-xs flex items-center justify-center gap-xs font-label-md text-label-md font-bold transition-colors">
+                    <span class="passo-numero w-5 h-5 shrink-0 rounded-full border-2 border-current flex items-center justify-center font-label-sm text-label-sm">2</span>
+                    <span class="passo-check w-5 h-5 shrink-0 rounded-full bg-secondary text-white items-center justify-center">
+                        <span class="material-symbols-outlined text-[14px]">check</span>
+                    </span>
+                    Cliente
                     <span id="clientePassoMarcador" class="hidden w-1.5 h-1.5 rounded-full bg-warning"></span>
                 </button>
                 <button id="passoPagamentoBtn" type="button" data-passo="pagamento" accesskey="b"
-                        class="passo-etapa flex-1 py-sm flex items-center justify-center gap-xs font-label-md text-label-md font-bold uppercase tracking-wide transition-colors">
-                    Pagamento <span class="font-label-sm text-label-sm font-normal opacity-70 normal-case">(Alt+B)</span>
+                        class="passo-etapa flex-1 rounded-lg py-sm px-xs flex items-center justify-center gap-xs font-label-md text-label-md font-bold transition-colors">
+                    <span class="passo-numero w-5 h-5 shrink-0 rounded-full border-2 border-current flex items-center justify-center font-label-sm text-label-sm">3</span>
+                    <span class="passo-check w-5 h-5 shrink-0 rounded-full bg-secondary text-white items-center justify-center">
+                        <span class="material-symbols-outlined text-[14px]">check</span>
+                    </span>
+                    Pagamento
                 </button>
             </div>
+            <p class="shrink-0 px-md pt-xs font-label-sm text-label-sm text-outline text-left">Atalhos: Alt+Z · Alt+C · Alt+B</p>
 
             @if (vendaEmEdicaoId > 0)
             {
@@ -109,55 +128,64 @@
                 <span id="toastMsg">Venda finalizada.</span>
             </div>
 
-            <!-- Passo Produto: busca + resultados; ao escolher um, abre a área de edição
-                 (qtd/desconto/valor/subtotal/comentário) antes de entrar no carrinho. -->
+            <!-- Passo Produto: busca fixa no topo + card de edição sempre visível abaixo
+                 (qtd/desconto/valor/subtotal/comentário) — nasce vazio/placeholder, digitar
+                 na busca faz a lista de resultados sobrepor o card até um ser escolhido. -->
             <div id="passoProduto" class="flex-1 flex flex-col overflow-hidden">
-                <form id="buscaForm" class="shrink-0 p-md" autocomplete="off">
+                <form id="buscaForm" class="shrink-0 p-md pb-0" autocomplete="off">
                     <div class="relative">
                         <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[22px]">barcode_scanner</span>
                         <input id="buscaInput" autocomplete="off"
                                class="w-full bg-surface-container-low border-none rounded-lg pl-11 pr-4 py-3 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30"
                                placeholder="Pesquise por código, descrição (F2)" type="text" />
+                        <!-- Resultados: sobrepõem o card de edição enquanto há busca digitada,
+                             mesma largura do campo — não empurram o layout. -->
+                        <div id="listaProduto" class="hidden absolute top-full left-0 w-full mt-xs bg-white rounded-lg border border-outline-variant shadow-lg max-h-[360px] overflow-hidden z-20">
+                            <div id="resultadosProduto" class="max-h-[360px] overflow-y-auto custom-scrollbar p-xs"></div>
+                            <div id="resultadosProdutoVazio" class="hidden p-lg text-center">
+                                <p class="font-body-md text-body-md text-on-surface-variant">Nenhum produto encontrado.</p>
+                            </div>
+                        </div>
                     </div>
                 </form>
 
-                <div id="listaProduto" class="flex-1 flex flex-col overflow-hidden">
-                    <div id="resultadosProduto" class="flex-1 overflow-y-auto custom-scrollbar px-sm pb-sm"></div>
-                    <div id="resultadosProdutoVazio" class="flex-1 flex flex-col items-center justify-center gap-xs px-lg text-center">
-                        <span class="material-symbols-outlined text-[32px] text-outline-variant">search</span>
-                        <p class="font-body-md text-body-md text-on-surface-variant">Digite para buscar um produto pelo nome ou código.</p>
-                    </div>
-                </div>
-
-                <!-- Edição do produto escolhido: nasce escondida, aparece ao clicar num resultado -->
-                <div id="edicaoProduto" class="hidden flex-1 flex flex-col overflow-y-auto custom-scrollbar p-md gap-md">
+                <!-- Card de edição: sempre no lugar. .card-vazio esmaece e desabilita os
+                     campos até um produto ser escolhido — sem produto nenhum selecionado,
+                     não faz sentido deixar editável. -->
+                <div id="edicaoProduto" class="card-vazio flex-1 flex flex-col overflow-y-auto custom-scrollbar p-md gap-md">
                     <div class="flex items-start gap-md">
-                        <div id="edicaoProdutoImg" class="w-20 h-20 shrink-0 rounded-lg bg-surface-container-low flex items-center justify-center overflow-hidden"></div>
-                        <div class="min-w-0">
-                            <p id="edicaoProdutoNome" class="font-title-lg text-title-lg text-on-surface font-bold leading-tight"></p>
-                            <p id="edicaoProdutoCodigo" class="font-label-sm text-label-sm text-outline mt-xs"></p>
-                            <p id="edicaoProdutoPreco" class="font-headline-md text-headline-md text-primary mt-xs"></p>
+                        <div id="edicaoProdutoImg" class="w-36 h-36 shrink-0 rounded-lg bg-surface-container-low flex items-center justify-center overflow-hidden">
+                            <span class="material-symbols-outlined text-[48px] text-outline-variant">inventory_2</span>
+                        </div>
+                        <div class="min-w-0 pt-xs">
+                            <p id="edicaoProdutoNome" class="font-headline-lg text-headline-lg text-on-surface font-bold leading-tight">Nenhum produto selecionado</p>
+                            <p id="edicaoProdutoCodigo" class="font-label-sm text-label-sm text-outline mt-xs">Busque um produto acima</p>
+                            <p id="edicaoProdutoPreco" class="font-headline-lg text-headline-lg text-primary mt-sm">R$ 0,00</p>
                         </div>
                     </div>
 
                     <div class="grid grid-cols-2 gap-sm">
                         <div>
                             <label class="font-label-sm text-label-sm text-outline uppercase tracking-wider" for="edicaoQtd">Quantidade</label>
-                            <div class="flex items-center gap-xs mt-xs">
-                                <button id="edicaoQtdDec" type="button" class="w-9 h-9 shrink-0 rounded-lg border border-outline-variant hover:bg-surface-container-low flex items-center justify-center text-on-surface-variant font-bold">−</button>
-                                <input id="edicaoQtd" type="number" min="1" step="1" value="1"
-                                       class="w-full text-center bg-surface-container-low border-none rounded-lg py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
-                                <button id="edicaoQtdInc" type="button" class="w-9 h-9 shrink-0 rounded-lg border border-outline-variant hover:bg-surface-container-low flex items-center justify-center text-on-surface-variant font-bold">+</button>
+                            <div id="edicaoQtdGrupo" class="flex items-center mt-xs bg-surface-container-low rounded-lg border border-outline-variant overflow-hidden">
+                                <button id="edicaoQtdDec" type="button" disabled class="w-9 h-9 shrink-0 border-r border-outline-variant hover:bg-white flex items-center justify-center text-on-surface-variant font-bold disabled:opacity-50 disabled:pointer-events-none">−</button>
+                                <input id="edicaoQtd" type="number" min="1" step="1" value="1" disabled
+                                       class="w-full text-center bg-transparent border-none py-2 font-body-md text-body-md focus:outline-none focus:ring-0" />
+                                <button id="edicaoQtdInc" type="button" disabled class="w-9 h-9 shrink-0 border-l border-outline-variant hover:bg-white flex items-center justify-center text-on-surface-variant font-bold disabled:opacity-50 disabled:pointer-events-none">+</button>
                             </div>
                         </div>
                         <div>
-                            <label class="font-label-sm text-label-sm text-outline uppercase tracking-wider" for="edicaoDesconto">Desconto (%)</label>
-                            <input id="edicaoDesconto" type="number" min="0" max="100" step="0.01" placeholder="0,00"
-                                   class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
+                            <label class="font-label-sm text-label-sm text-outline uppercase tracking-wider" for="edicaoDesconto">Desconto</label>
+                            <div id="edicaoDescontoGrupo" class="flex items-center mt-xs bg-surface-container-low rounded-lg border border-outline-variant overflow-hidden focus-within:ring-2 focus-within:ring-secondary/30">
+                                <input id="edicaoDesconto" type="number" min="0" step="0.01" value="0,00" disabled
+                                       class="w-full bg-transparent border-none px-md py-2 font-body-md text-body-md focus:outline-none focus:ring-0" />
+                                <button id="edicaoDescontoToggle" type="button" disabled title="Alternar entre % e R$"
+                                        class="w-9 h-9 shrink-0 border-l border-outline-variant hover:bg-white flex items-center justify-center font-label-sm text-label-sm font-bold text-on-surface-variant leading-none transition-colors disabled:opacity-50 disabled:pointer-events-none">%</button>
+                            </div>
                         </div>
                         <div>
                             <label class="font-label-sm text-label-sm text-outline uppercase tracking-wider" for="edicaoValorUnitario">Valor unitário</label>
-                            <input id="edicaoValorUnitario" type="number" min="0" step="0.01"
+                            <input id="edicaoValorUnitario" type="number" min="0" step="0.01" disabled
                                    class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30" />
                         </div>
                         <div>
@@ -168,17 +196,17 @@
 
                     <div>
                         <label class="font-label-sm text-label-sm text-outline uppercase tracking-wider" for="edicaoComentario">Comentário</label>
-                        <textarea id="edicaoComentario" rows="2" placeholder="Ex: cor azul, embrulho para presente..."
+                        <textarea id="edicaoComentario" rows="2" disabled placeholder="Ex: cor azul, embrulho para presente..."
                                   class="w-full mt-xs bg-surface-container-low border-none rounded-lg px-md py-2 font-body-md text-body-md focus:ring-2 focus:ring-secondary/30 resize-none"></textarea>
                     </div>
 
                     <div class="flex gap-sm mt-auto pt-sm">
-                        <button id="edicaoCancelarBtn" type="button"
-                                class="flex-1 py-sm rounded-lg font-label-md text-label-md border border-outline-variant text-on-surface hover:bg-surface-container-low transition-colors">
+                        <button id="edicaoCancelarBtn" type="button" disabled
+                                class="flex-1 py-sm rounded-lg font-label-md text-label-md border border-outline-variant text-on-surface hover:bg-surface-container-low transition-colors disabled:opacity-50 disabled:pointer-events-none">
                             Cancelar
                         </button>
-                        <button id="edicaoInserirBtn" type="button"
-                                class="flex-1 py-sm rounded-lg font-label-md text-label-md font-bold bg-secondary text-white hover:bg-opacity-90 transition-colors flex items-center justify-center gap-xs">
+                        <button id="edicaoInserirBtn" type="button" disabled
+                                class="flex-1 py-sm rounded-lg font-label-md text-label-md font-bold bg-secondary text-white hover:bg-opacity-90 transition-colors flex items-center justify-center gap-xs disabled:opacity-50 disabled:pointer-events-none">
                             <span class="material-symbols-outlined text-[18px]">add</span>
                             Inserir
                         </button>
@@ -336,12 +364,12 @@
          (impressão do comprovante não fiscal, NFC-e futura) antes de encerrar o atendimento. -->
     <div id="veuFechamento" class="hidden fixed inset-0 z-[70] bg-[#0b1c30]/40 opacity-0"></div>
     <aside id="painelFechamento" class="fechado fixed top-0 right-0 z-[80] h-screen w-full max-w-[400px] bg-white shadow-lg flex flex-col">
-        <div class="shrink-0 px-lg py-md border-b border-outline-variant flex items-center justify-between gap-sm bg-secondary-container">
-            <div class="flex items-center gap-sm text-on-secondary-container">
+        <div class="shrink-0 px-lg py-md border-b border-outline-variant flex items-center justify-between gap-sm bg-secondary">
+            <div class="flex items-center gap-sm text-white">
                 <span class="material-symbols-outlined text-[22px]">check_circle</span>
                 <div>
                     <p class="font-title-lg text-title-lg font-bold">Venda concluída</p>
-                    <p id="painelVendaNumero" class="font-label-sm text-label-sm">—</p>
+                    <p id="painelVendaNumero" class="font-label-sm text-label-sm opacity-90">—</p>
                 </div>
             </div>
         </div>

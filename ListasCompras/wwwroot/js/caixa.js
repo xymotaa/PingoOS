@@ -241,7 +241,9 @@ document.addEventListener("DOMContentLoaded", function () {
     if (modalVariacao) modalVariacao.addEventListener("click", function (e) { if (e.target === modalVariacao) fecharModalVariacao(); });
 
     // ===== Edição do produto escolhido: quantidade/desconto/valor/subtotal/comentário
-    // antes de entrar no carrinho (mesmo passo intermediário do PDV do Bling) =====
+    // antes de entrar no carrinho (mesmo passo intermediário do PDV do Bling). O card fica
+    // sempre visível (nunca some do layout) — só alterna entre vazio/travado e
+    // preenchido/editável; quem some é a lista de resultados, que sobrepõe a busca. =====
 
     const listaProduto = document.getElementById("listaProduto");
     const edicaoProduto = document.getElementById("edicaoProduto");
@@ -253,13 +255,21 @@ document.addEventListener("DOMContentLoaded", function () {
     const edicaoQtdDec = document.getElementById("edicaoQtdDec");
     const edicaoQtdInc = document.getElementById("edicaoQtdInc");
     const edicaoDesconto = document.getElementById("edicaoDesconto");
+    const edicaoDescontoToggle = document.getElementById("edicaoDescontoToggle");
     const edicaoValorUnitario = document.getElementById("edicaoValorUnitario");
     const edicaoSubtotal = document.getElementById("edicaoSubtotal");
     const edicaoComentario = document.getElementById("edicaoComentario");
     const edicaoCancelarBtn = document.getElementById("edicaoCancelarBtn");
     const edicaoInserirBtn = document.getElementById("edicaoInserirBtn");
+    const camposEdicaoProduto = [edicaoQtdDec, edicaoQtd, edicaoQtdInc, edicaoDesconto, edicaoDescontoToggle, edicaoValorUnitario, edicaoComentario, edicaoCancelarBtn, edicaoInserirBtn];
 
     let produtoEmEdicao = null;
+    let descontoTipoEmEdicao = "percentual";
+    let precoOriginalEmEdicao = 0;
+    // Quando o desconto exibido veio do próprio Valor unitário editado (não digitado
+    // pela pessoa), ele é só informativo — o Valor unitário já É o preço final, então
+    // não pode ser descontado de novo no cálculo do subtotal (ver precoEdicaoComDesconto).
+    let descontoOrigemAutomatica = false;
 
     function selecionarOuEscolherVariacao(produto) {
         if (produto.variacoes && produto.variacoes.length > 0) {
@@ -271,41 +281,93 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function abrirEdicaoProduto(produto) {
         produtoEmEdicao = produto;
-        edicaoProdutoImg.innerHTML = miniaturaHtml(produto.imagemUrl, 28);
+        descontoTipoEmEdicao = "percentual";
+        descontoOrigemAutomatica = false;
+        precoOriginalEmEdicao = produto.precoUnitario;
+        edicaoProdutoImg.innerHTML = miniaturaHtml(produto.imagemUrl, 48);
         edicaoProdutoNome.textContent = produto.nome;
         edicaoProdutoCodigo.textContent = produto.codigo;
         edicaoProdutoPreco.textContent = formatBRL(produto.precoUnitario);
         edicaoQtd.value = "1";
         edicaoDesconto.value = "";
+        edicaoDescontoToggle.textContent = "%";
         edicaoValorUnitario.value = Number(produto.precoUnitario).toFixed(2);
         edicaoComentario.value = "";
-        atualizarEdicaoSubtotal();
 
-        listaProduto.classList.add("hidden");
-        edicaoProduto.classList.remove("hidden");
+        edicaoProduto.classList.remove("card-vazio");
+        camposEdicaoProduto.forEach(function (el) { el.disabled = false; });
+        atualizarEdicaoSubtotal();
+        fecharResultadosProduto();
         edicaoQtd.focus();
     }
 
     function fecharEdicaoProduto() {
         produtoEmEdicao = null;
-        edicaoProduto.classList.add("hidden");
-        listaProduto.classList.remove("hidden");
+        descontoOrigemAutomatica = false;
+        edicaoProdutoImg.innerHTML = '<span class="material-symbols-outlined text-[48px] text-outline-variant">inventory_2</span>';
+        edicaoProdutoNome.textContent = "Nenhum produto selecionado";
+        edicaoProdutoCodigo.textContent = "Busque um produto acima";
+        edicaoProdutoPreco.textContent = "R$ 0,00";
+        edicaoQtd.value = "1";
+        edicaoDesconto.value = "0,00";
+        edicaoDescontoToggle.textContent = "%";
+        edicaoValorUnitario.value = "";
+        edicaoComentario.value = "";
+        edicaoSubtotal.textContent = "R$ 0,00";
+
+        edicaoProduto.classList.add("card-vazio");
+        camposEdicaoProduto.forEach(function (el) { el.disabled = true; });
         buscaInput.value = "";
         buscaInput.focus();
-        renderResultadosProduto();
+        fecharResultadosProduto();
+    }
+
+    // O Valor unitário sempre manda no subtotal. Quando o desconto exibido veio da própria
+    // edição do valor unitário (ver listener abaixo), ele é só um indicador da diferença
+    // pro preço de tabela — não é reaplicado por cima, senão descontaria duas vezes. Só um
+    // desconto digitado à mão pela pessoa desconta de fato sobre o valor unitário atual.
+    function precoEdicaoComDesconto() {
+        const valorUnitario = parseDecimal(edicaoValorUnitario.value);
+        const desconto = Math.max(parseDecimal(edicaoDesconto.value), 0);
+        if (!desconto || descontoOrigemAutomatica) return valorUnitario;
+        if (descontoTipoEmEdicao === "valor") return Math.max(valorUnitario - desconto, 0);
+        return valorUnitario * (1 - Math.min(desconto, 100) / 100);
     }
 
     function atualizarEdicaoSubtotal() {
         const qtd = Math.max(parseInt(edicaoQtd.value, 10) || 1, 1);
-        const desconto = Math.min(Math.max(parseDecimal(edicaoDesconto.value), 0), 100);
-        const valorUnitario = parseDecimal(edicaoValorUnitario.value);
-        const subtotal = qtd * valorUnitario * (1 - desconto / 100);
-        edicaoSubtotal.textContent = formatBRL(subtotal);
+        edicaoSubtotal.textContent = formatBRL(qtd * precoEdicaoComDesconto());
     }
 
-    [edicaoQtd, edicaoDesconto, edicaoValorUnitario].forEach(function (input) {
-        input.addEventListener("input", atualizarEdicaoSubtotal);
+    edicaoQtd.addEventListener("input", atualizarEdicaoSubtotal);
+    edicaoValorUnitario.addEventListener("input", atualizarEdicaoSubtotal);
+
+    // Editar o desconto à mão sempre desconta "de verdade" sobre o valor unitário atual
+    // — só o preenchimento automático (abaixo) fica marcado como não reaplicável.
+    edicaoDesconto.addEventListener("input", function () {
+        descontoOrigemAutomatica = false;
+        atualizarEdicaoSubtotal();
     });
+
+    // Editar o valor unitário direto (ex: baixar de R$290 pra R$280 num acerto de preço)
+    // preenche o desconto sozinho com essa diferença, no modo % ou R$ que já estiver
+    // selecionado — sem isso a pessoa precisaria calcular o desconto de cabeça toda vez.
+    // O valor unitário digitado já É o preço final: o desconto aqui é só informativo.
+    edicaoValorUnitario.addEventListener("input", function () {
+        const valorAtual = parseDecimal(edicaoValorUnitario.value);
+        descontoOrigemAutomatica = true;
+        if (!precoOriginalEmEdicao || valorAtual >= precoOriginalEmEdicao) {
+            edicaoDesconto.value = "";
+            return;
+        }
+        const diferenca = precoOriginalEmEdicao - valorAtual;
+        if (descontoTipoEmEdicao === "valor") {
+            edicaoDesconto.value = diferenca.toFixed(2);
+        } else {
+            edicaoDesconto.value = (diferenca / precoOriginalEmEdicao * 100).toFixed(2);
+        }
+    });
+
     edicaoQtdDec.addEventListener("click", function () {
         edicaoQtd.value = Math.max((parseInt(edicaoQtd.value, 10) || 1) - 1, 1);
         atualizarEdicaoSubtotal();
@@ -315,24 +377,70 @@ document.addEventListener("DOMContentLoaded", function () {
         atualizarEdicaoSubtotal();
     });
 
+    // Alterna o desconto entre % e R$ recalculando o valor equivalente em vez de zerar —
+    // troca só a "unidade" exibida, a diferença de preço que ela representa continua a
+    // mesma (10% de R$290 vira R$29,00 e vice-versa), esteja esse desconto ali por causa do
+    // valor unitário editado (automático) ou digitado à mão. A base do percentual muda
+    // conforme a origem: desconto automático é sempre sobre o preço original (é dali que a
+    // diferença foi calculada); desconto manual é sobre o valor unitário atual (o que
+    // realmente vai ser descontado na hora de inserir).
+    edicaoDescontoToggle.addEventListener("click", function () {
+        const baseCalculo = descontoOrigemAutomatica ? precoOriginalEmEdicao : parseDecimal(edicaoValorUnitario.value);
+        const descontoAtual = Math.max(parseDecimal(edicaoDesconto.value), 0);
+
+        let diferencaEmReais;
+        if (descontoTipoEmEdicao === "valor") {
+            diferencaEmReais = descontoAtual;
+        } else {
+            diferencaEmReais = baseCalculo * Math.min(descontoAtual, 100) / 100;
+        }
+
+        descontoTipoEmEdicao = descontoTipoEmEdicao === "valor" ? "percentual" : "valor";
+        edicaoDescontoToggle.textContent = descontoTipoEmEdicao === "valor" ? "R$" : "%";
+
+        if (!descontoAtual) {
+            edicaoDesconto.value = "";
+        } else if (descontoTipoEmEdicao === "valor") {
+            edicaoDesconto.value = diferencaEmReais.toFixed(2);
+        } else if (baseCalculo > 0) {
+            edicaoDesconto.value = Math.min(diferencaEmReais / baseCalculo * 100, 100).toFixed(2);
+        } else {
+            edicaoDesconto.value = "";
+        }
+        atualizarEdicaoSubtotal();
+    });
+
     edicaoCancelarBtn.addEventListener("click", fecharEdicaoProduto);
 
     edicaoInserirBtn.addEventListener("click", function () {
         if (!produtoEmEdicao) return;
         const qtd = Math.max(parseInt(edicaoQtd.value, 10) || 1, 1);
-        const desconto = Math.min(Math.max(parseDecimal(edicaoDesconto.value), 0), 100);
         const valorUnitario = parseDecimal(edicaoValorUnitario.value);
         const comentario = edicaoComentario.value.trim();
+
+        // O carrinho guarda sempre desconto percentual (mesmo padrão do resto da venda);
+        // se foi digitado em R$ aqui, converte na hora de inserir. Quando o desconto exibido
+        // é só o reflexo automático de ter editado o valor unitário direto, ele já está
+        // embutido no preço — gravar de novo descontaria duas vezes (ver precoEdicaoComDesconto).
+        let percentual = 0;
+        if (!descontoOrigemAutomatica) {
+            percentual = Math.max(parseDecimal(edicaoDesconto.value), 0);
+            if (descontoTipoEmEdicao === "valor" && valorUnitario > 0) {
+                percentual = Math.min(percentual / valorUnitario * 100, 100);
+            } else {
+                percentual = Math.min(percentual, 100);
+            }
+        }
 
         const existente = cart.find(function (i) { return i.codigo === produtoEmEdicao.codigo && i.comentario === comentario; });
         if (existente) {
             existente.qtd += qtd;
-            existente.desconto = desconto;
+            existente.desconto = percentual;
             existente.precoUnitario = valorUnitario;
         } else {
             cart.push({
                 id: produtoEmEdicao.id, codigo: produtoEmEdicao.codigo, nome: produtoEmEdicao.nome,
-                precoUnitario: valorUnitario, qtd: qtd, desconto: desconto, descontoTipo: "percentual", comentario: comentario,
+                precoUnitario: valorUnitario, qtd: qtd, desconto: percentual, descontoTipo: "percentual", comentario: comentario,
             });
         }
         renderTabela();
@@ -346,12 +454,18 @@ document.addEventListener("DOMContentLoaded", function () {
         if (editarBtn) {
             const index = parseInt(editarBtn.dataset.index, 10);
             const item = cart[index];
+            const produtoCatalogo = porId(item.id);
             cart.splice(index, 1);
             renderTabela();
             ativarPasso("produto");
-            abrirEdicaoProduto({ id: item.id, codigo: item.codigo, nome: item.nome, precoUnitario: item.precoUnitario, imagemUrl: (porId(item.id) || {}).imagemUrl });
+            // precoOriginalEmEdicao (definido dentro de abrirEdicaoProduto) precisa ser o
+            // preço de catálogo, não o preço já com desconto do item — senão o auto-cálculo
+            // do desconto ao reeditar o valor unitário parte de uma base errada.
+            abrirEdicaoProduto({ id: item.id, codigo: item.codigo, nome: item.nome, precoUnitario: produtoCatalogo ? produtoCatalogo.precoUnitario : item.precoUnitario, imagemUrl: produtoCatalogo && produtoCatalogo.imagemUrl });
+            edicaoValorUnitario.value = Number(item.precoUnitario).toFixed(2);
             edicaoQtd.value = item.qtd;
             edicaoDesconto.value = item.desconto || "";
+            descontoOrigemAutomatica = false;
             edicaoComentario.value = item.comentario || "";
             atualizarEdicaoSubtotal();
             return;
@@ -365,14 +479,19 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    // ===== Resultados de produto: lista permanente no passo, não dropdown flutuante =====
+    // ===== Resultados de produto: dropdown que sobrepõe a busca (o card de edição, logo
+    // abaixo, fica sempre visível — ver ponto 2 do pedido) =====
 
     const resultadosProduto = document.getElementById("resultadosProduto");
     const resultadosProdutoVazio = document.getElementById("resultadosProdutoVazio");
 
+    function fecharResultadosProduto() {
+        listaProduto.classList.add("hidden");
+    }
+
     function renderResultadosProduto() {
         const encontrados = buscarProdutos(buscaInput.value);
-        resultadosProduto.classList.toggle("hidden", encontrados.length === 0);
+        listaProduto.classList.toggle("hidden", encontrados.length === 0 && !buscaInput.value.trim());
         resultadosProdutoVazio.classList.toggle("hidden", encontrados.length > 0);
         resultadosProduto.innerHTML = "";
 
@@ -430,6 +549,10 @@ document.addEventListener("DOMContentLoaded", function () {
         e.preventDefault();
         const primeiro = resultadosProduto.querySelector(".resultado-produto-item");
         if (primeiro) primeiro.click();
+    });
+
+    document.addEventListener("click", function (e) {
+        if (!buscaForm.contains(e.target)) fecharResultadosProduto();
     });
 
     // ===== Passo Cliente: texto livre, sem puxar do cadastro =====
