@@ -478,6 +478,12 @@ document.addEventListener("DOMContentLoaded", function () {
             edicaoQtd.value = item.qtd;
             edicaoDesconto.value = item.desconto || "";
             descontoOrigemAutomatica = false;
+            // Atribuir .value direto não dispara o listener "input" do campo, então
+            // diferencaExataEmEdicao (zerada em abrirEdicaoProduto) precisa ser sincronizada
+            // aqui à mão — senão o primeiro clique no toggle %/R$ depois de reabrir um item
+            // com desconto zera o campo em vez de converter (mesma classe de bug já corrigida
+            // pro fluxo de digitação normal).
+            diferencaExataEmEdicao = item.desconto ? item.precoUnitario * item.desconto / 100 : 0;
             edicaoComentario.value = item.comentario || "";
             atualizarEdicaoSubtotal();
             return;
